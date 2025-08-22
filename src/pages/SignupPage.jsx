@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { ArrowLeft, Check, AlertCircle, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import api from '../lib/api'
 
 const SignupPage = () => {
   const [step, setStep] = useState(1)
@@ -226,7 +226,7 @@ const SignupPage = () => {
       }
 
       // Call backend API to provision tenant
-      const response = await axios.post('/api/saas/provision-tenant', tenantConfig)
+      const response = await api.post('/saas/provision-tenant', tenantConfig)
       
       if (response.data.success) {
         toast.success('🎉 Your restaurant website is being created!')
