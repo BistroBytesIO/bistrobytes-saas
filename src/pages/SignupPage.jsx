@@ -141,88 +141,56 @@ const SignupPage = () => {
         .replace(/_+/g, '_')
         .replace(/^_|_$/g, '')
 
-      // Create comprehensive tenant configuration
+      // Create flat tenant configuration matching backend SaaSProvisioningRequest
       const tenantConfig = {
-        // Basic tenant info
+        // Basic tenant info (flat structure as expected by backend)
         tenantSlug: tenantSlug,
         tenantName: data.restaurantName,
         domain: data.websiteUrl || `${tenantSlug}.bistrobytes.app`,
         
-        // Business information
-        business: {
-          type: data.businessType,
-          cuisine: data.cuisine,
-          description: data.description,
-          ownerName: data.ownerName,
-          email: data.email,
-          phone: data.phone,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          zipCode: data.zipCode,
-          country: data.country,
-          timezone: data.timezone,
-          currency: data.currency,
-          taxRate: parseFloat(data.taxRate) / 100,
-          serviceFeeName: data.serviceFeeName,
-          serviceFeeRate: parseFloat(data.serviceFeeRate) / 100,
-          minimumOrderAmount: parseFloat(data.minimumOrder),
-          hoursOfOperation: {
-            monday: { open: data.openTime, close: data.closeTime, closed: false },
-            tuesday: { open: data.openTime, close: data.closeTime, closed: false },
-            wednesday: { open: data.openTime, close: data.closeTime, closed: false },
-            thursday: { open: data.openTime, close: data.closeTime, closed: false },
-            friday: { open: data.openTime, close: data.closeTime, closed: false },
-            saturday: { open: data.openTime, close: data.closeTime, closed: false },
-            sunday: { open: data.openTime, close: data.closeTime, closed: false }
-          }
-        },
+        // Business information (flat fields)
+        businessType: data.businessType,
+        cuisine: data.cuisine,
+        description: data.description,
         
-        // Branding
-        branding: {
-          companyName: data.restaurantName,
-          contactPhone: data.phone,
-          contactEmail: data.email,
-          address: `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`
-        },
+        // Contact information (flat fields)
+        ownerName: data.ownerName,
+        email: data.email,
+        phone: data.phone,
         
-        // Theme
-        theme: {
-          primaryColor: data.primaryColor,
-          secondaryColor: data.secondaryColor,
-          logoUrl: data.logoUrl || '/bistroLogo.png'
-        },
+        // Address information (flat fields)
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        country: data.country,
         
-        // Features based on plan
-        features: {
-          voiceOrdering: data.plan === 'enterprise',
-          rewards: data.plan !== 'starter',
-          cloverIntegration: true,
-          squareIntegration: true,
-          applePayEnabled: data.plan !== 'starter',
-          googlePayEnabled: data.plan !== 'starter',
-          paypalEnabled: data.plan !== 'starter',
-          stripeEnabled: true,
-          guestCheckout: true
-        },
+        // Business settings (flat fields)
+        openTime: data.openTime,
+        closeTime: data.closeTime,
+        timezone: data.timezone,
+        currency: data.currency,
+        taxRate: parseFloat(data.taxRate) || 8.875,
+        serviceFeeName: data.serviceFeeName,
+        serviceFeeRate: parseFloat(data.serviceFeeRate) || 3.0,
+        minimumOrderAmount: parseFloat(data.minimumOrder) || 10.0,
         
-        // Subscription
-        subscription: {
-          plan: data.plan,
-          billingCycle: data.billingCycle
-        },
+        // Branding (flat fields)
+        primaryColor: data.primaryColor,
+        secondaryColor: data.secondaryColor,
+        logoUrl: data.logoUrl,
         
-        // POS Integration
-        pos: {
-          system: data.posSystem,
-          hasExisting: data.hasExistingPOS === 'yes'
-        },
+        // Plan (flat field)
+        plan: data.plan,
+        billingCycle: data.billingCycle,
         
-        // Marketing
-        marketing: {
-          source: data.howDidYouHear,
-          emailConsent: data.marketingEmails
-        }
+        // POS Integration (flat fields)
+        posSystem: data.posSystem,
+        hasExistingPOS: data.hasExistingPOS === 'yes',
+        
+        // Marketing (flat fields)
+        howDidYouHear: data.howDidYouHear,
+        marketingEmails: data.marketingEmails
       }
 
       // Call backend API to provision tenant
