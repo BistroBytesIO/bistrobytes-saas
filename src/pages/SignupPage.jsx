@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { Button } from '../components/ui/button'
@@ -12,6 +12,8 @@ const SignupPage = () => {
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState('professional')
+  const [subscriptionPlans, setSubscriptionPlans] = useState([])
+  const [plansLoading, setPlansLoading] = useState(true)
   const navigate = useNavigate()
   
   const { register, handleSubmit, control, watch, formState: { errors }, trigger } = useForm({
@@ -91,33 +93,39 @@ const SignupPage = () => {
     { value: 'none', label: 'No POS System' }
   ]
 
-  const pricingPlans = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      monthlyPrice: 49,
-      annualPrice: 499,
-      description: 'Perfect for small restaurants',
-      features: ['Up to 500 orders/month', 'Basic customization', 'Email support']
-    },
-    {
-      id: 'professional',
-      name: 'Professional',
-      monthlyPrice: 149,
-      annualPrice: 1499,
-      description: 'Complete solution for established restaurants',
-      features: ['Up to 2,000 orders/month', 'Loyalty program', 'Priority support'],
-      popular: true
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      monthlyPrice: 399,
-      annualPrice: 3999,
-      description: 'Premium with AI voice ordering',
-      features: ['Unlimited orders', 'AI voice ordering', '24/7 support']
+  // Hardcoded features for each plan
+  const planFeatures = {
+    starter: ['Up to 500 orders/month', 'Basic customization', 'Email support', 'Online ordering', 'Basic analytics'],
+    professional: ['Up to 2,000 orders/month', 'Loyalty program', 'Priority support', 'Advanced analytics', 'Custom branding', 'POS integrations'],
+    enterprise: ['Unlimited orders', 'AI voice ordering', '24/7 support', 'White-label options', 'Custom integrations', 'Dedicated account manager']
+  }
+
+  // Fetch subscription plans from API
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setPlansLoading(true)
+        const response = await api.get('/subscriptions/plans')
+        const plans = response.data.map(plan => ({
+          id: plan.planId,
+          name: plan.name,
+          monthlyPrice: plan.monthlyPrice,
+          annualPrice: plan.annualPrice,
+          description: plan.description,
+          features: planFeatures[plan.planId] || [],
+          popular: plan.popular
+        }))
+        setSubscriptionPlans(plans)
+      } catch (error) {
+        console.error('Failed to fetch subscription plans:', error)
+        toast.error('Failed to load subscription plans')
+      } finally {
+        setPlansLoading(false)
+      }
     }
-  ]
+    
+    fetchPlans()
+  }, [])
 
   const nextStep = async () => {
     const isValid = await trigger()
@@ -130,7 +138,7 @@ const SignupPage = () => {
     setStep(step - 1)
   }
 
-  const onSubmit = async (data) => {
+  const handleStripeCheckout = async (data) => {
     setIsLoading(true)
     
     try {
@@ -141,7 +149,7 @@ const SignupPage = () => {
         .replace(/_+/g, '_')
         .replace(/^_|_$/g, '')
 
-      // Create flat tenant configuration matching backend SaaSProvisioningRequest
+      // Create flat tenant configuration for Stripe metadata
       const tenantConfig = {
         // Basic tenant info (flat structure as expected by backend)
         tenantSlug: tenantSlug,
@@ -193,29 +201,31 @@ const SignupPage = () => {
         marketingEmails: data.marketingEmails
       }
 
-      // Call backend API to provision tenant
-      const response = await api.post('/saas/provision-tenant', tenantConfig)
+      // Create Stripe checkout session
+      const response = await api.post('/subscriptions/create-checkout-session', {
+        planId: data.plan,
+        billingCycle: data.billingCycle,
+        email: data.email,
+        tenantData: tenantConfig
+      })
       
       if (response.data.success) {
-        toast.success('🎉 Your restaurant website is being created!')
-        
-        // Show success page or redirect
-        setStep(5) // Success step
-        
-        // Optional: Redirect to tenant site after delay
-        setTimeout(() => {
-          window.location.href = `https://${tenantConfig.domain}`
-        }, 3000)
+        // Redirect to Stripe Checkout
+        window.location.href = response.data.checkoutUrl
       } else {
-        throw new Error(response.data.message || 'Failed to create restaurant')
+        throw new Error(response.data.error || 'Failed to create checkout session')
       }
       
     } catch (error) {
-      console.error('Signup error:', error)
-      toast.error(error.response?.data?.message || 'Failed to create your restaurant. Please try again.')
-    } finally {
+      console.error('Checkout error:', error)
+      toast.error(error.response?.data?.error || 'Failed to create checkout session. Please try again.')
       setIsLoading(false)
     }
+  }
+
+  const onSubmit = async (data) => {
+    // Just go to payment step, don't provision yet
+    setStep(5)
   }
 
   const renderStep = () => {
@@ -564,7 +574,13 @@ const SignupPage = () => {
             </div>
             
             <div className="grid md:grid-cols-3 gap-6">
-              {pricingPlans.map((plan) => (
+              {plansLoading ? (
+                <div className="col-span-3 text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                  <p className="text-gray-600">Loading subscription plans...</p>
+                </div>
+              ) : (
+                subscriptionPlans.map((plan) => (
                 <Card 
                   key={plan.id} 
                   className={`cursor-pointer transition-all ${
@@ -597,7 +613,8 @@ const SignupPage = () => {
                     </ul>
                   </CardContent>
                 </Card>
-              ))}
+                ))
+              )}
             </div>
             
             {/* Hidden input for plan selection */}
@@ -658,6 +675,63 @@ const SignupPage = () => {
 
       case 5:
         return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment & Account Setup</h2>
+              <p className="text-gray-600">Complete your payment to create your restaurant website</p>
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-6">
+              <h3 className="text-lg font-medium text-blue-900 mb-4">Order Summary</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Plan: {watch('plan')} ({watch('billingCycle')})</span>
+                  <span className="font-medium">
+                    ${watch('billingCycle') === 'monthly' 
+                      ? pricingPlans.find(p => p.id === watch('plan'))?.monthlyPrice 
+                      : pricingPlans.find(p => p.id === watch('plan'))?.annualPrice
+                    }
+                  </span>
+                </div>
+                <div className="border-t pt-2 flex justify-between font-bold">
+                  <span>Total</span>
+                  <span>
+                    ${watch('billingCycle') === 'monthly' 
+                      ? pricingPlans.find(p => p.id === watch('plan'))?.monthlyPrice 
+                      : pricingPlans.find(p => p.id === watch('plan'))?.annualPrice
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Payment Information</h3>
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <p className="text-gray-600 mb-4">Payment integration would go here</p>
+                <Button
+                  type="button"
+                  onClick={() => handleStripeCheckout(watch())}
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  size="lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Redirecting to Stripe...
+                    </>
+                  ) : (
+                    'Subscribe & Create Restaurant'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 6:
+        return (
           <div className="text-center space-y-6">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
               <Check className="h-6 w-6 text-green-600" />
@@ -700,9 +774,9 @@ const SignupPage = () => {
                 </span>
               </div>
             </Link>
-            {step < 5 && (
+            {step < 6 && (
               <div className="text-sm text-gray-500">
-                Step {step} of 4
+                Step {step} of 5
               </div>
             )}
           </div>
@@ -710,14 +784,14 @@ const SignupPage = () => {
       </div>
 
       {/* Progress Bar */}
-      {step < 5 && (
+      {step < 6 && (
         <div className="bg-white border-b">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center py-4">
               <div className="flex-1 bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${(step / 4) * 100}%` }}
+                  style={{ width: `${(step / 5) * 100}%` }}
                 ></div>
               </div>
             </div>
@@ -733,7 +807,7 @@ const SignupPage = () => {
               {renderStep()}
               
               {/* Navigation Buttons */}
-              {step < 5 && (
+              {step < 6 && (
                 <div className="flex justify-between mt-8">
                   <Button
                     type="button"
@@ -751,22 +825,14 @@ const SignupPage = () => {
                     >
                       Next
                     </Button>
-                  ) : (
+                  ) : step === 4 ? (
                     <Button
                       type="submit"
-                      disabled={isLoading}
                       className="min-w-[140px]"
                     >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        'Create Restaurant'
-                      )}
+                      Review & Payment
                     </Button>
-                  )}
+                  ) : null}
                 </div>
               )}
             </form>
