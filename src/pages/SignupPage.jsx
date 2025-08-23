@@ -688,8 +688,8 @@ const SignupPage = () => {
                   <span>Plan: {watch('plan')} ({watch('billingCycle')})</span>
                   <span className="font-medium">
                     ${watch('billingCycle') === 'monthly' 
-                      ? pricingPlans.find(p => p.id === watch('plan'))?.monthlyPrice 
-                      : pricingPlans.find(p => p.id === watch('plan'))?.annualPrice
+                      ? subscriptionPlans.find(p => p.id === watch('plan'))?.monthlyPrice 
+                      : subscriptionPlans.find(p => p.id === watch('plan'))?.annualPrice
                     }
                   </span>
                 </div>
@@ -697,8 +697,8 @@ const SignupPage = () => {
                   <span>Total</span>
                   <span>
                     ${watch('billingCycle') === 'monthly' 
-                      ? pricingPlans.find(p => p.id === watch('plan'))?.monthlyPrice 
-                      : pricingPlans.find(p => p.id === watch('plan'))?.annualPrice
+                      ? subscriptionPlans.find(p => p.id === watch('plan'))?.monthlyPrice 
+                      : subscriptionPlans.find(p => p.id === watch('plan'))?.annualPrice
                     }
                   </span>
                 </div>
