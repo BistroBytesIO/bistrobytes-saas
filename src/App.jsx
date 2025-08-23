@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import SignupPage from './pages/SignupPage'
+import SignupSuccessPage from './pages/SignupSuccessPage'
 import toast, { Toaster } from 'react-hot-toast'
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signup-success" element={<SignupSuccessPage />} />
         </Routes>
         <Toaster
           position="top-center"
