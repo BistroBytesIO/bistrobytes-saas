@@ -18,6 +18,9 @@ import {
   Mail,
   MapPin
 } from 'lucide-react'
+import { Badge } from '../components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion'
 
 const LandingPage = () => {
   const [billingCycle, setBillingCycle] = useState('monthly')
@@ -189,6 +192,57 @@ const LandingPage = () => {
             </p>
           </div>
         </div>
+        <div className="pb-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center gap-8 opacity-60">
+              <div className="h-6 w-24 bg-gray-300 rounded" />
+              <div className="h-6 w-24 bg-gray-300 rounded" />
+              <div className="h-6 w-24 bg-gray-300 rounded" />
+              <div className="h-6 w-24 bg-gray-300 rounded" />
+              <div className="h-6 w-24 bg-gray-300 rounded" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-24 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900">How it works</h2>
+            <p className="text-gray-600">From hello to paid order in under a minute.</p>
+          </div>
+          <Tabs defaultValue="speak" className="w-full">
+            <div className="flex justify-center mb-6">
+              <TabsList>
+                <TabsTrigger tabValue="speak">Speak</TabsTrigger>
+                <TabsTrigger tabValue="confirm">Confirm</TabsTrigger>
+                <TabsTrigger tabValue="pay">Pay</TabsTrigger>
+                <TabsTrigger tabValue="track">Track</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent tabValue="speak">
+              <Card className="max-w-3xl mx-auto">
+                <CardContent className="p-8 text-center text-gray-700">Customer talks naturally; our AI understands items, modifiers, and quantities in real-time.</CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent tabValue="confirm">
+              <Card className="max-w-3xl mx-auto">
+                <CardContent className="p-8 text-center text-gray-700">AI reads back the order and subtotals; customer approves by voice or tap.</CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent tabValue="pay">
+              <Card className="max-w-3xl mx-auto">
+                <CardContent className="p-8 text-center text-gray-700">Pay with card on file, Apple Pay, or Google Pay — securely via Stripe.</CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent tabValue="track">
+              <Card className="max-w-3xl mx-auto">
+                <CardContent className="p-8 text-center text-gray-700">Live updates via WebSocket — prep, ready, and pickup notifications.</CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </section>
 
       {/* Features Section */}
@@ -262,9 +316,7 @@ const LandingPage = () => {
               <Card key={index} className={`relative card-hover ${plan.popular ? 'ring-2 ring-blue-600 shadow-xl scale-105' : 'shadow-lg'}`}>
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
+                    <Badge className="px-4 py-1 bg-blue-600 text-white">Most Popular</Badge>
                   </div>
                 )}
                 <CardHeader className="text-center">
@@ -331,6 +383,16 @@ const LandingPage = () => {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 bg-white">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900">Frequently asked questions</h2>
+          </div>
+          <FAQ />
         </div>
       </section>
 
@@ -404,3 +466,29 @@ const LandingPage = () => {
 }
 
 export default LandingPage
+
+// Simple FAQ using Accordion primitives without logic changes elsewhere
+const FAQ = () => {
+  const [open, setOpen] = React.useState(null)
+  const items = [
+    { q: 'How accurate is the voice ordering?', a: 'Our OpenAI-powered Realtime integration achieves high accuracy in restaurant contexts with sub-800ms latency for voice-to-voice.' },
+    { q: 'How long does setup take?', a: 'Most tenants are provisioned in minutes. You can go from signup to first order the same day.' },
+    { q: 'Which payments are supported?', a: 'Stripe, Apple Pay, Google Pay, and cards. Off-session payments are supported with saved methods.' },
+    { q: 'Can I connect my POS?', a: 'Yes, we offer one-click integrations with Clover and others. Menu sync and order push are supported.' },
+  ]
+  return (
+    <Accordion>
+      {items.map((it, idx) => (
+        <AccordionItem key={idx} value={`item-${idx}`}>
+          <AccordionTrigger onClick={() => setOpen(open === idx ? null : idx)}>
+            <span>{it.q}</span>
+            <span className="text-muted-foreground">{open === idx ? '−' : '+'}</span>
+          </AccordionTrigger>
+          <AccordionContent open={open === idx}>
+            <p className="text-gray-600">{it.a}</p>
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  )
+}

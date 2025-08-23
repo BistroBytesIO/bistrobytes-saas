@@ -2,20 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Check, Clock, ExternalLink, Mail, Settings } from 'lucide-react';
+import { Progress } from '../components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 
 const SignupSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const [sessionId] = useState(searchParams.get('session_id'));
   const [buildStatus, setBuildStatus] = useState('processing'); // processing, completed, failed
+  const [progress, setProgress] = useState(60);
 
   useEffect(() => {
-    // You could poll for build status here
-    // For now, we'll simulate a delay and set to completed
-    const timer = setTimeout(() => {
-      setBuildStatus('completed');
-    }, 3000);
-
-    return () => clearTimeout(timer);
+    // Simulate provisioning progress visually only
+    const t = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 95) return p
+        return p + 5
+      })
+    }, 400)
+    const timer = setTimeout(() => setBuildStatus('completed'), 3200)
+    return () => {
+      clearInterval(t)
+      clearTimeout(timer)
+    }
   }, []);
 
   return (
@@ -50,45 +59,27 @@ const SignupSuccessPage = () => {
           
           <CardContent className="space-y-6">
             {buildStatus === 'processing' ? (
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-6" aria-live="polite">
                 <p className="text-lg text-gray-600">
                   Thank you for your payment! We're now creating your custom restaurant website.
                 </p>
-                
-                <div className="bg-blue-50 rounded-lg p-6">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
-                    <span className="text-lg font-medium text-blue-900">Building Your Website...</span>
-                  </div>
-                  <p className="text-blue-700">
-                    This process typically takes 2-3 minutes. Please don't close this page.
-                  </p>
+                <div className="space-y-3">
+                  <Progress value={progress} />
+                  <p className="text-blue-700">Provisioning your tenant and building your site…</p>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                  <div className="bg-white border rounded-lg p-4">
-                    <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full mx-auto mb-3">
-                      <Check className="w-4 h-4 text-green-600" />
-                    </div>
-                    <h3 className="font-medium text-gray-900 mb-1">Payment Processed</h3>
-                    <p className="text-sm text-gray-600">Subscription activated successfully</p>
-                  </div>
-                  
-                  <div className="bg-white border rounded-lg p-4">
-                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full mx-auto mb-3">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <h3 className="font-medium text-gray-900 mb-1">Creating Website</h3>
-                    <p className="text-sm text-gray-600">Building your custom site</p>
-                  </div>
-                  
-                  <div className="bg-white border rounded-lg p-4">
-                    <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full mx-auto mb-3">
-                      <Mail className="w-4 h-4 text-gray-400" />
-                    </div>
-                    <h3 className="font-medium text-gray-900 mb-1">Setup Email</h3>
-                    <p className="text-sm text-gray-600">Instructions incoming</p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                  <Alert variant="success">
+                    <AlertTitle className="flex items-center gap-2"><Check className="h-4 w-4" /> Payment processed</AlertTitle>
+                    <AlertDescription>Subscription activated successfully</AlertDescription>
+                  </Alert>
+                  <Alert variant="info">
+                    <AlertTitle className="flex items-center gap-2"><Clock className="h-4 w-4" /> Creating website</AlertTitle>
+                    <AlertDescription>Building your custom site</AlertDescription>
+                  </Alert>
+                  <Alert>
+                    <AlertTitle className="flex items-center gap-2"><Mail className="h-4 w-4" /> Setup email</AlertTitle>
+                    <AlertDescription>Instructions incoming</AlertDescription>
+                  </Alert>
                 </div>
               </div>
             ) : (
@@ -150,8 +141,9 @@ const SignupSuccessPage = () => {
             
             {sessionId && (
               <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">
-                  <strong>Session ID:</strong> {sessionId}
+                <p className="text-sm text-gray-600 flex items-center gap-2">
+                  <strong>Session:</strong>
+                  <Badge variant="outline">{sessionId.slice(0, 16)}…</Badge>
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Save this for your records. Contact support if you need assistance.

@@ -4,7 +4,12 @@ import { useForm, Controller } from 'react-hook-form'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
-import { ArrowLeft, Check, AlertCircle, Loader2 } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { ArrowLeft, Check, AlertCircle, Loader2, Info } from 'lucide-react'
+import { Label } from '../components/ui/label'
+import { Select } from '../components/ui/select'
+import { Tooltip } from '../components/ui/tooltip'
+import { Skeleton } from '../components/ui/skeleton'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
 
@@ -240,7 +245,7 @@ const SignupPage = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Restaurant Name *</label>
+                <Label className="mb-1 block">Restaurant Name *</Label>
                 <Input
                   {...register('restaurantName', { required: 'Restaurant name is required' })}
                   placeholder="Pizza Palace"
@@ -252,32 +257,32 @@ const SignupPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Business Type *</label>
-                <select
+                <Label className="mb-1 block">Business Type *</Label>
+                <Select
                   {...register('businessType', { required: 'Business type is required' })}
-                  className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className=""
                 >
                   {businessTypes.map(type => (
                     <option key={type.value} value={type.value}>{type.label}</option>
                   ))}
-                </select>
+                </Select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cuisine Type</label>
-                <select
+                <Label className="mb-1 block">Cuisine Type</Label>
+                <Select
                   {...register('cuisine')}
-                  className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className=""
                 >
                   <option value="">Select cuisine...</option>
                   {cuisineTypes.map(cuisine => (
                     <option key={cuisine} value={cuisine}>{cuisine}</option>
                   ))}
-                </select>
+                </Select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Website URL (optional)</label>
+                <Label className="mb-1 block">Website URL (optional)</Label>
                 <Input
                   {...register('websiteUrl')}
                   placeholder="https://pizzapalace.com"
@@ -286,7 +291,7 @@ const SignupPage = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <Label className="mb-1 block">Description</Label>
               <textarea
                 {...register('description')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -307,7 +312,7 @@ const SignupPage = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Owner/Manager Name *</label>
+                <Label className="mb-1 block">Owner/Manager Name *</Label>
                 <Input
                   {...register('ownerName', { required: 'Owner name is required' })}
                   placeholder="John Smith"
@@ -319,7 +324,7 @@ const SignupPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                <Label className="mb-1 block">Email Address *</Label>
                 <Input
                   type="email"
                   {...register('email', { 
@@ -338,7 +343,7 @@ const SignupPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                <Label className="mb-1 block">Phone Number *</Label>
                 <Input
                   {...register('phone', { required: 'Phone number is required' })}
                   placeholder="+1 (555) 123-4567"
@@ -354,7 +359,7 @@ const SignupPage = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Restaurant Address</h3>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
+                  <Label className="mb-1 block">Street Address *</Label>
                   <Input
                     {...register('address', { required: 'Address is required' })}
                     placeholder="123 Main Street"
@@ -367,7 +372,7 @@ const SignupPage = () => {
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                    <Label className="mb-1 block">City *</Label>
                     <Input
                       {...register('city', { required: 'City is required' })}
                       placeholder="New York"
@@ -376,7 +381,7 @@ const SignupPage = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                    <Label className="mb-1 block">State *</Label>
                     <Input
                       {...register('state', { required: 'State is required' })}
                       placeholder="NY"
@@ -385,7 +390,7 @@ const SignupPage = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">ZIP Code *</label>
+                    <Label className="mb-1 block">ZIP Code *</Label>
                     <Input
                       {...register('zipCode', { required: 'ZIP code is required' })}
                       placeholder="10001"
@@ -394,14 +399,14 @@ const SignupPage = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                    <select
+                    <Label className="mb-1 block">Country</Label>
+                    <Select
                       {...register('country')}
-                      className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className=""
                     >
                       <option value="United States">United States</option>
                       <option value="Canada">Canada</option>
-                    </select>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -419,7 +424,7 @@ const SignupPage = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Opening Time</label>
+                <Label className="mb-1 block">Opening Time</Label>
                 <Input
                   type="time"
                   {...register('openTime')}
@@ -427,7 +432,7 @@ const SignupPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Closing Time</label>
+                <Label className="mb-1 block">Closing Time</Label>
                 <Input
                   type="time"
                   {...register('closeTime')}
@@ -435,31 +440,36 @@ const SignupPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
-                <select
+                <Label className="mb-1 block">Timezone</Label>
+                <Select
                   {...register('timezone')}
-                  className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className=""
                 >
                   <option value="America/New_York">Eastern Time</option>
                   <option value="America/Chicago">Central Time</option>
                   <option value="America/Denver">Mountain Time</option>
                   <option value="America/Los_Angeles">Pacific Time</option>
-                </select>
+                </Select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                <select
+                <Label className="mb-1 block">Currency</Label>
+                <Select
                   {...register('currency')}
-                  className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className=""
                 >
                   <option value="USD">USD ($)</option>
                   <option value="CAD">CAD ($)</option>
-                </select>
+                </Select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
+                <div className="flex items-center gap-2">
+                  <Label className="mb-1 block">Tax Rate (%)</Label>
+                  <Tooltip content="Typical restaurant sales tax e.g. 8.875% in NYC">
+                    <Info className="h-4 w-4 text-muted-foreground" aria-hidden />
+                  </Tooltip>
+                </div>
                 <Input
                   type="number"
                   step="0.001"
@@ -469,7 +479,12 @@ const SignupPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Service Fee Rate (%)</label>
+                <div className="flex items-center gap-2">
+                  <Label className="mb-1 block">Service Fee Rate (%)</Label>
+                  <Tooltip content="Optional service fee for online orders">
+                    <Info className="h-4 w-4 text-muted-foreground" aria-hidden />
+                  </Tooltip>
+                </div>
                 <Input
                   type="number"
                   step="0.1"
@@ -479,7 +494,7 @@ const SignupPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Amount</label>
+                <Label className="mb-1 block">Minimum Order Amount</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -707,6 +722,19 @@ const SignupPage = () => {
             
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Payment Information</h3>
+              {/* Plans loading state (visual only) */}
+              {plansLoading && (
+                <div className="mb-3">
+                  <Skeleton className="h-6 w-40 mb-2" />
+                  <Skeleton className="h-4 w-64" />
+                </div>
+              )}
+              <Alert variant="info" className="flex items-start gap-3">
+                <div>
+                  <AlertTitle>Secure checkout via Stripe</AlertTitle>
+                  <AlertDescription>You'll be redirected to Stripe to complete your subscription. After payment, you will return here while we provision your tenant.</AlertDescription>
+                </div>
+              </Alert>
               <div className="bg-gray-50 rounded-lg p-4 text-center">
                 <p className="text-gray-600 mb-4">Payment integration would go here</p>
                 <Button
