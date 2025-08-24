@@ -19,7 +19,33 @@ const SignupPage = () => {
   const [selectedPlan, setSelectedPlan] = useState('professional')
   const [subscriptionPlans, setSubscriptionPlans] = useState([])
   const [plansLoading, setPlansLoading] = useState(true)
+  const [generateLogo, setGenerateLogo] = useState(false)
+  const [logoFile, setLogoFile] = useState(null)
+  const [logoPreview, setLogoPreview] = useState('')
   const navigate = useNavigate()
+
+  // Logo handling functions
+  const handleLogoUpload = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      setLogoFile(file)
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file)
+      setLogoPreview(previewUrl)
+      
+      // Clear generate logo if user uploads
+      setGenerateLogo(false)
+    }
+  }
+
+  const handleGenerateLogoToggle = (checked) => {
+    setGenerateLogo(checked)
+    if (checked) {
+      // Clear uploaded logo if generating
+      setLogoFile(null)
+      setLogoPreview('')
+    }
+  }
   
   const { register, handleSubmit, control, watch, formState: { errors }, trigger } = useForm({
     defaultValues: {
@@ -192,6 +218,8 @@ const SignupPage = () => {
         primaryColor: data.primaryColor,
         secondaryColor: data.secondaryColor,
         logoUrl: data.logoUrl,
+        generateLogo: generateLogo,
+        logoFileName: logoFile?.name || null,
         
         // Plan (flat field)
         plan: data.plan,
@@ -635,27 +663,102 @@ const SignupPage = () => {
             {/* Hidden input for plan selection */}
             <input type="hidden" {...register('plan')} />
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Customization</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Primary Brand Color</label>
-                    <Input
-                      type="color"
-                      {...register('primaryColor')}
-                      className="h-12"
-                    />
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Visual Branding</h3>
+                
+                {/* Logo Section */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Restaurant Logo</label>
+                  <div className="space-y-4">
+                    {/* Generate Logo Toggle */}
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id="generateLogo"
+                        checked={generateLogo}
+                        onChange={(e) => handleGenerateLogoToggle(e.target.checked)}
+                        className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                      />
+                      <label htmlFor="generateLogo" className="text-sm text-gray-700 cursor-pointer">
+                        Don't have one, create me one! 🎨
+                      </label>
+                    </div>
+
+                    {/* Logo Upload (shown when not generating) */}
+                    {!generateLogo && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-center w-full">
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              {logoPreview ? (
+                                <img src={logoPreview} alt="Logo preview" className="h-16 w-16 object-contain mb-2" />
+                              ) : (
+                                <>
+                                  <svg className="w-8 h-8 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                  </svg>
+                                  <p className="text-xs text-gray-500">
+                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={handleLogoUpload}
+                            />
+                          </label>
+                        </div>
+                        {logoPreview && (
+                          <p className="text-xs text-green-600 text-center">✓ Logo uploaded successfully</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Generate Logo Info (shown when generating) */}
+                    {generateLogo && (
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center space-x-2">
+                          <div className="h-4 w-4 bg-blue-600 rounded-full flex items-center justify-center">
+                            <svg className="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 8 8">
+                              <path d="M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z" />
+                            </svg>
+                          </div>
+                          <p className="text-sm text-blue-800">
+                            We'll generate a custom logo for <strong>{watch('restaurantName') || 'your restaurant'}</strong> using AI based on your cuisine and style preferences.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Secondary Color</label>
-                    <Input
-                      type="color"
-                      {...register('secondaryColor')}
-                      className="h-12"
-                    />
+                </div>
+
+                {/* Brand Colors */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Brand Colors</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Primary Color</label>
+                      <Input
+                        type="color"
+                        {...register('primaryColor')}
+                        className="h-12"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Secondary Color</label>
+                      <Input
+                        type="color"
+                        {...register('secondaryColor')}
+                        className="h-12"
+                      />
+                    </div>
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">These colors will be used throughout your restaurant's website theme.</p>
                 </div>
               </div>
               
