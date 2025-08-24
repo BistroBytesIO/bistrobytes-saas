@@ -22,6 +22,9 @@ const SignupPage = () => {
   const [generateLogo, setGenerateLogo] = useState(false)
   const [logoFile, setLogoFile] = useState(null)
   const [logoPreview, setLogoPreview] = useState('')
+  const [logoPrompt, setLogoPrompt] = useState('')
+  const [colorScheme, setColorScheme] = useState('warm and appetizing')
+  const [logoStyle, setLogoStyle] = useState('modern')
   const navigate = useNavigate()
 
   // Logo handling functions
@@ -84,6 +87,9 @@ const SignupPage = () => {
       secondaryColor: '#F59E0B',
       logoUrl: '',
       websiteUrl: '',
+      logoPrompt: '',
+      colorScheme: 'warm and appetizing',
+      logoStyle: 'modern',
       
       // Features & Plan
       plan: 'professional',
@@ -220,6 +226,9 @@ const SignupPage = () => {
         logoUrl: data.logoUrl,
         generateLogo: generateLogo,
         logoFileName: logoFile?.name || null,
+        logoPrompt: generateLogo ? logoPrompt : null,
+        colorScheme: generateLogo ? colorScheme : null,
+        logoStyle: generateLogo ? logoStyle : null,
         
         // Plan (flat field)
         plan: data.plan,
@@ -693,7 +702,63 @@ const SignupPage = () => {
                         Don't have one, create me one! 🎨
                       </label>
                     </div>
-
+                    
+                    {/* Logo Generation Options (shown when generating) */}
+                    {generateLogo && (
+                      <div className="space-y-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+                        <h4 className="text-sm font-medium text-purple-900">AI Logo Generation Options</h4>
+                        
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-2">Custom Logo Description (Optional)</label>
+                          <textarea
+                            value={logoPrompt}
+                            onChange={(e) => setLogoPrompt(e.target.value)}
+                            placeholder="e.g. A modern pizza slice with flames, vibrant red and gold colors, clean typography"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            rows={3}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Leave blank to auto-generate based on your restaurant details</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Color Scheme</label>
+                            <select
+                              value={colorScheme}
+                              onChange={(e) => setColorScheme(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="warm and appetizing">Warm & Appetizing</option>
+                              <option value="cool and professional">Cool & Professional</option>
+                              <option value="vibrant and energetic">Vibrant & Energetic</option>
+                              <option value="elegant and sophisticated">Elegant & Sophisticated</option>
+                              <option value="rustic and earthy">Rustic & Earthy</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Style</label>
+                            <select
+                              value={logoStyle}
+                              onChange={(e) => setLogoStyle(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="modern">Modern</option>
+                              <option value="vintage">Vintage</option>
+                              <option value="minimalist">Minimalist</option>
+                              <option value="playful">Playful</option>
+                              <option value="luxury">Luxury</option>
+                              <option value="hand-drawn">Hand-drawn</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
+                          ℹ️ Your logo will be automatically generated after payment and included in your restaurant website.
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Logo Upload (shown when not generating) */}
                     {!generateLogo && (
                       <div className="space-y-3">
