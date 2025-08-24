@@ -579,6 +579,7 @@ const SignupPage = () => {
         )
 
       case 4:
+        console.log('Rendering step 4 - Plan Selection with Visual Branding')
         return (
           <div className="space-y-6">
             <div>
@@ -663,9 +664,10 @@ const SignupPage = () => {
             {/* Hidden input for plan selection */}
             <input type="hidden" {...register('plan')} />
             
-            <div className="space-y-6">
+            <div className="space-y-6 border-4 border-red-500 p-6 bg-red-50">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Visual Branding</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">🎨 Visual Branding (TEST SECTION)</h3>
+                {console.log('Visual Branding section is rendering')}
                 
                 {/* Logo Section */}
                 <div className="mb-6">
