@@ -257,8 +257,13 @@ const SignupPage = () => {
   }
 
   const onSubmit = async (data) => {
-    // Just go to payment step, don't provision yet
-    setStep(5)
+    if (step === 5) {
+      // Only trigger Stripe checkout on the final step
+      await handleStripeCheckout(data)
+    } else {
+      // For other steps, just move to the next step
+      setStep(step + 1)
+    }
   }
 
   const renderStep = () => {
@@ -664,9 +669,11 @@ const SignupPage = () => {
             {/* Hidden input for plan selection */}
             <input type="hidden" {...register('plan')} />
             
-            <div className="space-y-6 border-4 border-red-500 p-6 bg-red-50">
+            {/* Visual Branding Section - Prominent Display */}
+            <div className="mt-8 space-y-6 border-4 border-blue-500 p-6 bg-blue-50 rounded-lg">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">🎨 Visual Branding (TEST SECTION)</h3>
+                <h3 className="text-xl font-bold text-blue-900 mb-2">🎨 Customize Your Brand</h3>
+                <p className="text-blue-700 text-sm mb-4">Make your restaurant website uniquely yours with custom branding.</p>
                 {console.log('Visual Branding section is rendering')}
                 
                 {/* Logo Section */}
@@ -960,10 +967,18 @@ const SignupPage = () => {
                     </Button>
                   ) : step === 4 ? (
                     <Button
+                      type="button"
+                      onClick={() => setStep(5)}
+                      className="min-w-[140px]"
+                    >
+                      Continue to Payment
+                    </Button>
+                  ) : step === 5 ? (
+                    <Button
                       type="submit"
                       className="min-w-[140px]"
                     >
-                      Review & Payment
+                      Subscribe & Create Restaurant
                     </Button>
                   ) : null}
                 </div>
