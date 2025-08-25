@@ -30,15 +30,32 @@ const SignupPage = () => {
   // Logo handling functions
   const handleLogoUpload = (event) => {
     const file = event.target.files[0]
-    if (file) {
-      setLogoFile(file)
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file)
-      setLogoPreview(previewUrl)
-      
-      // Clear generate logo if user uploads
-      setGenerateLogo(false)
+    if (!file) return
+    setLogoFile(file)
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file)
+    setLogoPreview(previewUrl)
+    // Read as base64 data URL and set into form so backend can persist
+    const reader = new FileReader()
+    reader.onload = () => {
+      const base64 = reader.result
+      // Lazily add logoUrl into form values; backend will persist this
+      try {
+        // setValue may not be available if not destructured; guard at runtime
+        if (typeof setValue === 'function') {
+          setValue('logoUrl', base64, { shouldValidate: false })
+        }
+      } catch (e) {
+        // no-op
+      }
+      // Also keep in local state in case we need it during submit
+      // eslint-disable-next-line no-undef
+      setLogoBase64 && setLogoBase64(base64)
     }
+    reader.onerror = () => console.error('Failed to read logo file')
+    reader.readAsDataURL(file)
+    // Clear generate logo if user uploads
+    setGenerateLogo(false)
   }
 
   const handleGenerateLogoToggle = (checked) => {
@@ -50,7 +67,7 @@ const SignupPage = () => {
     }
   }
   
-  const { register, handleSubmit, control, watch, formState: { errors }, trigger } = useForm({
+  const { register, handleSubmit, control, watch, formState: { errors }, trigger, setValue } = useForm({
     defaultValues: {
       // Business Information
       restaurantName: '',
