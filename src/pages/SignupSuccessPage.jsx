@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import api from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Check, Clock, ExternalLink, Mail, Settings } from 'lucide-react';
 import { Progress } from '../components/ui/progress';
@@ -9,23 +10,35 @@ import { Badge } from '../components/ui/badge';
 const SignupSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const [sessionId] = useState(searchParams.get('session_id'));
-  const [buildStatus, setBuildStatus] = useState('processing'); // processing, completed, failed
-  const [progress, setProgress] = useState(60);
+  const [buildStatus, setBuildStatus] = useState('processing'); // processing, provisioned, error
+  const [progress, setProgress] = useState(10);
+  const [tenantSlug, setTenantSlug] = useState('');
+  const [domain, setDomain] = useState('');
 
   useEffect(() => {
-    // Simulate provisioning progress visually only
-    const t = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 95) return p
-        return p + 5
-      })
-    }, 400)
-    const timer = setTimeout(() => setBuildStatus('completed'), 3200)
-    return () => {
-      clearInterval(t)
-      clearTimeout(timer)
-    }
-  }, []);
+    let poll;
+    const pollStatus = async () => {
+      try {
+        if (!sessionId) return;
+        const res = await api.get(`/subscriptions/checkout-result`, { params: { session_id: sessionId } });
+        const { status, tenantSlug, domain } = res.data || {};
+        if (tenantSlug) setTenantSlug(tenantSlug);
+        if (domain) setDomain(domain);
+        setBuildStatus(status || 'processing');
+        setProgress((p) => (p < 95 ? p + 5 : p));
+        if (status !== 'provisioned') return; // keep polling until ready
+        clearInterval(poll);
+        setProgress(100);
+      } catch (e) {
+        // keep polling, but cap progress
+        setProgress((p) => (p < 90 ? p + 2 : p));
+      }
+    };
+    // initial call and poll every 1.5s
+    pollStatus();
+    poll = setInterval(pollStatus, 1500);
+    return () => clearInterval(poll);
+  }, [sessionId]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -46,7 +59,7 @@ const SignupSuccessPage = () => {
         <Card className="shadow-lg">
           <CardHeader className="text-center pb-4">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-              {buildStatus === 'processing' ? (
+              {buildStatus !== 'provisioned' ? (
                 <Clock className="h-8 w-8 text-blue-600 animate-pulse" />
               ) : (
                 <Check className="h-8 w-8 text-green-600" />
@@ -58,7 +71,7 @@ const SignupSuccessPage = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
-            {buildStatus === 'processing' ? (
+              {buildStatus !== 'provisioned' ? (
               <div className="text-center space-y-6" aria-live="polite">
                 <p className="text-lg text-gray-600">
                   Thank you for your payment! We're now creating your custom restaurant website.
@@ -120,7 +133,9 @@ const SignupSuccessPage = () => {
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <a
-                    href="https://your-restaurant.bistrobytes.app" // This would be dynamic
+                    href={domain
+                      ? `https://${domain}`
+                      : `${window.location.protocol}//${tenantSlug || 'demo'}.localhost:5173`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"

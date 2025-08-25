@@ -90,6 +90,9 @@ const SignupPage = () => {
       logoPrompt: '',
       colorScheme: 'warm and appetizing',
       logoStyle: 'modern',
+      heroImage1: '',
+      heroImage2: '',
+      heroImage3: '',
       
       // Features & Plan
       plan: 'professional',
@@ -229,6 +232,9 @@ const SignupPage = () => {
         logoPrompt: generateLogo ? logoPrompt : null,
         colorScheme: generateLogo ? colorScheme : null,
         logoStyle: generateLogo ? logoStyle : null,
+        heroImage1: data.heroImage1 || null,
+        heroImage2: data.heroImage2 || null,
+        heroImage3: data.heroImage3 || null,
         
         // Plan (flat field)
         plan: data.plan,
@@ -791,6 +797,26 @@ const SignupPage = () => {
                         )}
                       </div>
                     )}
+
+                    {/* Optional Hero Images URLs */}
+                    <div className="mt-6">
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Homepage Hero Images (optional)</h4>
+                      <p className="text-xs text-gray-600 mb-3">Provide up to 3 image URLs for your homepage hero/slider. You can skip this now and add later.</p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Hero Image 1 URL</label>
+                          <Input {...register('heroImage1')} placeholder="https://example.com/hero1.jpg" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Hero Image 2 URL</label>
+                          <Input {...register('heroImage2')} placeholder="https://example.com/hero2.jpg" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Hero Image 3 URL</label>
+                          <Input {...register('heroImage3')} placeholder="https://example.com/hero3.jpg" />
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Generate Logo Info (shown when generating) */}
                     {generateLogo && (
