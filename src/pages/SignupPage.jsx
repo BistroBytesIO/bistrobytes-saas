@@ -74,6 +74,7 @@ const SignupPage = () => {
       businessType: 'restaurant',
       cuisine: '',
       description: '',
+      heroTagline: '',
       
       // Contact Information
       ownerName: '',
@@ -217,6 +218,7 @@ const SignupPage = () => {
         businessType: data.businessType,
         cuisine: data.cuisine,
         description: data.description,
+        heroTagline: data.heroTagline,
         
         // Contact information (flat fields)
         ownerName: data.ownerName,
@@ -361,8 +363,20 @@ const SignupPage = () => {
                 {...register('description')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
-                placeholder="Tell customers about your restaurant..."
+                placeholder="Tell customers about your restaurant's story, cuisine, and unique features..."
               />
+            </div>
+            
+            <div>
+              <Label className="mb-1 block">Hero Section Tagline</Label>
+              <Input
+                {...register('heroTagline')}
+                placeholder="e.g., 'Authentic Italian cuisine made with love' or 'New York's best pizza since 1985'"
+                className="w-full"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                A catchy one-liner that will be the first thing customers see on your homepage
+              </p>
             </div>
           </div>
         )
