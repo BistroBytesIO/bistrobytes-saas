@@ -133,9 +133,14 @@ const SignupSuccessPage = () => {
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <a
-                    href={domain
-                      ? `https://${domain}`
-                      : `${window.location.protocol}//${tenantSlug || 'demo'}.localhost:5173`}
+                    href={
+                      // Always use localhost during development
+                      import.meta.env.DEV || window.location.hostname === 'localhost'
+                        ? `http://${tenantSlug || 'demo'}.localhost:5173`
+                        : domain 
+                          ? `https://${domain}`
+                          : `${window.location.protocol}//${tenantSlug || 'demo'}.localhost:5173`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
