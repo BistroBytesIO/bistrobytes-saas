@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,7 @@ function PasswordSetupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [tokenValid, setTokenValid] = useState(null);
   const [isVerifyingToken, setIsVerifyingToken] = useState(true);
+  const toastShownRef = useRef(false);
 
   // Verify token on component mount
   useEffect(() => {
@@ -50,7 +51,11 @@ function PasswordSetupPage() {
         console.error('Missing tenant ID in setup URL');
         setTokenValid(false);
         setIsVerifyingToken(false);
-        toast.error('Invalid setup link - missing tenant information');
+        // Only show toast once
+        if (!toastShownRef.current) {
+          toast.error('Invalid setup link - missing tenant information');
+          toastShownRef.current = true;
+        }
         return;
       }
 
@@ -60,15 +65,27 @@ function PasswordSetupPage() {
         
         if (!tokenResult.isValid) {
           setTokenValid(false);
-          toast.error('Invalid setup token');
+          // Only show toast once
+          if (!toastShownRef.current) {
+            toast.error('Invalid setup token');
+            toastShownRef.current = true;
+          }
         } else {
           setTokenValid(true);
-          toast.success('Setup token verified successfully');
+          // Only show toast once
+          if (!toastShownRef.current) {
+            toast.success('Setup token verified successfully');
+            toastShownRef.current = true;
+          }
         }
       } catch (error) {
         console.error('Token verification error:', error);
         setTokenValid(false);
-        toast.error('Failed to verify setup token');
+        // Only show toast once
+        if (!toastShownRef.current) {
+          toast.error('Failed to verify setup token');
+          toastShownRef.current = true;
+        }
       } finally {
         setIsVerifyingToken(false);
       }
