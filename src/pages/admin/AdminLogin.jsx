@@ -29,6 +29,7 @@ function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showTenantField, setShowTenantField] = useState(!tenantId);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('admin_remember') === 'true');
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -43,6 +44,19 @@ function AdminLogin() {
       toast.success(location.state.message);
     }
   }, [setupSuccess, location.state]);
+
+  // Prefill from remembered values
+  useEffect(() => {
+    if (rememberMe) {
+      const lastEmail = localStorage.getItem('admin_last_email');
+      const lastTenant = localStorage.getItem('admin_last_tenant');
+      setFormData(prev => ({
+        ...prev,
+        email: lastEmail || prev.email,
+        tenantId: prev.tenantId || lastTenant || ''
+      }));
+    }
+  }, [rememberMe]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -68,7 +82,18 @@ function AdminLogin() {
       await login(formData.email, formData.password, formData.tenantId);
       
       toast.success('Login successful! Welcome back.');
-      
+
+      // Remember selections
+      if (rememberMe) {
+        localStorage.setItem('admin_remember', 'true');
+        localStorage.setItem('admin_last_email', formData.email);
+        localStorage.setItem('admin_last_tenant', formData.tenantId);
+      } else {
+        localStorage.removeItem('admin_remember');
+        localStorage.removeItem('admin_last_email');
+        localStorage.removeItem('admin_last_tenant');
+      }
+
       // Redirect to the intended page or dashboard
       const redirectTo = location.state?.from?.pathname || '/admin/dashboard';
       navigate(redirectTo);
@@ -215,6 +240,21 @@ function AdminLogin() {
 
           {/* Back to Home Link */}
           <div className="mt-6 text-center">
+            {/* Remember me + Forgot password */}
+            <div className="flex items-center justify-between mb-3">
+              <label className="flex items-center text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                  className="h-4 w-4 text-blue-600 rounded border-gray-300 mr-2"
+                />
+                Remember me
+              </label>
+              <Button variant="link" className="text-sm" onClick={() => navigate('/admin/forgot-password')}>
+                Forgot password?
+              </Button>
+            </div>
             <Button 
               variant="ghost" 
               onClick={() => navigate('/')}

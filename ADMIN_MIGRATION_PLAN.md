@@ -100,16 +100,16 @@ Migrate the complete admin dashboard functionality from `bistro-template` to `bi
 
 ### Phase 4: Enhanced SaaS Features
 - [ ] **Restaurant Profile Management**
-  - [ ] Add restaurant settings and profile management
-  - [ ] Implement business hours configuration
-  - [ ] Create contact information management
-  - [ ] Add restaurant branding customization
-  - [ ] Implement location/address management
+  - [x] Add restaurant settings and profile management (UI scaffold)
+  - [x] Implement business hours configuration (UI scaffold)
+  - [x] Create contact information management (UI scaffold)
+  - [x] Add restaurant branding customization (UI scaffold)
+  - [x] Implement location/address management (placeholder)
 
 - [ ] **Admin Login System**
   - [ ] Create `pages/admin/AdminLogin.jsx` with proper tenant routing
-  - [ ] Implement remember me functionality
-  - [ ] Add forgot password flow
+  - [x] Implement remember me functionality (prefill email/tenant)
+  - [x] Add forgot password flow (UI + route)
   - [ ] Create admin session management
   - [ ] Add login attempt limiting
 

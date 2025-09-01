@@ -14,6 +14,8 @@ import AdminMenu from './pages/admin/AdminMenu'
 import Unauthorized from './pages/admin/Unauthorized'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 import toast, { Toaster } from 'react-hot-toast'
+import AdminSettings from './pages/admin/AdminSettings'
+import ForgotPassword from './pages/admin/ForgotPassword'
 
 function App() {
   return (
@@ -29,6 +31,7 @@ function App() {
             {/* Admin Routes */}
             <Route path="/admin/setup-password/:token" element={<PasswordSetupPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/forgot-password" element={<ForgotPassword />} />
             <Route path="/admin/unauthorized" element={<Unauthorized />} />
             
             {/* Protected Admin Routes */}
@@ -69,6 +72,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminMenu />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/settings" 
+              element={
+                <ProtectedRoute>
+                  <AdminSettings />
                 </ProtectedRoute>
               } 
             />

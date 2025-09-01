@@ -222,4 +222,25 @@ export const adminApiUtils = {
   deleteMenuItem: function (itemId) { return this.withRetry(() => adminApi.delete(adminEndpoints.menu.delete(itemId))); }
 };
 
+// Settings utilities (Phase 4)
+adminApiUtils.getRestaurantProfile = function () {
+  return this.withRetry(() => adminApi.get(adminEndpoints.restaurant.profile));
+};
+
+adminApiUtils.updateRestaurantProfile = function (data) {
+  return this.withRetry(() => adminApi.put(adminEndpoints.restaurant.profile, data));
+};
+
+adminApiUtils.getBusinessHours = function () {
+  return this.withRetry(() => adminApi.get(adminEndpoints.restaurant.hours));
+};
+
+adminApiUtils.updateBusinessHours = function (data) {
+  return this.withRetry(() => adminApi.put(adminEndpoints.restaurant.hours, data));
+};
+
+adminApiUtils.updateRestaurantSettings = function (data) {
+  return this.withRetry(() => adminApi.put(adminEndpoints.restaurant.settings, data));
+};
+
 export default adminApi;
