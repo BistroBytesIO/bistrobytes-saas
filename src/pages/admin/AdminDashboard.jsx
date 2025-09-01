@@ -99,7 +99,7 @@ function AdminDashboard() {
     }
   };
 
-  const { isConnected, connectionError } = useWebSocket(
+  const { isConnected, connectionError, testConnection } = useWebSocket(
     baseUrl,
     handleWebSocketMessage,
     true,
@@ -257,6 +257,26 @@ function AdminDashboard() {
             >
               <RefreshCw size={16} />
               Refresh Data
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  const res = await testConnection();
+                  if (res?.success) {
+                    toast.success('WebSocket test message sent');
+                  } else {
+                    toast.error('WebSocket test failed');
+                  }
+                } catch (e) {
+                  toast.error('WebSocket test failed');
+                }
+              }}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Wifi size={16} />
+              Test WS
             </Button>
           </div>
         </div>

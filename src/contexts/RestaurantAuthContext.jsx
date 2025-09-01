@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import api from '@/lib/api';
 
 const RestaurantAuthContext = createContext();
@@ -15,6 +15,20 @@ export const RestaurantAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const logoutTimerRef = useRef(null);
+
+  const decodeJwt = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  };
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -97,6 +111,9 @@ export const RestaurantAuthProvider = ({ children }) => {
       // Fetch restaurant data if available
       await fetchRestaurantData();
 
+      // Set auto logout timer if token has exp
+      setupAutoLogout(userData.token);
+
       return userData;
     } catch (error) {
       console.error('Login error:', error);
@@ -118,6 +135,12 @@ export const RestaurantAuthProvider = ({ children }) => {
     // Clear axios default headers
     delete api.defaults.headers.common['Authorization'];
     delete api.defaults.headers.common['X-Tenant-Id'];
+
+    // Clear any logout timers
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+      logoutTimerRef.current = null;
+    }
     
     // Navigate to login page
     if (navigate) {
@@ -203,14 +226,32 @@ export const RestaurantAuthProvider = ({ children }) => {
   const validateSession = async () => {
     if (!user?.token) return false;
 
-    try {
-      // Make a test request to validate the session
-      const response = await api.get('/auth/validate');
-      return response.status === 200;
-    } catch (error) {
-      console.error('Session validation failed:', error);
-      return false;
+    // Prefer client-side validation based on JWT exp
+    const payload = decodeJwt(user.token);
+    if (payload?.exp) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      if (payload.exp <= nowSec) {
+        console.warn('Session expired based on token exp');
+        return false;
+      }
+      return true;
     }
+    // If no exp claim, assume valid and rely on API failures to prompt logout
+    return true;
+  };
+
+  const setupAutoLogout = (token) => {
+    if (!token) return;
+    const payload = decodeJwt(token);
+    if (!payload?.exp) return;
+    const nowMs = Date.now();
+    const expMs = payload.exp * 1000;
+    const timeout = Math.max(0, expMs - nowMs);
+    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+    logoutTimerRef.current = setTimeout(() => {
+      console.warn('Auto-logout: token expired');
+      logout();
+    }, timeout);
   };
 
   const contextValue = {

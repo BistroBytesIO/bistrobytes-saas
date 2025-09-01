@@ -76,6 +76,10 @@ function AdminSettings() {
   }, [updateRestaurantData]);
 
   const handleSaveProfile = async () => {
+    if (!profile.name?.trim()) {
+      toast.error('Restaurant name is required');
+      return;
+    }
     setSaving(true);
     try {
       await adminApiUtils.updateRestaurantProfile(profile);
@@ -89,6 +93,10 @@ function AdminSettings() {
   };
 
   const handleSaveContact = async () => {
+    if (contact.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contact.email)) {
+      toast.error('Please provide a valid email address');
+      return;
+    }
     setSaving(true);
     try {
       await adminApiUtils.updateRestaurantSettings({ contact });
@@ -101,6 +109,10 @@ function AdminSettings() {
   };
 
   const handleSaveBranding = async () => {
+    if (branding.logoUrl && !/^https?:\/\//i.test(branding.logoUrl)) {
+      toast.error('Logo URL must start with http or https');
+      return;
+    }
     setSaving(true);
     try {
       await adminApiUtils.updateRestaurantSettings({ branding });
@@ -316,4 +328,3 @@ function AdminSettings() {
 }
 
 export default AdminSettings;
-

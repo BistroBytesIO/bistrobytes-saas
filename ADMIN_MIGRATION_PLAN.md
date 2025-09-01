@@ -115,18 +115,18 @@ Migrate the complete admin dashboard functionality from `bistro-template` to `bi
 
 ### Phase 5: Integration and Testing
 - [ ] **Backend Integration**
-  - [ ] Connect to backend API with proper tenant routing
-  - [ ] Test WebSocket connections for real-time updates
-  - [ ] Verify authentication flows and tenant isolation
+  - [x] Connect to backend API with proper tenant routing
+  - [x] Test WebSocket connections for real-time updates (dashboard test button)
+  - [x] Verify authentication flows and tenant isolation (JWT exp validation + auto-logout)
   - [ ] Test all CRUD operations
   - [ ] Validate data security and isolation
 
 - [ ] **UI/UX Polish**
-  - [ ] Port CSS functionality to Tailwind classes
-  - [ ] Ensure responsive design consistency
-  - [ ] Add loading states and error handling
-  - [ ] Implement proper form validation
-  - [ ] Add success/error notifications
+  - [x] Port CSS functionality to Tailwind classes
+  - [x] Ensure responsive design consistency
+  - [x] Add loading states and error handling
+  - [x] Implement proper form validation (login, password, settings)
+  - [x] Add success/error notifications
 
 - [ ] **Complete User Flow Testing**
   - [ ] Test signup → provisioning → email → password setup flow
