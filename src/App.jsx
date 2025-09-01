@@ -7,6 +7,8 @@ import SignupSuccessPage from './pages/SignupSuccessPage'
 import PasswordSetupPage from './pages/admin/PasswordSetupPage'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminOrders from './pages/admin/AdminOrders'
+import AdminReadyForPickup from './pages/admin/AdminReadyForPickup'
 import Unauthorized from './pages/admin/Unauthorized'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 import toast, { Toaster } from 'react-hot-toast'
@@ -36,8 +38,24 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/orders" 
+              element={
+                <ProtectedRoute>
+                  <AdminOrders />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/orders/ready" 
+              element={
+                <ProtectedRoute>
+                  <AdminReadyForPickup />
+                </ProtectedRoute>
+              } 
+            />
             
-            {/* TODO: Add more protected admin routes in Phase 3 */}
+            {/* TODO: Add more protected admin routes for menu management, etc. */}
           </Routes>
           <Toaster
             position="top-center"
