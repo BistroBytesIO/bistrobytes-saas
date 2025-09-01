@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,34 @@ import {
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
-  const { user, restaurant, logout } = useRestaurantAuth();
+  const { user, restaurant, logout, getTenantId, updateRestaurantData } = useRestaurantAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
+  const tenantId = getTenantId();
+  const locations = Array.isArray(restaurant?.locations) && restaurant.locations.length > 0
+    ? restaurant.locations
+    : [{ id: tenantId || 'primary', name: restaurant?.name || 'Primary Location' }];
+
+  useEffect(() => {
+    // Initialize selection from stored value or default to first location
+    const stored = localStorage.getItem('selected_location');
+    if (stored) {
+      setSelectedLocation(stored);
+    } else if (locations.length > 0) {
+      setSelectedLocation(locations[0].id);
+    }
+  }, [locations]);
+
+  const handleLocationChange = (e) => {
+    const value = e.target.value;
+    setSelectedLocation(value);
+    localStorage.setItem('selected_location', value);
+    // Store on restaurant context for future use
+    updateRestaurantData?.({ selectedLocation: value });
+  };
 
   const navigationItems = [
     {
@@ -206,6 +230,19 @@ const AdminLayout = ({ children }) => {
 
             {/* Header actions */}
             <div className="flex items-center space-x-4">
+              {/* Location switcher (placeholder) */}
+              <div className="hidden sm:flex items-center space-x-2">
+                <span className="text-xs text-gray-500">Location</span>
+                <select
+                  value={selectedLocation || ''}
+                  onChange={handleLocationChange}
+                  className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </select>
+              </div>
               {/* Notifications - placeholder for future */}
               <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
                 <Bell className="h-5 w-5" />

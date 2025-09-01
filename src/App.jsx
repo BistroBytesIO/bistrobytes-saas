@@ -9,6 +9,7 @@ import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminReadyForPickup from './pages/admin/AdminReadyForPickup'
+import AdminAllOrders from './pages/admin/AdminAllOrders'
 import AdminMenu from './pages/admin/AdminMenu'
 import Unauthorized from './pages/admin/Unauthorized'
 import ProtectedRoute from './components/admin/ProtectedRoute'
@@ -52,6 +53,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminReadyForPickup />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/orders/all" 
+              element={
+                <ProtectedRoute>
+                  <AdminAllOrders />
                 </ProtectedRoute>
               } 
             />

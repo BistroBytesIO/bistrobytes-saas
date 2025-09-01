@@ -64,7 +64,7 @@ Migrate the complete admin dashboard functionality from `bistro-template` to `bi
 
 - [x] **Navigation Structure**
   - [x] Create `components/admin/AdminLayout.jsx` with sidebar navigation
-  - [x] Add restaurant context switching (for multi-location support)
+  - [x] Add restaurant context switching (placeholder in header)
   - [x] Implement role-based access control
   - [x] Create responsive admin navigation
   - [x] Add breadcrumb navigation system
@@ -79,9 +79,9 @@ Migrate the complete admin dashboard functionality from `bistro-template` to `bi
 
 - [x] **Dashboard Components**
   - [x] Migrate `AdminDashboard.jsx` with all analytics and KPIs (placeholder)
-  - [ ] Port revenue charts and performance metrics (recharts)
+  - [x] Port revenue charts and performance metrics (recharts)
   - [x] Transfer inventory alerts and low-stock management (placeholder)
-  - [ ] Implement real-time dashboard updates
+  - [x] Implement real-time dashboard updates
   - [x] Add responsive dashboard layout
 
 - [x] **Order Management**
@@ -89,12 +89,12 @@ Migrate the complete admin dashboard functionality from `bistro-template` to `bi
   - [x] Port `AdminReadyForPickup.jsx` for order fulfillment
   - [x] Implement sound notification system
   - [x] Add order status management
-  - [ ] Create order filtering and search
+  - [x] Create order filtering and search
 
 - [ ] **Menu Management**
-  - [ ] Transfer menu CRUD operations
+  - [x] Transfer menu CRUD operations
   - [ ] Port category management functionality
-  - [ ] Implement stock quantity tracking
+  - [x] Implement stock quantity tracking
   - [ ] Add menu item image management
   - [ ] Create bulk menu operations
 
@@ -262,7 +262,7 @@ bistrobytes-saas/
 
 ```env
 VITE_API_BASE_URL=https://localhost:8443/api
-VITE_WEBSOCKET_URL=ws://localhost:8080/ws
+VITE_WEBSOCKET_URL=ws://localhost:8080/ws-orders/websocket
 VITE_ADMIN_BASE_URL=/admin
 ```
 
@@ -271,8 +271,8 @@ VITE_ADMIN_BASE_URL=/admin
 ## Progress Tracking
 
 **Started**: 2025-01-01
-**Current Phase**: Phase 3 Major Components Complete
-**Completion**: ~70% (Phase 1 & 2 complete, Phase 3 core features working)
+**Current Phase**: Phase 3 nearing completion
+**Completion**: ~80% (Phase 1 & 2 complete, Phase 3 mostly complete)
 
 ### Phase 1 Completed ✅
 - ✅ Password creation flow with PasswordSetupPage.jsx
@@ -292,6 +292,8 @@ VITE_ADMIN_BASE_URL=/admin
 - ✅ AdminSidebar component with navigation highlighting
 - ✅ Mobile-responsive design with hamburger menu
 - ✅ User context display and logout functionality
+ - ✅ Breadcrumb navigation system
+ - ✅ Restaurant context switcher placeholder in header
 
 ### Phase 3 Major Progress ✅
 - ✅ Complete services layer (adminApi, WebSocket, sound notifications)
@@ -301,13 +303,16 @@ VITE_ADMIN_BASE_URL=/admin
 - ✅ Professional sound notification system
 - ✅ Enhanced UI with loading states and error handling
 - ✅ Mobile-responsive order management interface
+ - ✅ Dashboard charts (Recharts) and live updates
+ - ✅ Order search, filtering, sorting
 
 ### Currently Working On
-- Phase 3 completion: Menu management migration and dashboard enhancements
+- Phase 3 wrap-up: Menu categories, images, and bulk ops
 
 ### Notes
-- Successfully integrated with existing `/api/auth/create-admin` endpoint from bistro-template-backend
+- Integrated with `/api/auth/create-admin` endpoint (now forwards setup token header)
 - Implemented proper X-Tenant-Id header handling for multi-tenant requests
-- Created comprehensive password validation with visual feedback
-- Authentication context supports tenant switching and session validation
-- Ready to begin Phase 2: Core admin dashboard migration
+- Password validation with visual feedback is complete
+- Authentication context supports session validation and logout
+- WebSocket subscriptions aligned to `/topic/orders` with tenant filtering
+- Ready to begin Phase 4 and 5: integration and end-to-end testing
