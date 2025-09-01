@@ -98,10 +98,10 @@ const AdminLayout = ({ children }) => {
         </div>
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar (fixed on large screens so content sits to the right) */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
         
         {/* Sidebar header */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
