@@ -181,8 +181,8 @@ function AdminMenu() {
     setModalForm({
       name: item.name,
       description: item.description,
-      price: item.price.toString(),
-      stockQuantity: item.stockQuantity.toString(),
+      price: item?.price != null ? item.price.toString() : '',
+      stockQuantity: item?.stockQuantity != null ? item.stockQuantity.toString() : '',
       isFeatured: item.isFeatured,
     });
     setIsModalOpen(true);

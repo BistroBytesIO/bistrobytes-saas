@@ -11,6 +11,7 @@ import AdminOrders from './pages/admin/AdminOrders'
 import AdminReadyForPickup from './pages/admin/AdminReadyForPickup'
 import AdminAllOrders from './pages/admin/AdminAllOrders'
 import AdminMenu from './pages/admin/AdminMenu'
+import AdminAnalytics from './pages/admin/AdminAnalytics'
 import Unauthorized from './pages/admin/Unauthorized'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 import toast, { Toaster } from 'react-hot-toast'
@@ -72,6 +73,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminMenu />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/analytics" 
+              element={
+                <ProtectedRoute>
+                  <AdminAnalytics />
                 </ProtectedRoute>
               } 
             />

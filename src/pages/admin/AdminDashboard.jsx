@@ -532,9 +532,11 @@ function AdminDashboard() {
                         <div className="relative pt-1">
                           <div className="overflow-hidden h-4 text-xs flex rounded bg-gray-100">
                             <div
-                              style={{ width: `${category.percentage}%` }}
+                              style={{
+                                width: `${category.percentage}%`,
+                                backgroundColor: chartColors[index % chartColors.length]
+                              }}
                               className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center"
-                              style={{ backgroundColor: chartColors[index % chartColors.length] }}
                             ></div>
                           </div>
                         </div>

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import api from '@/lib/api';
+import { adminApiUtils } from '@/services/adminApi';
 
 const RestaurantAuthContext = createContext();
 
@@ -155,14 +156,30 @@ export const RestaurantAuthProvider = ({ children }) => {
     if (!user?.tenantId) return;
 
     try {
-      // This would fetch restaurant-specific data
-      // For now, we'll create a placeholder structure
+      // Try to fetch from backend profile first
+      let name = null;
+      try {
+        const resp = await adminApiUtils.getRestaurantProfile();
+        const data = resp?.data || {};
+        name = data.companyName || data.name || null;
+      } catch (e) {
+        // ignore and fallback
+      }
+
+      if (!name) {
+        // Fallback: derive from tenantId (slug -> Title Case)
+        const slug = user.tenantId || '';
+        name = slug
+          .split(/[-_]/)
+          .filter(Boolean)
+          .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+          .join(' ') || 'Your Restaurant';
+      }
+
       const restaurantData = {
         tenantId: user.tenantId,
-        name: 'Your Restaurant', // This would come from backend
-        settings: {
-          // Restaurant-specific settings
-        }
+        name,
+        settings: {}
       };
 
       localStorage.setItem('restaurant_data', JSON.stringify(restaurantData));
