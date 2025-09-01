@@ -6,6 +6,9 @@ import SignupPage from './pages/SignupPage'
 import SignupSuccessPage from './pages/SignupSuccessPage'
 import PasswordSetupPage from './pages/admin/PasswordSetupPage'
 import AdminLogin from './pages/admin/AdminLogin'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import Unauthorized from './pages/admin/Unauthorized'
+import ProtectedRoute from './components/admin/ProtectedRoute'
 import toast, { Toaster } from 'react-hot-toast'
 
 function App() {
@@ -22,8 +25,19 @@ function App() {
             {/* Admin Routes */}
             <Route path="/admin/setup-password/:token" element={<PasswordSetupPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/unauthorized" element={<Unauthorized />} />
             
-            {/* TODO: Add more admin routes in next phases */}
+            {/* Protected Admin Routes */}
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* TODO: Add more protected admin routes in Phase 3 */}
           </Routes>
           <Toaster
             position="top-center"
