@@ -153,13 +153,15 @@ function PasswordSetupPage() {
         
         // Redirect to admin login with success message
         setTimeout(() => {
-          navigate('/admin/login?setup=success', { 
+          const tenantQuery = tenantId ? `&tenantId=${encodeURIComponent(tenantId)}` : '';
+          navigate(`/admin/login?setup=success${tenantQuery}`, { 
             state: { 
               message: 'Your admin account has been created successfully. Please log in.',
-              email: formData.email 
+              email: formData.email,
+              tenantId: tenantId || undefined
             }
           });
-        }, 2000);
+        }, 1500);
       }
     } catch (error) {
       console.error('Password setup error:', error);

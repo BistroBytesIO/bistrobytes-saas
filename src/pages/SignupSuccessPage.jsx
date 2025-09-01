@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import api from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -39,6 +39,17 @@ const SignupSuccessPage = () => {
     poll = setInterval(pollStatus, 1500);
     return () => clearInterval(poll);
   }, [sessionId]);
+
+  // Generate a simple random token for setup links (dev convenience)
+  const setupToken = useMemo(() => {
+    const bytes = new Uint8Array(24);
+    if (window.crypto?.getRandomValues) {
+      window.crypto.getRandomValues(bytes);
+    } else {
+      for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    }
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(''); // 48 hex chars
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -149,7 +160,13 @@ const SignupSuccessPage = () => {
                     Visit Your Website
                   </a>
                   <Link
-                    to="/dashboard"
+                    to={`/admin/setup-password/${setupToken}?tenantId=${encodeURIComponent(tenantSlug || '')}`}
+                    className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Set Up Admin Access
+                  </Link>
+                  <Link
+                    to="/admin/login"
                     className="inline-flex items-center justify-center px-6 py-3 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors"
                   >
                     <Settings className="w-4 h-4 mr-2" />
