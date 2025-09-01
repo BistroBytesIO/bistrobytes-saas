@@ -9,6 +9,7 @@ import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminReadyForPickup from './pages/admin/AdminReadyForPickup'
+import AdminMenu from './pages/admin/AdminMenu'
 import Unauthorized from './pages/admin/Unauthorized'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 import toast, { Toaster } from 'react-hot-toast'
@@ -54,8 +55,16 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/menu" 
+              element={
+                <ProtectedRoute>
+                  <AdminMenu />
+                </ProtectedRoute>
+              } 
+            />
             
-            {/* TODO: Add more protected admin routes for menu management, etc. */}
+            {/* TODO: Add more protected admin routes for analytics, settings, etc. */}
           </Routes>
           <Toaster
             position="top-center"

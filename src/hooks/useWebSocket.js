@@ -57,11 +57,19 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
             subscriptionsRef.current.clear();
         }
 
-        // Build WebSocket URL with tenant awareness
-        const wsUrl = baseUrl
-            .replace('http://', 'ws://')
-            .replace('https://', 'wss://')
-            .replace('/api', '') + '/ws-orders/websocket';
+        // Build WebSocket URL with env override support
+        const envWs = import.meta?.env?.VITE_WEBSOCKET_URL;
+        let wsUrl;
+        if (envWs && typeof envWs === 'string' && envWs.trim().length > 0) {
+            // Use provided WebSocket URL as-is (assume it’s already ws:// or wss://)
+            wsUrl = envWs.trim();
+        } else {
+            // Derive from API base URL
+            wsUrl = baseUrl
+                .replace('http://', 'ws://')
+                .replace('https://', 'wss://')
+                .replace('/api', '') + '/ws-orders/websocket';
+        }
 
         console.log('📡 Connecting to WebSocket:', wsUrl);
 
@@ -79,9 +87,9 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
                 setIsConnected(true);
                 setConnectionError(null);
 
-                // Subscribe to tenant-specific order notifications
+                // Subscribe to order notifications (backend broadcasts to /topic/orders)
                 try {
-                    const orderSubscription = client.subscribe(`/topic/orders/${effectiveTenantId}`, (message) => {
+                    const orderSubscription = client.subscribe(`/topic/orders`, (message) => {
                         if (!mountedRef.current) return; // Component unmounted
 
                         console.log('📨 Received order message:', message.body);
@@ -99,9 +107,10 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
                     });
 
                     subscriptionsRef.current.set('orders', orderSubscription);
-                    console.log('📡 Successfully subscribed to tenant orders:', effectiveTenantId);
+                    console.log('📡 Subscribed to /topic/orders for tenant:', effectiveTenantId);
 
                     // Subscribe to general admin notifications for this tenant
+                    // Optional: if backend provides a tenant-scoped admin topic
                     const adminSubscription = client.subscribe(`/topic/admin/${effectiveTenantId}`, (message) => {
                         if (!mountedRef.current) return;
 

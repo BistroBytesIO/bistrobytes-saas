@@ -145,65 +145,81 @@ export const adminEndpoints = {
  * Utility functions for common admin operations
  */
 export const adminApiUtils = {
+  // Basic retry helper for transient failures (5xx/network)
+  withRetry: async (fn, retries = 2, delayMs = 500) => {
+    let attempt = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      try {
+        return await fn();
+      } catch (error) {
+        const status = error?.response?.status;
+        const isTransient = !status || (status >= 500 && status < 600);
+        if (attempt >= retries || !isTransient) throw error;
+        attempt += 1;
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+  },
   /**
    * Get dashboard statistics
    */
-  getDashboardStats: () => adminApi.get(adminEndpoints.stats.dashboard),
+  getDashboardStats: function () { return this.withRetry(() => adminApi.get(adminEndpoints.stats.dashboard)); },
   
   /**
    * Get monthly revenue data
    */
-  getMonthlyRevenue: () => adminApi.get(adminEndpoints.stats.revenue.monthly),
+  getMonthlyRevenue: function () { return this.withRetry(() => adminApi.get(adminEndpoints.stats.revenue.monthly)); },
   
   /**
    * Get low stock items
    */
-  getLowStockItems: () => adminApi.get(adminEndpoints.stats.inventory.lowStock),
+  getLowStockItems: function () { return this.withRetry(() => adminApi.get(adminEndpoints.stats.inventory.lowStock)); },
   
   /**
    * Get performance statistics
    */
-  getPerformanceStats: () => adminApi.get(adminEndpoints.stats.performance),
+  getPerformanceStats: function () { return this.withRetry(() => adminApi.get(adminEndpoints.stats.performance)); },
   
   /**
    * Get pending orders
    */
-  getPendingOrders: () => adminApi.get(adminEndpoints.orders.pending),
+  getPendingOrders: function () { return this.withRetry(() => adminApi.get(adminEndpoints.orders.pending)); },
   
   /**
    * Get ready for pickup orders
    */
-  getReadyForPickupOrders: () => adminApi.get(adminEndpoints.orders.readyForPickup),
+  getReadyForPickupOrders: function () { return this.withRetry(() => adminApi.get(adminEndpoints.orders.readyForPickup)); },
   
   /**
    * Mark order as ready for pickup
    */
-  markOrderReady: (orderId) => adminApi.put(adminEndpoints.orders.markReady(orderId)),
+  markOrderReady: function (orderId) { return this.withRetry(() => adminApi.put(adminEndpoints.orders.markReady(orderId))); },
   
   /**
    * Mark order as completed/picked up
    */
-  markOrderCompleted: (orderId) => adminApi.put(adminEndpoints.orders.markCompleted(orderId)),
+  markOrderCompleted: function (orderId) { return this.withRetry(() => adminApi.put(adminEndpoints.orders.markCompleted(orderId))); },
   
   /**
    * Get all menu items
    */
-  getMenuItems: () => adminApi.get(adminEndpoints.menu.all),
+  getMenuItems: function () { return this.withRetry(() => adminApi.get(adminEndpoints.menu.all)); },
   
   /**
    * Create new menu item
    */
-  createMenuItem: (itemData) => adminApi.post(adminEndpoints.menu.create, itemData),
+  createMenuItem: function (itemData) { return this.withRetry(() => adminApi.post(adminEndpoints.menu.create, itemData)); },
   
   /**
    * Update menu item
    */
-  updateMenuItem: (itemId, itemData) => adminApi.put(adminEndpoints.menu.update(itemId), itemData),
+  updateMenuItem: function (itemId, itemData) { return this.withRetry(() => adminApi.put(adminEndpoints.menu.update(itemId), itemData)); },
   
   /**
    * Delete menu item
    */
-  deleteMenuItem: (itemId) => adminApi.delete(adminEndpoints.menu.delete(itemId))
+  deleteMenuItem: function (itemId) { return this.withRetry(() => adminApi.delete(adminEndpoints.menu.delete(itemId))); }
 };
 
 export default adminApi;

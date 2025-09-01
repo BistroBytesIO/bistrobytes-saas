@@ -181,11 +181,27 @@ const AdminLayout = ({ children }) => {
               <Menu className="h-6 w-6" />
             </button>
 
-            {/* Page title will be set by individual pages */}
+            {/* Page title + breadcrumbs */}
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-semibold text-gray-900 truncate">
                 {getPageTitle(location.pathname)}
               </h1>
+              <nav aria-label="Breadcrumb" className="mt-1">
+                <ol className="flex items-center space-x-2 text-xs text-gray-500">
+                  {getBreadcrumbs(location.pathname).map((bc, idx) => (
+                    <li key={bc.path} className="flex items-center">
+                      {idx > 0 && <span className="mx-1 text-gray-400">/</span>}
+                      {bc.to ? (
+                        <Link to={bc.to} className="hover:text-gray-700">
+                          {bc.label}
+                        </Link>
+                      ) : (
+                        <span className="text-gray-700">{bc.label}</span>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </nav>
             </div>
 
             {/* Header actions */}
@@ -235,3 +251,18 @@ const getPageTitle = (pathname) => {
 };
 
 export default AdminLayout;
+
+// Generate breadcrumb items for known admin routes
+const getBreadcrumbs = (pathname) => {
+  const base = [{ label: 'Admin', to: '/admin/dashboard', path: '/admin' }];
+  const map = {
+    '/admin/dashboard': [...base, { label: 'Dashboard', path: '/admin/dashboard' }],
+    '/admin/orders': [...base, { label: 'Orders', to: '/admin/orders', path: '/admin/orders' }, { label: 'Pending', path: '/admin/orders' }],
+    '/admin/orders/ready': [...base, { label: 'Orders', to: '/admin/orders', path: '/admin/orders' }, { label: 'Ready for Pickup', path: '/admin/orders/ready' }],
+    '/admin/orders/all': [...base, { label: 'Orders', to: '/admin/orders', path: '/admin/orders' }, { label: 'All Orders', path: '/admin/orders/all' }],
+    '/admin/menu': [...base, { label: 'Menu', path: '/admin/menu' }],
+    '/admin/analytics': [...base, { label: 'Analytics', path: '/admin/analytics' }],
+    '/admin/settings': [...base, { label: 'Settings', path: '/admin/settings' }],
+  };
+  return map[pathname] || [...base, { label: 'Dashboard', path: '/admin/dashboard' }];
+};

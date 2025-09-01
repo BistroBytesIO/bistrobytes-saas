@@ -143,7 +143,8 @@ function PasswordSetupPage() {
         password: formData.password
       }, {
         headers: {
-          'X-Tenant-Id': tenantId || 'default' // Include tenant ID in request header
+          'X-Tenant-Id': tenantId || 'default', // Include tenant ID in request header
+          'X-Setup-Token': token // Forward setup token for backend validation (when enabled)
         }
       });
 

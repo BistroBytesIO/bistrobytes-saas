@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
 import adminApi, { adminApiUtils } from '@/services/adminApi';
@@ -7,6 +7,7 @@ import soundService from '@/services/soundService';
 import ClipLoader from 'react-spinners/ClipLoader';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,7 +20,11 @@ import {
   ShoppingBag,
   RefreshCw,
   User,
-  Package
+  Package,
+  Search,
+  Filter,
+  SortAsc,
+  SortDesc
 } from 'lucide-react';
 
 function AdminReadyForPickup() {
@@ -27,6 +32,11 @@ function AdminReadyForPickup() {
   const [orders, setOrders] = useState([]);
   const [loadingOrderId, setLoadingOrderId] = useState(null);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('longest_wait'); // longest_wait, newest, oldest, amount_high, amount_low
+  const [filterBy, setFilterBy] = useState('all'); // all, urgent (>30min), recent (<15min)
 
   // WebSocket configuration with tenant support
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api';
@@ -58,6 +68,61 @@ function AdminReadyForPickup() {
     true,
     tenantId
   );
+
+  // Filtered and sorted orders
+  const filteredAndSortedOrders = useMemo(() => {
+    let filteredOrders = [...orders];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filteredOrders = filteredOrders.filter(order => 
+        order.id.toString().includes(searchLower) ||
+        order.customerName?.toLowerCase().includes(searchLower) ||
+        order.customerEmail?.toLowerCase().includes(searchLower) ||
+        order.items?.some(item => item.name?.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Apply wait time filter
+    if (filterBy !== 'all') {
+      filteredOrders = filteredOrders.filter(order => {
+        const now = new Date();
+        const orderTime = new Date(order.orderDate);
+        const diffInMinutes = Math.floor((now - orderTime) / (1000 * 60));
+        
+        if (filterBy === 'urgent') {
+          return diffInMinutes > 30;
+        } else if (filterBy === 'recent') {
+          return diffInMinutes < 15;
+        }
+        return true;
+      });
+    }
+
+    // Apply sorting
+    filteredOrders.sort((a, b) => {
+      switch (sortBy) {
+        case 'longest_wait': {
+          const aTime = new Date(a.orderDate);
+          const bTime = new Date(b.orderDate);
+          return aTime - bTime; // Oldest first (longest wait)
+        }
+        case 'newest':
+          return new Date(b.orderDate) - new Date(a.orderDate);
+        case 'oldest':
+          return new Date(a.orderDate) - new Date(b.orderDate);
+        case 'amount_high':
+          return (b.totalAmount || 0) - (a.totalAmount || 0);
+        case 'amount_low':
+          return (a.totalAmount || 0) - (b.totalAmount || 0);
+        default:
+          return new Date(a.orderDate) - new Date(b.orderDate);
+      }
+    });
+
+    return filteredOrders;
+  }, [orders, searchTerm, sortBy, filterBy]);
 
   useEffect(() => {
     console.log('🚀 AdminReadyForPickup component mounted');
@@ -137,7 +202,8 @@ function AdminReadyForPickup() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Ready for Pickup</h1>
             <p className="text-gray-600">
-              {orders.length} {orders.length === 1 ? 'order' : 'orders'} ready for customer pickup
+              {filteredAndSortedOrders.length} of {orders.length} {orders.length === 1 ? 'order' : 'orders'} 
+              {searchTerm || filterBy !== 'all' ? ' shown' : ' ready for customer pickup'}
             </p>
           </div>
 
@@ -171,6 +237,71 @@ function AdminReadyForPickup() {
           </div>
         </div>
 
+        {/* Search and Filter Controls */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search Bar */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    type="text"
+                    placeholder="Search by order ID, customer name, email, or items..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Wait Time Filter */}
+              <div className="sm:w-48">
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                >
+                  <option value="all">All Orders</option>
+                  <option value="urgent">Urgent (30+ min)</option>
+                  <option value="recent">Recent (&lt;15 min)</option>
+                </select>
+              </div>
+
+              {/* Sort Options */}
+              <div className="sm:w-48">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                >
+                  <option value="longest_wait">Longest Wait</option>
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="amount_high">Highest Amount</option>
+                  <option value="amount_low">Lowest Amount</option>
+                </select>
+              </div>
+
+              {/* Clear Filters */}
+              {(searchTerm || filterBy !== 'all' || sortBy !== 'longest_wait') && (
+                <Button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setFilterBy('all');
+                    setSortBy('longest_wait');
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="text-gray-600"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Connection Error Alert */}
         {connectionError && (
           <Alert variant="destructive">
@@ -197,9 +328,9 @@ function AdminReadyForPickup() {
         ) : (
           <>
             {/* Orders Display */}
-            {orders.length > 0 ? (
+            {filteredAndSortedOrders.length > 0 ? (
               <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-                {orders.map((order) => (
+                {filteredAndSortedOrders.map((order) => (
                   <Card key={order.id} className="overflow-hidden hover:shadow-lg transition-shadow border-l-4 border-green-500">
                     {/* Order Header */}
                     <CardHeader className="bg-green-50 border-b">
@@ -329,10 +460,32 @@ function AdminReadyForPickup() {
               <Card>
                 <CardContent className="text-center py-12">
                   <Package size={48} className="mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No orders ready for pickup</h3>
-                  <p className="text-gray-500">
-                    Orders marked as ready will appear here for customer pickup.
-                  </p>
+                  {orders.length === 0 ? (
+                    <>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No orders ready for pickup</h3>
+                      <p className="text-gray-500">
+                        Orders marked as ready will appear here for customer pickup.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No orders match your filters</h3>
+                      <p className="text-gray-500 mb-4">
+                        Try adjusting your search or filter criteria.
+                      </p>
+                      <Button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setFilterBy('all');
+                          setSortBy('longest_wait');
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Clear All Filters
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}
