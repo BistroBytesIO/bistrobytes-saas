@@ -18,13 +18,21 @@ import {
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
-  const { user, restaurant, logout, getTenantId, updateRestaurantData } = useRestaurantAuth();
+  const { user, restaurant, logout, getTenantId, updateRestaurantData, fetchRestaurantData } = useRestaurantAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
   const tenantId = getTenantId();
+  const formatSlugToName = (slug) => {
+    return (slug || '')
+      .split(/[-_]/)
+      .filter(Boolean)
+      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+      .join(' ') || 'Restaurant';
+  };
+  const displayName = restaurant?.name || formatSlugToName(tenantId);
   const locations = Array.isArray(restaurant?.locations) && restaurant.locations.length > 0
     ? restaurant.locations
     : [{ id: tenantId || 'primary', name: restaurant?.name || 'Primary Location' }];
@@ -38,6 +46,13 @@ const AdminLayout = ({ children }) => {
       setSelectedLocation(locations[0].id);
     }
   }, [locations]);
+
+  useEffect(() => {
+    // Ensure restaurant data is populated (e.g., on hard refresh after auth restore)
+    if (user?.tenantId && !restaurant?.name) {
+      fetchRestaurantData?.();
+    }
+  }, [user?.tenantId]);
 
   const handleLocationChange = (e) => {
     const value = e.target.value;
@@ -107,7 +122,7 @@ const AdminLayout = ({ children }) => {
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
             <Building2 className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-bold text-gray-900">BistroBytes</span>
+            <span className="ml-2 text-xl font-bold text-gray-900">{displayName}</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -126,9 +141,7 @@ const AdminLayout = ({ children }) => {
               </div>
             </div>
             <div className="ml-3 flex-1">
-              <p className="text-sm font-medium text-gray-900">
-                {restaurant?.name || 'Your Restaurant'}
-              </p>
+              <p className="text-sm font-medium text-gray-900">{displayName}</p>
               <p className="text-xs text-gray-500 truncate">
                 {user?.email}
               </p>

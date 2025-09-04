@@ -70,6 +70,13 @@ export const RestaurantAuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
+  // Ensure restaurant data is fetched when user is present but restaurant info is missing
+  useEffect(() => {
+    if (user?.tenantId && !restaurant?.name) {
+      fetchRestaurantData().catch(() => {/* no-op */});
+    }
+  }, [user?.tenantId]);
+
   /**
    * Login function with tenant isolation
    * @param {string} email - Admin email
