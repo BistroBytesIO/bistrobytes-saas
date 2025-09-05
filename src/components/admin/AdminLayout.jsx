@@ -122,7 +122,10 @@ const AdminLayout = ({ children }) => {
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
             <Building2 className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-bold text-gray-900">{displayName}</span>
+            <div className="ml-2">
+              <div className="text-xs text-blue-600 font-medium">BistroBytes</div>
+              <span className="text-lg font-bold text-gray-900">{displayName}</span>
+            </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
