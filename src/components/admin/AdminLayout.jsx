@@ -123,8 +123,7 @@ const AdminLayout = ({ children }) => {
           <div className="flex items-center">
             <Building2 className="h-8 w-8 text-blue-600" />
             <div className="ml-2">
-              <div className="text-xs text-blue-600 font-medium">BistroBytes</div>
-              <span className="text-lg font-bold text-gray-900">{displayName}</span>
+              <span className="text-lg font-bold text-blue-600">BistroBytes</span>
             </div>
           </div>
           <button
