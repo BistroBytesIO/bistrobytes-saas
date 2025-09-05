@@ -15,11 +15,6 @@ const SignupSuccessPage = () => {
   const [tenantSlug, setTenantSlug] = useState('');
   const [domain, setDomain] = useState('');
 
-  // Helper function to create clean domain from tenant slug (remove underscores)
-  const getCleanDomain = (slug) => {
-    if (!slug) return 'demo';
-    return slug.replace(/_/g, '');
-  };
 
   useEffect(() => {
     let poll;
@@ -153,10 +148,10 @@ const SignupSuccessPage = () => {
                     href={
                       // Always use localhost during development
                       import.meta.env.DEV || window.location.hostname === 'localhost'
-                        ? `http://${getCleanDomain(tenantSlug)}.localhost:5173`
+                        ? `http://${tenantSlug || 'demo'}.localhost:5173`
                         : domain 
                           ? `https://${domain}`
-                          : `${window.location.protocol}//${getCleanDomain(tenantSlug)}.localhost:5173`
+                          : `${window.location.protocol}//${tenantSlug || 'demo'}.localhost:5173`
                     }
                     target="_blank"
                     rel="noopener noreferrer"

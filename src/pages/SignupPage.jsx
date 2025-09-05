@@ -200,12 +200,13 @@ const SignupPage = () => {
     setIsLoading(true)
     
     try {
-      // Generate tenant slug from restaurant name
+      // Generate clean tenant slug from restaurant name (no underscores or spaces)
       const tenantSlug = data.restaurantName
         .toLowerCase()
-        .replace(/[^a-z0-9]/g, '_')
-        .replace(/_+/g, '_')
-        .replace(/^_|_$/g, '')
+        .replace(/[^a-z0-9]/g, '')  // Remove all non-alphanumeric characters (including spaces and special chars)
+        .replace(/^[0-9]+/, '')     // Remove leading numbers if any
+        .substring(0, 50)           // Limit length to 50 chars
+        || 'restaurant'             // Fallback if empty
 
       // Create flat tenant configuration for Stripe metadata
       const tenantConfig = {
