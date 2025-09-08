@@ -87,7 +87,7 @@ function AdminSettings() {
       }
     };
     load();
-  }, [updateRestaurantData]);
+  }, []); // Remove updateRestaurantData from dependency array to prevent infinite loop
 
   const handleSaveProfile = async () => {
     if (!profile.name?.trim()) {
