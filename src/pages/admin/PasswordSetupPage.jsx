@@ -40,6 +40,12 @@ function PasswordSetupPage() {
   // Verify token on component mount
   useEffect(() => {
     const verifyToken = async () => {
+      // Clear any existing authentication data to prevent conflicts
+      localStorage.removeItem('restaurant_user');
+      localStorage.removeItem('restaurant_data');
+      delete api.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['X-Tenant-Id'];
+      
       if (!token) {
         setTokenValid(false);
         setIsVerifyingToken(false);
@@ -151,17 +157,43 @@ function PasswordSetupPage() {
       if (response.status === 200) {
         toast.success('Admin account created successfully!');
         
-        // Redirect to admin login with success message
-        setTimeout(() => {
-          const tenantQuery = tenantId ? `&tenantId=${encodeURIComponent(tenantId)}` : '';
-          navigate(`/admin/login?setup=success${tenantQuery}`, { 
-            state: { 
-              message: 'Your admin account has been created successfully. Please log in.',
-              email: formData.email,
-              tenantId: tenantId || undefined
-            }
-          });
-        }, 1500);
+        // Check if response includes authentication data for automatic login
+        if (response.data.token && response.data.tenantId) {
+          // Store authentication data in localStorage for automatic login
+          const userData = {
+            email: response.data.email,
+            role: response.data.role,
+            token: response.data.token,
+            tenantId: response.data.tenantId
+          };
+          
+          localStorage.setItem('restaurant_user', JSON.stringify(userData));
+          
+          // Set up axios default headers for immediate authenticated requests
+          api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
+          api.defaults.headers.common['X-Tenant-Id'] = userData.tenantId;
+          
+          // Redirect to admin dashboard with success message
+          setTimeout(() => {
+            navigate('/admin/dashboard', { 
+              state: { 
+                message: 'Welcome! Your admin account has been created and you are now logged in.'
+              }
+            });
+          }, 1500);
+        } else {
+          // Fallback to login redirect if no auth data returned
+          setTimeout(() => {
+            const tenantQuery = tenantId ? `&tenantId=${encodeURIComponent(tenantId)}` : '';
+            navigate(`/admin/login?setup=success${tenantQuery}`, { 
+              state: { 
+                message: 'Your admin account has been created successfully. Please log in.',
+                email: formData.email,
+                tenantId: tenantId || undefined
+              }
+            });
+          }, 1500);
+        }
       }
     } catch (error) {
       console.error('Password setup error:', error);
