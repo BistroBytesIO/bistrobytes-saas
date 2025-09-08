@@ -17,6 +17,7 @@ import ProtectedRoute from './components/admin/ProtectedRoute'
 import toast, { Toaster } from 'react-hot-toast'
 import AdminSettings from './pages/admin/AdminSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
+import CloverOAuthCallback from './pages/admin/CloverOAuthCallback'
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route path="/admin/setup-password/:token" element={<PasswordSetupPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+            <Route path="/admin/clover/oauth/callback" element={<CloverOAuthCallback />} />
             <Route path="/admin/unauthorized" element={<Unauthorized />} />
             
             {/* Protected Admin Routes */}

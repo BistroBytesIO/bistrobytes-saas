@@ -239,6 +239,31 @@ adminApiUtils.updateBusinessHours = function (data) {
   return this.withRetry(() => adminApi.put(adminEndpoints.restaurant.hours, data));
 };
 
+// Clover OAuth Integration utilities
+adminApiUtils.getCloverStatus = function () {
+  return this.withRetry(() => adminApi.get('/admin/clover/oauth/status'));
+};
+
+adminApiUtils.initiateCloverOAuth = function () {
+  return this.withRetry(() => adminApi.post('/admin/clover/oauth/authorize'));
+};
+
+adminApiUtils.refreshCloverToken = function () {
+  return this.withRetry(() => adminApi.post('/admin/clover/oauth/refresh'));
+};
+
+adminApiUtils.disconnectClover = function () {
+  return this.withRetry(() => adminApi.delete('/admin/clover/oauth/disconnect'));
+};
+
+adminApiUtils.testCloverConnection = function () {
+  return this.withRetry(() => adminApi.post('/admin/clover/oauth/test'));
+};
+
+adminApiUtils.getCloverConfig = function () {
+  return this.withRetry(() => adminApi.get('/admin/clover/oauth/config'));
+};
+
 adminApiUtils.updateRestaurantSettings = function (data) {
   return this.withRetry(() => adminApi.put(adminEndpoints.restaurant.settings, data));
 };
