@@ -253,7 +253,7 @@ adminApiUtils.refreshCloverToken = function () {
 };
 
 adminApiUtils.disconnectClover = function () {
-  return this.withRetry(() => adminApi.delete('/admin/clover/oauth/disconnect'));
+  return this.withRetry(() => adminApi.patch('/admin/clover/oauth/disconnect'));
 };
 
 adminApiUtils.testCloverConnection = function () {
