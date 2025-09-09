@@ -34,7 +34,7 @@ function App() {
             <Route path="/admin/setup-password/:token" element={<PasswordSetupPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/forgot-password" element={<ForgotPassword />} />
-            <Route path="/admin/clover/oauth/callback" element={<CloverOAuthCallback />} />
+            <Route path="/admin/settings/clover/callback" element={<CloverOAuthCallback />} />
             <Route path="/admin/unauthorized" element={<Unauthorized />} />
             
             {/* Protected Admin Routes */}

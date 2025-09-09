@@ -20,6 +20,8 @@ function CloverOAuthCallback() {
   // Get OAuth parameters from URL
   const code = searchParams.get('code');
   const merchantId = searchParams.get('merchant_id');  
+  const employeeId = searchParams.get('employee_id');
+  const clientId = searchParams.get('client_id');
   const state = searchParams.get('state');
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
@@ -61,6 +63,8 @@ function CloverOAuthCallback() {
           params: {
             code,
             merchant_id: merchantId,
+            employee_id: employeeId,
+            client_id: clientId,
             state
           },
           headers: {
