@@ -60,6 +60,15 @@ function AdminSettings() {
     loading: false
   });
 
+  // Clover menu sync state
+  const [menuSyncStatus, setMenuSyncStatus] = useState({
+    totalMenuItems: 0,
+    syncedItems: 0,
+    syncPercentage: 0,
+    lastSyncAt: null,
+    syncing: false
+  });
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -79,6 +88,10 @@ function AdminSettings() {
         }
         if (c.status === 'fulfilled' && c.value?.data) {
           setCloverStatus(prev => ({ ...prev, ...c.value.data }));
+          // Load menu sync status if Clover is connected
+          if (c.value.data.connected && c.value.data.valid) {
+            loadMenuSyncStatus();
+          }
         }
       } catch (e) {
         // Fallback to defaults
@@ -150,6 +163,22 @@ function AdminSettings() {
     }
   };
 
+  // Menu sync utility functions
+  const loadMenuSyncStatus = async () => {
+    try {
+      const response = await adminApiUtils.getCloverMenuSyncStatus();
+      if (response.data.success) {
+        setMenuSyncStatus(prev => ({
+          ...prev,
+          ...response.data,
+          syncing: false
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load menu sync status:', error);
+    }
+  };
+
   // Clover integration handlers
   const handleCloverConnect = async () => {
     try {
@@ -211,6 +240,34 @@ function AdminSettings() {
       console.error('Clover token refresh error:', error);
       toast.error('Failed to refresh Clover token');
       setCloverStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Menu sync handlers
+  const handleMenuSync = async () => {
+    try {
+      setMenuSyncStatus(prev => ({ ...prev, syncing: true }));
+      toast.loading('Syncing menu items from Clover...', { id: 'menu-sync' });
+
+      const response = await adminApiUtils.syncCloverMenu();
+      
+      if (response.data.success) {
+        const itemMessage = `${response.data.itemsCreated} items created, ${response.data.itemsUpdated} updated`;
+        const modifierMessage = `${response.data.customizationsCreated || 0} modifiers created, ${response.data.customizationsUpdated || 0} updated`;
+        toast.success(`Menu sync completed! ${itemMessage}, ${modifierMessage}.`, { id: 'menu-sync' });
+        // Reload menu sync status
+        await loadMenuSyncStatus();
+      } else {
+        toast.error('Menu sync completed with errors. Check the logs for details.', { id: 'menu-sync' });
+        if (response.data.errors && response.data.errors.length > 0) {
+          console.error('Menu sync errors:', response.data.errors);
+        }
+      }
+    } catch (error) {
+      console.error('Menu sync error:', error);
+      toast.error('Failed to sync menu items from Clover', { id: 'menu-sync' });
+    } finally {
+      setMenuSyncStatus(prev => ({ ...prev, syncing: false }));
     }
   };
 
@@ -466,6 +523,56 @@ function AdminSettings() {
                         )}
                         Disconnect
                       </Button>
+                    </div>
+
+                    {/* Menu Sync Section */}
+                    <div className="border-t pt-4 mt-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <div>
+                          <h3 className="text-lg font-medium">Menu Synchronization</h3>
+                          <p className="text-sm text-gray-600">Sync menu items from your Clover POS to BistroBytes</p>
+                        </div>
+                        <Button 
+                          onClick={handleMenuSync}
+                          disabled={menuSyncStatus.syncing}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          {menuSyncStatus.syncing ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                          )}
+                          {menuSyncStatus.syncing ? 'Syncing...' : 'Sync Menu'}
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div className="text-center p-4 bg-gray-50 rounded-lg">
+                          <div className="text-2xl font-bold text-gray-900">{menuSyncStatus.totalMenuItems}</div>
+                          <div className="text-sm text-gray-600">Total Menu Items</div>
+                        </div>
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">{menuSyncStatus.syncedItems}</div>
+                          <div className="text-sm text-gray-600">Synced from Clover</div>
+                        </div>
+                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">{menuSyncStatus.syncPercentage}%</div>
+                          <div className="text-sm text-gray-600">Sync Coverage</div>
+                        </div>
+                      </div>
+
+                      {menuSyncStatus.lastSyncAt && (
+                        <div className="text-sm text-gray-600 mb-4">
+                          Last synced: {new Date(menuSyncStatus.lastSyncAt).toLocaleString()}
+                        </div>
+                      )}
+
+                      <Alert>
+                        <AlertDescription>
+                          Click "Sync Menu" to pull the latest menu items from your Clover POS. 
+                          This will create new items and update existing ones with current pricing and availability.
+                        </AlertDescription>
+                      </Alert>
                     </div>
 
                     <Alert>

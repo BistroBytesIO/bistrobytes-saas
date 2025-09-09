@@ -268,4 +268,17 @@ adminApiUtils.updateRestaurantSettings = function (data) {
   return this.withRetry(() => adminApi.put(adminEndpoints.restaurant.settings, data));
 };
 
+// Clover Menu Sync utilities
+adminApiUtils.syncCloverMenu = function () {
+  return this.withRetry(() => adminApi.post('/admin/clover/oauth/sync/menu'));
+};
+
+adminApiUtils.syncCloverMenuItem = function (itemId) {
+  return this.withRetry(() => adminApi.post(`/admin/clover/oauth/sync/item/${itemId}`));
+};
+
+adminApiUtils.getCloverMenuSyncStatus = function () {
+  return this.withRetry(() => adminApi.get('/admin/clover/oauth/sync/status'));
+};
+
 export default adminApi;
