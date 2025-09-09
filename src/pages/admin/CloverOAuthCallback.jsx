@@ -59,7 +59,7 @@ function CloverOAuthCallback() {
         setMessage('Completing Clover authorization...');
 
         // Make request to our OAuth callback endpoint
-        const response = await axios.get('/api/admin/clover/oauth/callback', {
+        const response = await axios.get('/admin/clover/oauth/callback', {
           params: {
             code,
             merchant_id: merchantId,
