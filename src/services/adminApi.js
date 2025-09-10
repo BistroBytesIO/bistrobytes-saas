@@ -281,4 +281,42 @@ adminApiUtils.getCloverMenuSyncStatus = function () {
   return this.withRetry(() => adminApi.get('/admin/clover/oauth/sync/status'));
 };
 
+// Square OAuth Integration utilities
+adminApiUtils.getSquareStatus = function () {
+  return this.withRetry(() => adminApi.get('/admin/square/oauth/status'));
+};
+
+adminApiUtils.initiateSquareOAuth = function () {
+  return this.withRetry(() => adminApi.post('/admin/square/oauth/authorize'));
+};
+
+adminApiUtils.refreshSquareToken = function () {
+  return this.withRetry(() => adminApi.post('/admin/square/oauth/refresh'));
+};
+
+adminApiUtils.disconnectSquare = function () {
+  return this.withRetry(() => adminApi.delete('/admin/square/oauth/disconnect'));
+};
+
+adminApiUtils.testSquareConnection = function () {
+  return this.withRetry(() => adminApi.post('/admin/square/oauth/test'));
+};
+
+adminApiUtils.getSquareConfig = function () {
+  return this.withRetry(() => adminApi.get('/admin/square/oauth/config'));
+};
+
+// Square Menu Sync utilities (TODO: Phase 2)
+adminApiUtils.syncSquareMenu = function () {
+  return this.withRetry(() => adminApi.post('/admin/square/oauth/sync/menu'));
+};
+
+adminApiUtils.syncSquareMenuItem = function (itemId) {
+  return this.withRetry(() => adminApi.post(`/admin/square/oauth/sync/item/${itemId}`));
+};
+
+adminApiUtils.getSquareMenuSyncStatus = function () {
+  return this.withRetry(() => adminApi.get('/admin/square/oauth/sync/status'));
+};
+
 export default adminApi;

@@ -18,6 +18,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import AdminSettings from './pages/admin/AdminSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import CloverOAuthCallback from './pages/admin/CloverOAuthCallback'
+import SquareOAuthCallback from './pages/admin/SquareOAuthCallback'
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/forgot-password" element={<ForgotPassword />} />
             <Route path="/admin/settings/clover/callback" element={<CloverOAuthCallback />} />
+            <Route path="/admin/settings/square/callback" element={<SquareOAuthCallback />} />
             <Route path="/admin/unauthorized" element={<Unauthorized />} />
             
             {/* Protected Admin Routes */}

@@ -69,14 +69,34 @@ function AdminSettings() {
     syncing: false
   });
 
+  // Square integration state
+  const [squareStatus, setSquareStatus] = useState({
+    connected: false,
+    valid: false,
+    merchantId: '',
+    merchantName: '',
+    environment: 'sandbox',
+    loading: false
+  });
+
+  // Square menu sync state (TODO: Phase 2)
+  const [squareMenuSyncStatus, setSquareMenuSyncStatus] = useState({
+    totalMenuItems: 0,
+    syncedItems: 0,
+    syncPercentage: 0,
+    lastSyncAt: null,
+    syncing: false
+  });
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [p, h, c] = await Promise.allSettled([
+        const [p, h, c, s] = await Promise.allSettled([
           adminApiUtils.getRestaurantProfile(),
           adminApiUtils.getBusinessHours(),
           adminApiUtils.getCloverStatus(),
+          adminApiUtils.getSquareStatus(),
         ]);
 
         if (p.status === 'fulfilled' && p.value?.data) {
@@ -92,6 +112,13 @@ function AdminSettings() {
           if (c.value.data.connected && c.value.data.valid) {
             loadMenuSyncStatus();
           }
+        }
+        if (s.status === 'fulfilled' && s.value?.data) {
+          setSquareStatus(prev => ({ ...prev, ...s.value.data }));
+          // TODO: Load Square menu sync status when Phase 2 is implemented
+          // if (s.value.data.connected && s.value.data.valid) {
+          //   loadSquareMenuSyncStatus();
+          // }
         }
       } catch (e) {
         // Fallback to defaults
@@ -271,6 +298,95 @@ function AdminSettings() {
     }
   };
 
+  // Square integration handlers
+  const handleSquareConnect = async () => {
+    try {
+      setSquareStatus(prev => ({ ...prev, loading: true }));
+      const response = await adminApiUtils.initiateSquareOAuth();
+      if (response.data.success && response.data.authorizationUrl) {
+        // Redirect to Square OAuth
+        window.location.href = response.data.authorizationUrl;
+      } else {
+        toast.error('Failed to initiate Square connection');
+      }
+    } catch (error) {
+      console.error('Square OAuth initiation error:', error);
+      toast.error('Failed to connect to Square');
+      setSquareStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleSquareDisconnect = async () => {
+    if (!confirm('Are you sure you want to disconnect from Square? This will disable menu sync and order integration.')) {
+      return;
+    }
+    
+    try {
+      setSquareStatus(prev => ({ ...prev, loading: true }));
+      await adminApiUtils.disconnectSquare();
+      setSquareStatus({
+        connected: false,
+        valid: false,
+        merchantId: '',
+        merchantName: '',
+        environment: 'sandbox',
+        loading: false
+      });
+      toast.success('Disconnected from Square successfully');
+    } catch (error) {
+      console.error('Square disconnect error:', error);
+      toast.error('Failed to disconnect from Square');
+      setSquareStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleSquareRefresh = async () => {
+    try {
+      setSquareStatus(prev => ({ ...prev, loading: true }));
+      const response = await adminApiUtils.refreshSquareToken();
+      if (response.data.success) {
+        toast.success('Square token refreshed successfully');
+        // Reload status
+        const statusResponse = await adminApiUtils.getSquareStatus();
+        if (statusResponse.data) {
+          setSquareStatus(prev => ({ ...prev, ...statusResponse.data, loading: false }));
+        }
+      } else {
+        toast.error('Failed to refresh Square token');
+        setSquareStatus(prev => ({ ...prev, loading: false }));
+      }
+    } catch (error) {
+      console.error('Square token refresh error:', error);
+      toast.error('Failed to refresh Square token');
+      setSquareStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Square menu sync handlers (TODO: Phase 2)
+  const handleSquareMenuSync = async () => {
+    try {
+      setSquareMenuSyncStatus(prev => ({ ...prev, syncing: true }));
+      toast.loading('Syncing menu items from Square...', { id: 'square-menu-sync' });
+
+      const response = await adminApiUtils.syncSquareMenu();
+      
+      if (response.data.success) {
+        const itemMessage = `${response.data.itemsCreated} items created, ${response.data.itemsUpdated} updated`;
+        const modifierMessage = `${response.data.customizationsCreated || 0} modifiers created, ${response.data.customizationsUpdated || 0} updated`;
+        toast.success(`Square menu sync completed! ${itemMessage}, ${modifierMessage}.`, { id: 'square-menu-sync' });
+        // TODO: Reload Square menu sync status when implemented
+        // await loadSquareMenuSyncStatus();
+      } else {
+        toast.error('Square menu sync not yet implemented (Phase 2)', { id: 'square-menu-sync' });
+      }
+    } catch (error) {
+      console.error('Square menu sync error:', error);
+      toast.error('Square menu sync not yet implemented (Phase 2)', { id: 'square-menu-sync' });
+    } finally {
+      setSquareMenuSyncStatus(prev => ({ ...prev, syncing: false }));
+    }
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -296,6 +412,7 @@ function AdminSettings() {
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="branding">Branding</TabsTrigger>
             <TabsTrigger value="clover">Clover POS</TabsTrigger>
+            <TabsTrigger value="square">Square POS</TabsTrigger>
             <TabsTrigger value="locations">Locations</TabsTrigger>
           </TabsList>
 
@@ -620,6 +737,166 @@ function AdminSettings() {
                         <li>Orders from BistroBytes will appear in your Clover POS</li>
                         <li>Inventory and pricing stay synchronized</li>
                         <li>Customer payments are processed through Clover</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="square">
+            <Card>
+              <CardHeader>
+                <CardTitle>Square POS Integration</CardTitle>
+                <CardDescription>Connect with your Square POS system for menu sync and order management</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {squareStatus.connected ? (
+                  // Connected state
+                  <div className="space-y-4">
+                    <Alert className="border-green-200 bg-green-50">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-800">
+                        Successfully connected to Square POS
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Merchant Name</label>
+                        <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                          {squareStatus.merchantName || 'Loading...'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Merchant ID</label>
+                        <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded font-mono">
+                          {squareStatus.merchantId || 'Loading...'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Environment</label>
+                        <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                          {squareStatus.environment || 'sandbox'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Connection Status</label>
+                        <div className={`text-sm p-2 rounded flex items-center gap-2 ${
+                          squareStatus.valid ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                        }`}>
+                          {squareStatus.valid ? (
+                            <>
+                              <CheckCircle className="h-4 w-4" />
+                              Active & Valid
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="h-4 w-4" />
+                              Token Expired
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button 
+                        onClick={handleSquareRefresh} 
+                        disabled={squareStatus.loading}
+                        variant="outline"
+                      >
+                        {squareStatus.loading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                        )}
+                        Refresh Token
+                      </Button>
+                      <Button 
+                        onClick={handleSquareDisconnect}
+                        disabled={squareStatus.loading}
+                        variant="destructive"
+                      >
+                        {squareStatus.loading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Unlink className="h-4 w-4 mr-2" />
+                        )}
+                        Disconnect
+                      </Button>
+                    </div>
+
+                    {/* Menu Sync Section - TODO: Phase 2 */}
+                    <div className="border-t pt-4 mt-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <div>
+                          <h3 className="text-lg font-medium">Menu Synchronization</h3>
+                          <p className="text-sm text-gray-600">Sync menu items from your Square POS to BistroBytes (Coming in Phase 2)</p>
+                        </div>
+                        <Button 
+                          onClick={handleSquareMenuSync}
+                          disabled={true}
+                          className="bg-gray-400 cursor-not-allowed"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Sync Menu (Coming Soon)
+                        </Button>
+                      </div>
+
+                      <Alert className="border-blue-200 bg-blue-50">
+                        <AlertDescription className="text-blue-800">
+                          <strong>Phase 2 Feature:</strong> Square menu synchronization will be available in the next release. 
+                          This will allow automatic syncing of menu items, prices, and modifiers from your Square catalog.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  </div>
+                ) : (
+                  // Not connected state
+                  <div className="space-y-4">
+                    <Alert className="border-orange-200 bg-orange-50">
+                      <AlertDescription className="text-orange-800">
+                        Connect your Square POS to sync menu items and manage orders from BistroBytes.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="text-center py-8">
+                      <div className="max-w-md mx-auto">
+                        <h3 className="text-lg font-medium mb-3">Connect to Square POS</h3>
+                        <p className="text-sm text-gray-600 mb-6">
+                          Authorize BistroBytes to access your Square merchant account for menu synchronization and order management.
+                        </p>
+                        
+                        <Button 
+                          onClick={handleSquareConnect}
+                          disabled={squareStatus.loading}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          {squareStatus.loading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Connecting...
+                            </>
+                          ) : (
+                            <>
+                              <Link2 className="h-4 w-4 mr-2" />
+                              Connect Square POS
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-2">What you'll get:</h4>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• Automatic menu synchronization from Square</li>
+                        <li>• Real-time inventory updates</li>
+                        <li>• Unified order management</li>
+                        <li>• Item pricing and modifier sync</li>
+                        <li>• Phase 2: Advanced menu sync features</li>
                       </ul>
                     </div>
                   </div>
