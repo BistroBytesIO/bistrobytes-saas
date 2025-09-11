@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +24,7 @@ const defaultHours = {
 
 function AdminSettings() {
   const { restaurant, updateRestaurantData } = useRestaurantAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -92,6 +94,10 @@ function AdminSettings() {
   const [tenantConfig, setTenantConfig] = useState({
     posProvider: 'none' // none, clover, square
   });
+
+  // Track active tab via query param (default profile)
+  const initialTab = searchParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
     const load = async () => {
@@ -168,6 +174,25 @@ function AdminSettings() {
     };
     load();
   }, []); // Remove updateRestaurantData from dependency array to prevent infinite loop
+
+  // Keep query param in sync with active tab
+  useEffect(() => {
+    const current = searchParams.get('tab');
+    if (activeTab && activeTab !== current) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set('tab', activeTab);
+      setSearchParams(sp, { replace: true });
+    }
+    // If landing directly on the Square tab, fetch status immediately
+    if (activeTab === 'square') {
+      adminApiUtils.getSquareStatus()
+        .then(res => {
+          if (res?.data) setSquareStatus(prev => ({ ...prev, ...res.data }));
+        })
+        .catch(() => {/* noop */});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const handleSaveProfile = async () => {
     if (!profile.name?.trim()) {
@@ -445,7 +470,7 @@ function AdminSettings() {
           <p className="text-gray-600">Manage your profile, hours, contact, branding, and locations.</p>
         </div>
 
-        <Tabs defaultValue="profile">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="hours">Business Hours</TabsTrigger>
