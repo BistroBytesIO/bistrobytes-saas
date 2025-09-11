@@ -191,6 +191,13 @@ function AdminSettings() {
         })
         .catch(() => {/* noop */});
     }
+    if (activeTab === 'clover') {
+      adminApiUtils.getCloverStatus()
+        .then(res => {
+          if (res?.data) setCloverStatus(prev => ({ ...prev, ...res.data }));
+        })
+        .catch(() => {/* noop */});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
@@ -472,20 +479,20 @@ function AdminSettings() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="hours">Business Hours</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="branding">Branding</TabsTrigger>
+            <TabsTrigger tabValue="profile">Profile</TabsTrigger>
+            <TabsTrigger tabValue="hours">Business Hours</TabsTrigger>
+            <TabsTrigger tabValue="contact">Contact</TabsTrigger>
+            <TabsTrigger tabValue="branding">Branding</TabsTrigger>
             {(tenantConfig.posProvider === 'clover' || tenantConfig.posProvider === 'none') && (
-              <TabsTrigger value="clover">Clover POS</TabsTrigger>
+              <TabsTrigger tabValue="clover">Clover POS</TabsTrigger>
             )}
             {(tenantConfig.posProvider === 'square' || tenantConfig.posProvider === 'none') && (
-              <TabsTrigger value="square">Square POS</TabsTrigger>
+              <TabsTrigger tabValue="square">Square POS</TabsTrigger>
             )}
-            <TabsTrigger value="locations">Locations</TabsTrigger>
+            <TabsTrigger tabValue="locations">Locations</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile">
+          <TabsContent tabValue="profile">
             <Card>
               <CardHeader>
                 <CardTitle>Profile</CardTitle>
@@ -510,7 +517,7 @@ function AdminSettings() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="hours">
+          <TabsContent tabValue="hours">
             <Card>
               <CardHeader>
                 <CardTitle>Business Hours</CardTitle>
@@ -544,7 +551,7 @@ function AdminSettings() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="contact">
+          <TabsContent tabValue="contact">
             <Card>
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
@@ -593,7 +600,7 @@ function AdminSettings() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="branding">
+          <TabsContent tabValue="branding">
             <Card>
               <CardHeader>
                 <CardTitle>Branding</CardTitle>
@@ -629,7 +636,7 @@ function AdminSettings() {
           </TabsContent>
 
           {(tenantConfig.posProvider === 'clover' || tenantConfig.posProvider === 'none') && (
-            <TabsContent value="clover">
+            <TabsContent tabValue="clover">
             <Card>
               <CardHeader>
                 <CardTitle>Clover POS Integration</CardTitle>
@@ -813,11 +820,11 @@ function AdminSettings() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
           )}
 
           {(tenantConfig.posProvider === 'square' || tenantConfig.posProvider === 'none') && (
-            <TabsContent value="square">
+            <TabsContent tabValue="square">
             <Card>
               <CardHeader>
                 <CardTitle>Square POS Integration</CardTitle>
@@ -975,10 +982,10 @@ function AdminSettings() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
           )}
 
-          <TabsContent value="locations">
+          <TabsContent tabValue="locations">
             <Card>
               <CardHeader>
                 <CardTitle>Locations</CardTitle>
