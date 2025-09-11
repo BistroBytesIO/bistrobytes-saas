@@ -72,7 +72,8 @@ function CloverOAuthCallback() {
             'X-Tenant-Id': user.tenantId,
             'Content-Type': 'application/json'
           },
-          baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443'
+          // Ensure default includes '/api' for consistency with backend routing
+          baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api'
         });
 
         console.log('OAuth callback response:', response.data);
