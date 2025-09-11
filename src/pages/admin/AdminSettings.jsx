@@ -88,15 +88,21 @@ function AdminSettings() {
     syncing: false
   });
 
+  // Tenant configuration state
+  const [tenantConfig, setTenantConfig] = useState({
+    posProvider: 'none' // none, clover, square
+  });
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [p, h, c, s] = await Promise.allSettled([
+        const [p, h, c, s, t] = await Promise.allSettled([
           adminApiUtils.getRestaurantProfile(),
           adminApiUtils.getBusinessHours(),
           adminApiUtils.getCloverStatus(),
           adminApiUtils.getSquareStatus(),
+          adminApiUtils.getTenantConfig(),
         ]);
 
         if (p.status === 'fulfilled' && p.value?.data) {
@@ -119,6 +125,9 @@ function AdminSettings() {
           // if (s.value.data.connected && s.value.data.valid) {
           //   loadSquareMenuSyncStatus();
           // }
+        }
+        if (t.status === 'fulfilled' && t.value?.data) {
+          setTenantConfig(prev => ({ ...prev, ...t.value.data }));
         }
       } catch (e) {
         // Fallback to defaults
@@ -411,8 +420,12 @@ function AdminSettings() {
             <TabsTrigger value="hours">Business Hours</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="branding">Branding</TabsTrigger>
-            <TabsTrigger value="clover">Clover POS</TabsTrigger>
-            <TabsTrigger value="square">Square POS</TabsTrigger>
+            {(tenantConfig.posProvider === 'clover' || tenantConfig.posProvider === 'none') && (
+              <TabsTrigger value="clover">Clover POS</TabsTrigger>
+            )}
+            {(tenantConfig.posProvider === 'square' || tenantConfig.posProvider === 'none') && (
+              <TabsTrigger value="square">Square POS</TabsTrigger>
+            )}
             <TabsTrigger value="locations">Locations</TabsTrigger>
           </TabsList>
 
@@ -559,7 +572,8 @@ function AdminSettings() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="clover">
+          {(tenantConfig.posProvider === 'clover' || tenantConfig.posProvider === 'none') && (
+            <TabsContent value="clover">
             <Card>
               <CardHeader>
                 <CardTitle>Clover POS Integration</CardTitle>
@@ -744,8 +758,10 @@ function AdminSettings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
-          <TabsContent value="square">
+          {(tenantConfig.posProvider === 'square' || tenantConfig.posProvider === 'none') && (
+            <TabsContent value="square">
             <Card>
               <CardHeader>
                 <CardTitle>Square POS Integration</CardTitle>
@@ -904,6 +920,7 @@ function AdminSettings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           <TabsContent value="locations">
             <Card>

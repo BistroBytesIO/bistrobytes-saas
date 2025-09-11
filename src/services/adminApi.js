@@ -268,6 +268,10 @@ adminApiUtils.updateRestaurantSettings = function (data) {
   return this.withRetry(() => adminApi.put(adminEndpoints.restaurant.settings, data));
 };
 
+adminApiUtils.getTenantConfig = function () {
+  return this.withRetry(() => adminApi.get('/admin/tenant/config'));
+};
+
 // Clover Menu Sync utilities
 adminApiUtils.syncCloverMenu = function () {
   return this.withRetry(() => adminApi.post('/admin/clover/oauth/sync/menu'));
