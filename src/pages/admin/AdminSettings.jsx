@@ -97,37 +97,68 @@ function AdminSettings() {
     const load = async () => {
       setLoading(true);
       try {
-        const [p, h, c, s, t] = await Promise.allSettled([
+        // First load tenant config to know which POS provider to load
+        const tenantConfigResponse = await adminApiUtils.getTenantConfig();
+        const posProvider = tenantConfigResponse?.data?.posProvider || 'none';
+        
+        // Set tenant config first
+        setTenantConfig(prev => ({ ...prev, posProvider }));
+
+        // Build the promise array based on POS provider
+        const promises = [
           adminApiUtils.getRestaurantProfile(),
           adminApiUtils.getBusinessHours(),
-          adminApiUtils.getCloverStatus(),
-          adminApiUtils.getSquareStatus(),
-          adminApiUtils.getTenantConfig(),
-        ]);
+        ];
+        
+        // Only load POS status for the configured provider or if none is set
+        let cloverPromise = null;
+        let squarePromise = null;
+        
+        if (posProvider === 'clover' || posProvider === 'none') {
+          cloverPromise = adminApiUtils.getCloverStatus();
+          promises.push(cloverPromise);
+        }
+        
+        if (posProvider === 'square' || posProvider === 'none') {
+          squarePromise = adminApiUtils.getSquareStatus();
+          promises.push(squarePromise);
+        }
 
-        if (p.status === 'fulfilled' && p.value?.data) {
-          setProfile((prev) => ({ ...prev, ...p.value.data }));
-          updateRestaurantData?.({ name: p.value.data.name });
+        const results = await Promise.allSettled(promises);
+        
+        // Process basic results
+        if (results[0].status === 'fulfilled' && results[0].value?.data) {
+          setProfile((prev) => ({ ...prev, ...results[0].value.data }));
+          updateRestaurantData?.({ name: results[0].value.data.name });
         }
-        if (h.status === 'fulfilled' && h.value?.data) {
-          setHours({ ...defaultHours, ...h.value.data });
+        if (results[1].status === 'fulfilled' && results[1].value?.data) {
+          setHours({ ...defaultHours, ...results[1].value.data });
         }
-        if (c.status === 'fulfilled' && c.value?.data) {
-          setCloverStatus(prev => ({ ...prev, ...c.value.data }));
-          // Load menu sync status if Clover is connected
-          if (c.value.data.connected && c.value.data.valid) {
-            loadMenuSyncStatus();
+        
+        // Process POS-specific results
+        let resultIndex = 2;
+        
+        if (cloverPromise) {
+          const cloverResult = results[resultIndex];
+          if (cloverResult.status === 'fulfilled' && cloverResult.value?.data) {
+            setCloverStatus(prev => ({ ...prev, ...cloverResult.value.data }));
+            // Load menu sync status if Clover is connected
+            if (cloverResult.value.data.connected && cloverResult.value.data.valid) {
+              loadMenuSyncStatus();
+            }
           }
+          resultIndex++;
         }
-        if (s.status === 'fulfilled' && s.value?.data) {
-          setSquareStatus(prev => ({ ...prev, ...s.value.data }));
-          // TODO: Load Square menu sync status when Phase 2 is implemented
-          // if (s.value.data.connected && s.value.data.valid) {
-          //   loadSquareMenuSyncStatus();
-          // }
-        }
-        if (t.status === 'fulfilled' && t.value?.data) {
-          setTenantConfig(prev => ({ ...prev, ...t.value.data }));
+        
+        if (squarePromise) {
+          const squareResult = results[resultIndex];
+          if (squareResult.status === 'fulfilled' && squareResult.value?.data) {
+            setSquareStatus(prev => ({ ...prev, ...squareResult.value.data }));
+            // TODO: Load Square menu sync status when Phase 2 is implemented
+            // if (squareResult.value.data.connected && squareResult.value.data.valid) {
+            //   loadSquareMenuSyncStatus();
+            // }
+          }
         }
       } catch (e) {
         // Fallback to defaults
