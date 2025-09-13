@@ -160,10 +160,10 @@ function AdminSettings() {
           const squareResult = results[resultIndex];
           if (squareResult.status === 'fulfilled' && squareResult.value?.data) {
             setSquareStatus(prev => ({ ...prev, ...squareResult.value.data }));
-            // TODO: Load Square menu sync status when Phase 2 is implemented
-            // if (squareResult.value.data.connected && squareResult.value.data.valid) {
-            //   loadSquareMenuSyncStatus();
-            // }
+            // Load Square menu sync status if Square is connected
+            if (squareResult.value.data.connected && squareResult.value.data.valid) {
+              loadSquareMenuSyncStatus();
+            }
           }
         }
       } catch (e) {
@@ -275,6 +275,21 @@ function AdminSettings() {
       }
     } catch (error) {
       console.error('Failed to load menu sync status:', error);
+    }
+  };
+
+  const loadSquareMenuSyncStatus = async () => {
+    try {
+      const response = await adminApiUtils.getSquareMenuSyncStatus();
+      if (response.data.success) {
+        setSquareMenuSyncStatus(prev => ({
+          ...prev,
+          ...response.data,
+          syncing: false
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load Square menu sync status:', error);
     }
   };
 
@@ -434,26 +449,29 @@ function AdminSettings() {
     }
   };
 
-  // Square menu sync handlers (TODO: Phase 2)
+  // Square menu sync handlers
   const handleSquareMenuSync = async () => {
     try {
       setSquareMenuSyncStatus(prev => ({ ...prev, syncing: true }));
       toast.loading('Syncing menu items from Square...', { id: 'square-menu-sync' });
 
       const response = await adminApiUtils.syncSquareMenu();
-      
+
       if (response.data.success) {
         const itemMessage = `${response.data.itemsCreated} items created, ${response.data.itemsUpdated} updated`;
         const modifierMessage = `${response.data.customizationsCreated || 0} modifiers created, ${response.data.customizationsUpdated || 0} updated`;
         toast.success(`Square menu sync completed! ${itemMessage}, ${modifierMessage}.`, { id: 'square-menu-sync' });
-        // TODO: Reload Square menu sync status when implemented
-        // await loadSquareMenuSyncStatus();
+        // Reload Square menu sync status
+        await loadSquareMenuSyncStatus();
       } else {
-        toast.error('Square menu sync not yet implemented (Phase 2)', { id: 'square-menu-sync' });
+        toast.error('Square menu sync completed with errors. Check the logs for details.', { id: 'square-menu-sync' });
+        if (response.data.errors && response.data.errors.length > 0) {
+          console.error('Square menu sync errors:', response.data.errors);
+        }
       }
     } catch (error) {
       console.error('Square menu sync error:', error);
-      toast.error('Square menu sync not yet implemented (Phase 2)', { id: 'square-menu-sync' });
+      toast.error('Failed to sync menu items from Square', { id: 'square-menu-sync' });
     } finally {
       setSquareMenuSyncStatus(prev => ({ ...prev, syncing: false }));
     }
@@ -907,30 +925,62 @@ function AdminSettings() {
                       </Button>
                     </div>
 
-                    {/* Menu Sync Section - TODO: Phase 2 */}
+                    {/* Menu Sync Section */}
                     <div className="border-t pt-4 mt-6">
                       <div className="flex justify-between items-center mb-4">
                         <div>
                           <h3 className="text-lg font-medium">Menu Synchronization</h3>
-                          <p className="text-sm text-gray-600">Sync menu items from your Square POS to BistroBytes (Coming in Phase 2)</p>
+                          <p className="text-sm text-gray-600">Sync menu items from your Square POS to BistroBytes</p>
                         </div>
-                        <Button 
+                        <Button
                           onClick={handleSquareMenuSync}
-                          disabled={true}
-                          className="bg-gray-400 cursor-not-allowed"
+                          disabled={squareMenuSyncStatus.syncing}
+                          className="bg-blue-600 hover:bg-blue-700"
                         >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Sync Menu (Coming Soon)
+                          {squareMenuSyncStatus.syncing ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                          )}
+                          {squareMenuSyncStatus.syncing ? 'Syncing...' : 'Sync Menu'}
                         </Button>
                       </div>
 
-                      <Alert className="border-blue-200 bg-blue-50">
-                        <AlertDescription className="text-blue-800">
-                          <strong>Phase 2 Feature:</strong> Square menu synchronization will be available in the next release. 
-                          This will allow automatic syncing of menu items, prices, and modifiers from your Square catalog.
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div className="text-center p-4 bg-gray-50 rounded-lg">
+                          <div className="text-2xl font-bold text-gray-900">{squareMenuSyncStatus.totalMenuItems}</div>
+                          <div className="text-sm text-gray-600">Total Menu Items</div>
+                        </div>
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">{squareMenuSyncStatus.syncedItems}</div>
+                          <div className="text-sm text-gray-600">Synced from Square</div>
+                        </div>
+                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">{squareMenuSyncStatus.syncPercentage}%</div>
+                          <div className="text-sm text-gray-600">Sync Coverage</div>
+                        </div>
+                      </div>
+
+                      {squareMenuSyncStatus.lastSyncAt && (
+                        <div className="text-sm text-gray-600 mb-4">
+                          Last synced: {new Date(squareMenuSyncStatus.lastSyncAt).toLocaleString()}
+                        </div>
+                      )}
+
+                      <Alert>
+                        <AlertDescription>
+                          Click "Sync Menu" to pull the latest menu items from your Square POS.
+                          This will create new items and update existing ones with current pricing and availability.
                         </AlertDescription>
                       </Alert>
                     </div>
+
+                    <Alert>
+                      <AlertDescription>
+                        Once connected, menu items from your Square POS will automatically sync with BistroBytes.
+                        Orders placed through BistroBytes will appear in your Square dashboard.
+                      </AlertDescription>
+                    </Alert>
                   </div>
                 ) : (
                   // Not connected state
@@ -975,7 +1025,7 @@ function AdminSettings() {
                         <li>• Real-time inventory updates</li>
                         <li>• Unified order management</li>
                         <li>• Item pricing and modifier sync</li>
-                        <li>• Phase 2: Advanced menu sync features</li>
+                        <li>• Advanced menu sync features</li>
                       </ul>
                     </div>
                   </div>
