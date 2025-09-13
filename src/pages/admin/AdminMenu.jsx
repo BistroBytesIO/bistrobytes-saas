@@ -495,7 +495,7 @@ function AdminMenu() {
                             )}
                           </h4>
                           <span className="font-bold text-green-600 text-lg">
-                            ${item.price.toFixed(2)}
+                            ${item.price ? item.price.toFixed(2) : '0.00'}
                           </span>
                         </div>
                         
