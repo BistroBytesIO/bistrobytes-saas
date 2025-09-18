@@ -308,6 +308,18 @@ function AdminSettings() {
     }
   };
 
+  // Payment config utility function
+  const loadPaymentConfig = async () => {
+    try {
+      const response = await adminApiUtils.getPaymentConfig();
+      if (response?.data) {
+        setPaymentConfig(prev => ({ ...prev, ...response.data }));
+      }
+    } catch (error) {
+      console.error('Failed to load payment config:', error);
+    }
+  };
+
   // Menu sync utility functions
   const loadMenuSyncStatus = async () => {
     try {
@@ -347,6 +359,7 @@ function AdminSettings() {
       if (response.data.success && response.data.authorizationUrl) {
         // Redirect to Clover OAuth
         window.location.href = response.data.authorizationUrl;
+        // Note: loadPaymentConfig will be called when user returns from OAuth
       } else {
         toast.error('Failed to initiate Clover connection');
       }
@@ -361,7 +374,7 @@ function AdminSettings() {
     if (!confirm('Are you sure you want to disconnect from Clover? This will disable menu sync and order integration.')) {
       return;
     }
-    
+
     try {
       setCloverStatus(prev => ({ ...prev, loading: true }));
       await adminApiUtils.disconnectClover();
@@ -373,6 +386,8 @@ function AdminSettings() {
         environment: 'sandbox',
         loading: false
       });
+      // Reload payment config to synchronize connection state
+      await loadPaymentConfig();
       toast.success('Disconnected from Clover successfully');
     } catch (error) {
       console.error('Clover disconnect error:', error);
@@ -392,6 +407,8 @@ function AdminSettings() {
         if (statusResponse.data) {
           setCloverStatus(prev => ({ ...prev, ...statusResponse.data, loading: false }));
         }
+        // Reload payment config to synchronize connection state
+        await loadPaymentConfig();
       } else {
         toast.error('Failed to refresh Clover token');
         setCloverStatus(prev => ({ ...prev, loading: false }));
