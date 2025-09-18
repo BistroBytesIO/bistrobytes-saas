@@ -323,4 +323,13 @@ adminApiUtils.getSquareMenuSyncStatus = function () {
   return this.withRetry(() => adminApi.get('/admin/square/oauth/sync/status'));
 };
 
+// Payment Configuration utilities
+adminApiUtils.getPaymentConfig = function () {
+  return this.withRetry(() => adminApi.get('/tenant/payments/config'));
+};
+
+adminApiUtils.updatePaymentProcessor = function (processor) {
+  return this.withRetry(() => adminApi.put('/tenant/payments/processor', { processor }));
+};
+
 export default adminApi;

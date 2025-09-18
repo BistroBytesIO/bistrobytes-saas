@@ -100,7 +100,8 @@ function AdminSettings() {
     processor: 'STRIPE', // STRIPE, CLOVER
     cloverConfigured: false,
     stripeConfigured: false,
-    loading: false
+    loading: false,
+    saving: false
   });
 
   // Track active tab via query param (default profile)
@@ -122,6 +123,7 @@ function AdminSettings() {
         const promises = [
           adminApiUtils.getRestaurantProfile(),
           adminApiUtils.getBusinessHours(),
+          adminApiUtils.getPaymentConfig(), // Load payment configuration
         ];
         
         // Only load POS status for the configured provider or if none is set
@@ -148,9 +150,12 @@ function AdminSettings() {
         if (results[1].status === 'fulfilled' && results[1].value?.data) {
           setHours({ ...defaultHours, ...results[1].value.data });
         }
+        if (results[2].status === 'fulfilled' && results[2].value?.data) {
+          setPaymentConfig(prev => ({ ...prev, ...results[2].value.data }));
+        }
         
         // Process POS-specific results
-        let resultIndex = 2;
+        let resultIndex = 3;
         
         if (cloverPromise) {
           const cloverResult = results[resultIndex];
@@ -208,6 +213,14 @@ function AdminSettings() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  // Update payment config when clover status changes
+  useEffect(() => {
+    setPaymentConfig(prev => ({
+      ...prev,
+      cloverConfigured: cloverStatus.connected && cloverStatus.valid
+    }));
+  }, [cloverStatus.connected, cloverStatus.valid]);
 
   const handleSaveProfile = async () => {
     if (!profile.name?.trim()) {
@@ -267,6 +280,31 @@ function AdminSettings() {
       toast.error('Failed to save hours');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSavePaymentConfig = async () => {
+    // Validate Clover selection
+    if (paymentConfig.processor === 'CLOVER' && !paymentConfig.cloverConfigured) {
+      toast.error('Please connect your Clover POS before selecting it as payment processor');
+      return;
+    }
+
+    setPaymentConfig(prev => ({ ...prev, saving: true }));
+    try {
+      await adminApiUtils.updatePaymentProcessor(paymentConfig.processor);
+      toast.success(`Payment processor updated to ${paymentConfig.processor}`);
+
+      // Optional: Reload payment config to confirm server state
+      const response = await adminApiUtils.getPaymentConfig();
+      if (response?.data) {
+        setPaymentConfig(prev => ({ ...prev, ...response.data, saving: false }));
+      }
+    } catch (e) {
+      console.error('Payment config save error:', e);
+      const errorMessage = e.response?.data?.message || 'Failed to save payment configuration';
+      toast.error(errorMessage);
+      setPaymentConfig(prev => ({ ...prev, saving: false }));
     }
   };
 
@@ -670,6 +708,16 @@ function AdminSettings() {
               </CardHeader>
               <CardContent className="space-y-6">
 
+                {loading && (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                    <span>Loading payment configuration...</span>
+                  </div>
+                )}
+
+                {!loading && (
+                  <>
+
                 {/* Payment Processor Selection */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Payment Processor</h3>
@@ -721,9 +769,9 @@ function AdminSettings() {
                         paymentConfig.processor === 'CLOVER'
                           ? 'border-green-500 bg-green-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      } ${!cloverStatus.connected ? 'opacity-50' : ''}`}
+                      } ${!paymentConfig.cloverConfigured ? 'opacity-50' : ''}`}
                       onClick={() => {
-                        if (cloverStatus.connected) {
+                        if (paymentConfig.cloverConfigured) {
                           setPaymentConfig({...paymentConfig, processor: 'CLOVER'});
                         }
                       }}
@@ -748,13 +796,13 @@ function AdminSettings() {
                         • Real-time transaction synchronization
                         • Unified reporting and reconciliation
                       </div>
-                      {!cloverStatus.connected && (
+                      {!paymentConfig.cloverConfigured && (
                         <div className="mt-3 flex items-center gap-2 text-sm">
                           <XCircle className="w-4 h-4 text-gray-400" />
                           <span className="text-gray-500">Requires Clover POS connection</span>
                         </div>
                       )}
-                      {paymentConfig.processor === 'CLOVER' && cloverStatus.connected && (
+                      {paymentConfig.processor === 'CLOVER' && paymentConfig.cloverConfigured && (
                         <div className="mt-3 flex items-center gap-2 text-sm">
                           <CheckCircle className="w-4 h-4 text-green-500" />
                           <span className="text-green-600">Selected</span>
@@ -785,12 +833,12 @@ function AdminSettings() {
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${
-                          cloverStatus.connected ? 'bg-green-500' : 'bg-gray-400'
+                          paymentConfig.cloverConfigured ? 'bg-green-500' : 'bg-gray-400'
                         }`}></div>
                         <span className="font-medium">Clover</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        {cloverStatus.connected ? (
+                        {paymentConfig.cloverConfigured ? (
                           <>
                             <CheckCircle className="w-4 h-4 text-green-500" />
                             <span className="text-green-600">Connected</span>
@@ -805,7 +853,7 @@ function AdminSettings() {
                     </div>
                   </div>
 
-                  {!cloverStatus.connected && (
+                  {!paymentConfig.cloverConfigured && (
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">
                         <strong>Want to use Clover for payments?</strong> Connect your Clover POS in the
@@ -827,14 +875,11 @@ function AdminSettings() {
                 {/* Save Button */}
                 <div className="border-t pt-6">
                   <Button
-                    onClick={() => {
-                      // TODO: Implement save functionality
-                      toast.success('Payment processor configuration saved');
-                    }}
-                    disabled={paymentConfig.loading}
+                    onClick={handleSavePaymentConfig}
+                    disabled={paymentConfig.saving}
                     className="flex items-center gap-2"
                   >
-                    {paymentConfig.loading ? (
+                    {paymentConfig.saving ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Saving...
@@ -847,6 +892,9 @@ function AdminSettings() {
                     )}
                   </Button>
                 </div>
+
+                  </>
+                )}
 
               </CardContent>
             </Card>
