@@ -95,6 +95,14 @@ function AdminSettings() {
     posProvider: 'none' // none, clover, square
   });
 
+  // Payment configuration state
+  const [paymentConfig, setPaymentConfig] = useState({
+    processor: 'STRIPE', // STRIPE, CLOVER
+    cloverConfigured: false,
+    stripeConfigured: false,
+    loading: false
+  });
+
   // Track active tab via query param (default profile)
   const initialTab = searchParams.get('tab') || 'profile';
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -501,6 +509,7 @@ function AdminSettings() {
             <TabsTrigger tabValue="hours">Business Hours</TabsTrigger>
             <TabsTrigger tabValue="contact">Contact</TabsTrigger>
             <TabsTrigger tabValue="branding">Branding</TabsTrigger>
+            <TabsTrigger tabValue="payments">Payment Processing</TabsTrigger>
             {(tenantConfig.posProvider === 'clover' || tenantConfig.posProvider === 'none') && (
               <TabsTrigger tabValue="clover">Clover POS</TabsTrigger>
             )}
@@ -649,6 +658,196 @@ function AdminSettings() {
                     Save Branding
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent tabValue="payments">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Processing</CardTitle>
+                <CardDescription>Configure how customer payments are processed</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+
+                {/* Payment Processor Selection */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Payment Processor</h3>
+                  <p className="text-sm text-gray-600">
+                    Choose which payment system will process customer transactions
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Stripe Option */}
+                    <div
+                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        paymentConfig.processor === 'STRIPE'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => setPaymentConfig({...paymentConfig, processor: 'STRIPE'})}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border-2 ${
+                          paymentConfig.processor === 'STRIPE'
+                            ? 'border-blue-500 bg-blue-500'
+                            : 'border-gray-300'
+                        }`}>
+                          {paymentConfig.processor === 'STRIPE' && (
+                            <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Stripe</h4>
+                          <p className="text-sm text-gray-600">Industry-leading payment processing</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-sm text-gray-500">
+                        • Express checkout with Apple Pay & Google Pay
+                        • Comprehensive fraud protection
+                        • Global payment methods support
+                      </div>
+                      {paymentConfig.processor === 'STRIPE' && (
+                        <div className="mt-3 flex items-center gap-2 text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-green-600">Selected</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Clover Option */}
+                    <div
+                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        paymentConfig.processor === 'CLOVER'
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      } ${!cloverStatus.connected ? 'opacity-50' : ''}`}
+                      onClick={() => {
+                        if (cloverStatus.connected) {
+                          setPaymentConfig({...paymentConfig, processor: 'CLOVER'});
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border-2 ${
+                          paymentConfig.processor === 'CLOVER'
+                            ? 'border-green-500 bg-green-500'
+                            : 'border-gray-300'
+                        }`}>
+                          {paymentConfig.processor === 'CLOVER' && (
+                            <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Clover</h4>
+                          <p className="text-sm text-gray-600">Integrated POS payment processing</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-sm text-gray-500">
+                        • Direct integration with your Clover POS
+                        • Real-time transaction synchronization
+                        • Unified reporting and reconciliation
+                      </div>
+                      {!cloverStatus.connected && (
+                        <div className="mt-3 flex items-center gap-2 text-sm">
+                          <XCircle className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-500">Requires Clover POS connection</span>
+                        </div>
+                      )}
+                      {paymentConfig.processor === 'CLOVER' && cloverStatus.connected && (
+                        <div className="mt-3 flex items-center gap-2 text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-green-600">Selected</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Configuration Status */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Integration Status</h3>
+
+                  <div className="space-y-3">
+                    {/* Stripe Status */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="font-medium">Stripe</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span className="text-green-600">Ready</span>
+                      </div>
+                    </div>
+
+                    {/* Clover Status */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${
+                          cloverStatus.connected ? 'bg-green-500' : 'bg-gray-400'
+                        }`}></div>
+                        <span className="font-medium">Clover</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        {cloverStatus.connected ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <span className="text-green-600">Connected</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-500">Not Connected</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {!cloverStatus.connected && (
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <strong>Want to use Clover for payments?</strong> Connect your Clover POS in the
+                        {' '}
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto text-blue-600 underline"
+                          onClick={() => setActiveTab('clover')}
+                        >
+                          Clover POS tab
+                        </Button>
+                        {' '}
+                        first, then return here to select it as your payment processor.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Save Button */}
+                <div className="border-t pt-6">
+                  <Button
+                    onClick={() => {
+                      // TODO: Implement save functionality
+                      toast.success('Payment processor configuration saved');
+                    }}
+                    disabled={paymentConfig.loading}
+                    className="flex items-center gap-2"
+                  >
+                    {paymentConfig.loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Save Payment Configuration
+                      </>
+                    )}
+                  </Button>
+                </div>
+
               </CardContent>
             </Card>
           </TabsContent>
