@@ -97,8 +97,9 @@ function AdminSettings() {
 
   // Payment configuration state
   const [paymentConfig, setPaymentConfig] = useState({
-    processor: 'STRIPE', // STRIPE, CLOVER
+    processor: 'STRIPE', // STRIPE, CLOVER, SQUARE
     cloverConfigured: false,
+    squareConfigured: false,
     stripeConfigured: false,
     loading: false,
     saving: false
@@ -222,6 +223,14 @@ function AdminSettings() {
     }));
   }, [cloverStatus.connected, cloverStatus.valid]);
 
+  // Update payment config when Square status changes
+  useEffect(() => {
+    setPaymentConfig(prev => ({
+      ...prev,
+      squareConfigured: squareStatus.connected && squareStatus.valid
+    }));
+  }, [squareStatus.connected, squareStatus.valid]);
+
   const handleSaveProfile = async () => {
     if (!profile.name?.trim()) {
       toast.error('Restaurant name is required');
@@ -287,6 +296,12 @@ function AdminSettings() {
     // Validate Clover selection
     if (paymentConfig.processor === 'CLOVER' && !paymentConfig.cloverConfigured) {
       toast.error('Please connect your Clover POS before selecting it as payment processor');
+      return;
+    }
+
+    // Validate Square selection
+    if (paymentConfig.processor === 'SQUARE' && !paymentConfig.squareConfigured) {
+      toast.error('Please connect your Square POS before selecting it as payment processor');
       return;
     }
 
@@ -742,7 +757,7 @@ function AdminSettings() {
                     Choose which payment system will process customer transactions
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Stripe Option */}
                     <div
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
@@ -826,6 +841,53 @@ function AdminSettings() {
                         </div>
                       )}
                     </div>
+
+                    {/* Square Option */}
+                    <div
+                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        paymentConfig.processor === 'SQUARE'
+                          ? 'border-orange-500 bg-orange-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      } ${!paymentConfig.squareConfigured ? 'opacity-50' : ''}`}
+                      onClick={() => {
+                        if (paymentConfig.squareConfigured) {
+                          setPaymentConfig({...paymentConfig, processor: 'SQUARE'});
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border-2 ${
+                          paymentConfig.processor === 'SQUARE'
+                            ? 'border-orange-500 bg-orange-500'
+                            : 'border-gray-300'
+                        }`}>
+                          {paymentConfig.processor === 'SQUARE' && (
+                            <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Square</h4>
+                          <p className="text-sm text-gray-600">Square POS payment processing</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-sm text-gray-500">
+                        • Direct integration with your Square POS
+                        • Real-time transaction synchronization
+                        • Comprehensive payment tools
+                      </div>
+                      {!paymentConfig.squareConfigured && (
+                        <div className="mt-3 flex items-center gap-2 text-sm">
+                          <XCircle className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-500">Requires Square POS connection</span>
+                        </div>
+                      )}
+                      {paymentConfig.processor === 'SQUARE' && paymentConfig.squareConfigured && (
+                        <div className="mt-3 flex items-center gap-2 text-sm">
+                          <CheckCircle className="w-4 h-4 text-orange-500" />
+                          <span className="text-orange-600">Selected</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -868,6 +930,29 @@ function AdminSettings() {
                         )}
                       </div>
                     </div>
+
+                    {/* Square Status */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${
+                          paymentConfig.squareConfigured ? 'bg-orange-500' : 'bg-gray-400'
+                        }`}></div>
+                        <span className="font-medium">Square</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        {paymentConfig.squareConfigured ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 text-orange-500" />
+                            <span className="text-orange-600">Connected</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-500">Not Connected</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {!paymentConfig.cloverConfigured && (
@@ -881,6 +966,24 @@ function AdminSettings() {
                           onClick={() => setActiveTab('clover')}
                         >
                           Clover POS tab
+                        </Button>
+                        {' '}
+                        first, then return here to select it as your payment processor.
+                      </p>
+                    </div>
+                  )}
+
+                  {!paymentConfig.squareConfigured && (
+                    <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                      <p className="text-sm text-orange-800">
+                        <strong>Want to use Square for payments?</strong> Connect your Square POS in the
+                        {' '}
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto text-orange-600 underline"
+                          onClick={() => setActiveTab('square')}
+                        >
+                          Square POS tab
                         </Button>
                         {' '}
                         first, then return here to select it as your payment processor.
