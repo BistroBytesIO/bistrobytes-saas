@@ -97,7 +97,7 @@ function AdminSettings() {
 
   // Payment configuration state
   const [paymentConfig, setPaymentConfig] = useState({
-    processor: 'STRIPE', // STRIPE, CLOVER, SQUARE
+    paymentProcessor: 'STRIPE', // STRIPE, CLOVER, SQUARE
     cloverConfigured: false,
     squareConfigured: false,
     stripeConfigured: false,
@@ -294,21 +294,21 @@ function AdminSettings() {
 
   const handleSavePaymentConfig = async () => {
     // Validate Clover selection
-    if (paymentConfig.processor === 'CLOVER' && !paymentConfig.cloverConfigured) {
+    if (paymentConfig.paymentProcessor === 'CLOVER' && !paymentConfig.cloverConfigured) {
       toast.error('Please connect your Clover POS before selecting it as payment processor');
       return;
     }
 
     // Validate Square selection
-    if (paymentConfig.processor === 'SQUARE' && !paymentConfig.squareConfigured) {
+    if (paymentConfig.paymentProcessor === 'SQUARE' && !paymentConfig.squareConfigured) {
       toast.error('Please connect your Square POS before selecting it as payment processor');
       return;
     }
 
     setPaymentConfig(prev => ({ ...prev, saving: true }));
     try {
-      await adminApiUtils.updatePaymentProcessor(paymentConfig.processor);
-      toast.success(`Payment processor updated to ${paymentConfig.processor}`);
+      await adminApiUtils.updatePaymentProcessor(paymentConfig.paymentProcessor);
+      toast.success(`Payment processor updated to ${paymentConfig.paymentProcessor}`);
 
       // Optional: Reload payment config to confirm server state
       const response = await adminApiUtils.getPaymentConfig();
@@ -761,19 +761,19 @@ function AdminSettings() {
                     {/* Stripe Option */}
                     <div
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        paymentConfig.processor === 'STRIPE'
+                        paymentConfig.paymentProcessor === 'STRIPE'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
-                      onClick={() => setPaymentConfig({...paymentConfig, processor: 'STRIPE'})}
+                      onClick={() => setPaymentConfig({...paymentConfig, paymentProcessor: 'STRIPE'})}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border-2 ${
-                          paymentConfig.processor === 'STRIPE'
+                          paymentConfig.paymentProcessor === 'STRIPE'
                             ? 'border-blue-500 bg-blue-500'
                             : 'border-gray-300'
                         }`}>
-                          {paymentConfig.processor === 'STRIPE' && (
+                          {paymentConfig.paymentProcessor === 'STRIPE' && (
                             <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                           )}
                         </div>
@@ -787,7 +787,7 @@ function AdminSettings() {
                         • Comprehensive fraud protection
                         • Global payment methods support
                       </div>
-                      {paymentConfig.processor === 'STRIPE' && (
+                      {paymentConfig.paymentProcessor === 'STRIPE' && (
                         <div className="mt-3 flex items-center gap-2 text-sm">
                           <CheckCircle className="w-4 h-4 text-green-500" />
                           <span className="text-green-600">Selected</span>
@@ -798,23 +798,23 @@ function AdminSettings() {
                     {/* Clover Option */}
                     <div
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        paymentConfig.processor === 'CLOVER'
+                        paymentConfig.paymentProcessor === 'CLOVER'
                           ? 'border-green-500 bg-green-50'
                           : 'border-gray-200 hover:border-gray-300'
                       } ${!paymentConfig.cloverConfigured ? 'opacity-50' : ''}`}
                       onClick={() => {
                         if (paymentConfig.cloverConfigured) {
-                          setPaymentConfig({...paymentConfig, processor: 'CLOVER'});
+                          setPaymentConfig({...paymentConfig, paymentProcessor: 'CLOVER'});
                         }
                       }}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border-2 ${
-                          paymentConfig.processor === 'CLOVER'
+                          paymentConfig.paymentProcessor === 'CLOVER'
                             ? 'border-green-500 bg-green-500'
                             : 'border-gray-300'
                         }`}>
-                          {paymentConfig.processor === 'CLOVER' && (
+                          {paymentConfig.paymentProcessor === 'CLOVER' && (
                             <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                           )}
                         </div>
@@ -834,7 +834,7 @@ function AdminSettings() {
                           <span className="text-gray-500">Requires Clover POS connection</span>
                         </div>
                       )}
-                      {paymentConfig.processor === 'CLOVER' && paymentConfig.cloverConfigured && (
+                      {paymentConfig.paymentProcessor === 'CLOVER' && paymentConfig.cloverConfigured && (
                         <div className="mt-3 flex items-center gap-2 text-sm">
                           <CheckCircle className="w-4 h-4 text-green-500" />
                           <span className="text-green-600">Selected</span>
@@ -845,23 +845,23 @@ function AdminSettings() {
                     {/* Square Option */}
                     <div
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        paymentConfig.processor === 'SQUARE'
+                        paymentConfig.paymentProcessor === 'SQUARE'
                           ? 'border-orange-500 bg-orange-50'
                           : 'border-gray-200 hover:border-gray-300'
                       } ${!paymentConfig.squareConfigured ? 'opacity-50' : ''}`}
                       onClick={() => {
                         if (paymentConfig.squareConfigured) {
-                          setPaymentConfig({...paymentConfig, processor: 'SQUARE'});
+                          setPaymentConfig({...paymentConfig, paymentProcessor: 'SQUARE'});
                         }
                       }}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border-2 ${
-                          paymentConfig.processor === 'SQUARE'
+                          paymentConfig.paymentProcessor === 'SQUARE'
                             ? 'border-orange-500 bg-orange-500'
                             : 'border-gray-300'
                         }`}>
-                          {paymentConfig.processor === 'SQUARE' && (
+                          {paymentConfig.paymentProcessor === 'SQUARE' && (
                             <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                           )}
                         </div>
@@ -881,7 +881,7 @@ function AdminSettings() {
                           <span className="text-gray-500">Requires Square POS connection</span>
                         </div>
                       )}
-                      {paymentConfig.processor === 'SQUARE' && paymentConfig.squareConfigured && (
+                      {paymentConfig.paymentProcessor === 'SQUARE' && paymentConfig.squareConfigured && (
                         <div className="mt-3 flex items-center gap-2 text-sm">
                           <CheckCircle className="w-4 h-4 text-orange-500" />
                           <span className="text-orange-600">Selected</span>
