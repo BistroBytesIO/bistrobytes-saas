@@ -326,7 +326,7 @@ const SignupPage = () => {
     switch (step) {
       case 1:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6" key="step-1">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell us about your restaurant</h2>
               <p className="text-gray-600">Let's start with the basics</p>
@@ -405,7 +405,7 @@ const SignupPage = () => {
 
       case 2:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6" key="step-2">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Contact Information</h2>
               <p className="text-gray-600">How can customers reach you?</p>
@@ -517,7 +517,7 @@ const SignupPage = () => {
 
       case 3:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6" key="step-3">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Business Settings</h2>
               <p className="text-gray-600">Configure your restaurant operations</p>
@@ -654,7 +654,7 @@ const SignupPage = () => {
       case 4:
         console.log('Rendering step 4 - Plan Selection with Visual Branding')
         return (
-          <div className="space-y-6">
+          <div className="space-y-6" key="step-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Plan</h2>
               <p className="text-gray-600">Select the plan that fits your needs</p>
@@ -946,7 +946,7 @@ const SignupPage = () => {
 
       case 5:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6" key="step-5">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment & Account Setup</h2>
               <p className="text-gray-600">Complete your payment to create your restaurant website</p>
@@ -1016,7 +1016,7 @@ const SignupPage = () => {
 
       case 6:
         return (
-          <div className="text-center space-y-6">
+          <div className="text-center space-y-6" key="step-6">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
               <Check className="h-6 w-6 text-green-600" />
             </div>
