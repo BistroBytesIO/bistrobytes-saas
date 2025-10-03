@@ -185,8 +185,29 @@ const SignupPage = () => {
     fetchPlans()
   }, [])
 
+  // Define fields to validate for each step
+  const getFieldsForStep = (stepNumber) => {
+    switch (stepNumber) {
+      case 1:
+        return ['restaurantName', 'businessType', 'cuisine', 'websiteUrl', 'description', 'heroTagline']
+      case 2:
+        return ['ownerName', 'email', 'phone', 'address', 'city', 'state', 'zipCode', 'country']
+      case 3:
+        return ['openTime', 'closeTime', 'timezone', 'currency', 'taxRate', 'serviceFeeRate', 'minimumOrder', 'hasExistingPOS', 'posSystem']
+      case 4:
+        return ['plan', 'billingCycle', 'primaryColor', 'secondaryColor', 'logoUrl', 'heroImage1', 'heroImage2', 'heroImage3', 'howDidYouHear', 'marketingEmails']
+      case 5:
+        return [] // No validation needed for payment step
+      default:
+        return []
+    }
+  }
+
   const nextStep = async () => {
-    const isValid = await trigger()
+    // Only validate fields for the current step
+    const fieldsToValidate = getFieldsForStep(step)
+    const isValid = fieldsToValidate.length > 0 ? await trigger(fieldsToValidate) : true
+
     if (isValid) {
       setStep(step + 1)
     }
