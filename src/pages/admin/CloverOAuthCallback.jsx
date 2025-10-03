@@ -13,9 +13,11 @@ function CloverOAuthCallback() {
   const [searchParams] = useSearchParams();
   const { user } = useRestaurantAuth();
   
-  const [status, setStatus] = useState('processing'); // processing, success, error
+  const [status, setStatus] = useState('processing'); // processing, success, error, retrying
   const [message, setMessage] = useState('Processing Clover authorization...');
   const [details, setDetails] = useState(null);
+  const [isRetryable, setIsRetryable] = useState(false);
+  const [retryCountdown, setRetryCountdown] = useState(null);
 
   // Get OAuth parameters from URL
   const code = searchParams.get('code');
@@ -101,9 +103,40 @@ function CloverOAuthCallback() {
 
       } catch (error) {
         console.error('OAuth callback processing error:', error);
-        
+
         let errorMessage = 'Failed to process OAuth callback';
-        
+        let retryable = false;
+
+        // Check if this is a retryable error (auth code expired)
+        if (error.response?.status === 409 && error.response?.data?.retryable) {
+          // This is the auth code expiration error - handle gracefully with auto-retry
+          retryable = true;
+          errorMessage = error.response.data?.userMessage || error.response.data?.error ||
+                        'Clover connection timed out during first-time setup. Retrying automatically...';
+
+          setStatus('retrying');
+          setMessage(errorMessage);
+          setIsRetryable(true);
+
+          // Show countdown and auto-redirect to settings to retry
+          let countdown = 3;
+          setRetryCountdown(countdown);
+
+          const countdownInterval = setInterval(() => {
+            countdown--;
+            setRetryCountdown(countdown);
+
+            if (countdown <= 0) {
+              clearInterval(countdownInterval);
+              navigate('/admin/settings?tab=clover&retry=true', { replace: true });
+            }
+          }, 1000);
+
+          toast.info('Clover app connected! Retrying connection in 3 seconds...', { duration: 3000 });
+          return; // Exit early, don't set error status
+        }
+
+        // Handle other errors
         if (error.response?.status === 401) {
           errorMessage = 'Authentication failed. Please log in and try again.';
         } else if (error.response?.status === 400) {
@@ -116,6 +149,7 @@ function CloverOAuthCallback() {
 
         setStatus('error');
         setMessage(errorMessage);
+        setIsRetryable(retryable);
         toast.error('Failed to connect to Clover POS');
       }
     };
@@ -136,7 +170,7 @@ function CloverOAuthCallback() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full">
-            {status === 'processing' && (
+            {(status === 'processing' || status === 'retrying') && (
               <div className="bg-blue-100">
                 <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
               </div>
@@ -152,13 +186,14 @@ function CloverOAuthCallback() {
               </div>
             )}
           </div>
-          
+
           <CardTitle className="text-2xl font-bold text-gray-900">
             {status === 'processing' && 'Connecting to Clover...'}
+            {status === 'retrying' && 'App Connected - Retrying...'}
             {status === 'success' && 'Connection Successful!'}
-            {status === 'error' && 'Connection Failed'}
+            {status === 'error' && (isRetryable ? 'Retry Required' : 'Connection Failed')}
           </CardTitle>
-          
+
           <CardDescription className="mt-2">
             {message}
           </CardDescription>
@@ -228,6 +263,26 @@ function CloverOAuthCallback() {
                   <li>Contact support if the issue persists</li>
                 </ul>
               </div>
+            </div>
+          )}
+
+          {status === 'retrying' && retryCountdown !== null && (
+            <div className="space-y-4">
+              <Alert className="border-blue-200 bg-blue-50">
+                <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                <AlertDescription className="text-blue-800">
+                  <strong>Great news!</strong> Your Clover app is now connected to your merchant account.
+                  <br />
+                  <span className="text-sm">Automatically retrying connection in {retryCountdown} second{retryCountdown !== 1 ? 's' : ''}...</span>
+                </AlertDescription>
+              </Alert>
+
+              <Button
+                onClick={() => navigate('/admin/settings?tab=clover&retry=true', { replace: true })}
+                className="w-full"
+              >
+                Retry Connection Now
+              </Button>
             </div>
           )}
 
