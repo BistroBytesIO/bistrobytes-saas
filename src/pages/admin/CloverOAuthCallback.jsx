@@ -12,12 +12,13 @@ function CloverOAuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useRestaurantAuth();
-  
+
   const [status, setStatus] = useState('processing'); // processing, success, error, retrying
   const [message, setMessage] = useState('Processing Clover authorization...');
   const [details, setDetails] = useState(null);
   const [isRetryable, setIsRetryable] = useState(false);
   const [retryCountdown, setRetryCountdown] = useState(null);
+  const [hasAttempted, setHasAttempted] = useState(false); // Prevent multiple retry attempts
 
   // Get OAuth parameters from URL
   const code = searchParams.get('code');
@@ -30,6 +31,19 @@ function CloverOAuthCallback() {
 
   useEffect(() => {
     const processCallback = async () => {
+      // Check if we're coming back from an auto-retry (check sessionStorage)
+      const retryAttempt = sessionStorage.getItem('clover_oauth_retry_attempt');
+      const isRetryAttempt = retryAttempt === 'true';
+
+      // Prevent processing if we've already attempted and are in retry state
+      if (hasAttempted) {
+        console.log('Already processing callback, skipping duplicate attempt');
+        return;
+      }
+
+      // Mark as attempted to prevent duplicate processing
+      setHasAttempted(true);
+
       // Check for OAuth errors first
       if (error) {
         console.error('OAuth error:', error, errorDescription);
@@ -46,7 +60,7 @@ function CloverOAuthCallback() {
       }
 
       if (!merchantId) {
-        setStatus('error');  
+        setStatus('error');
         setMessage('Missing merchant ID from Clover');
         return;
       }
@@ -81,6 +95,9 @@ function CloverOAuthCallback() {
         console.log('OAuth callback response:', response.data);
 
         if (response.data.success) {
+          // Clear the retry attempt flag on success
+          sessionStorage.removeItem('clover_oauth_retry_attempt');
+
           setStatus('success');
           setMessage('Successfully connected to Clover POS!');
           setDetails({
@@ -88,15 +105,18 @@ function CloverOAuthCallback() {
             merchantName: response.data.merchantName,
             tenantSlug: response.data.tenantSlug
           });
-          
+
           toast.success('Clover POS connected successfully!');
-          
+
           // Redirect to settings after 3 seconds
           setTimeout(() => {
             navigate('/admin/settings?tab=clover', { replace: true });
           }, 3000);
 
         } else {
+          // Clear retry flag on failure
+          sessionStorage.removeItem('clover_oauth_retry_attempt');
+
           setStatus('error');
           setMessage(response.data.error || 'Failed to complete OAuth authorization');
         }
@@ -122,14 +142,29 @@ function CloverOAuthCallback() {
           if (error.response.data?.autoRetry && error.response.data?.newAuthorizationUrl) {
             const newAuthUrl = error.response.data.newAuthorizationUrl;
 
-            toast.info('Clover app connected! Completing connection...', { duration: 2000 });
+            // Only retry if we haven't already done an auto-retry
+            if (!isRetryAttempt) {
+              toast.info('Clover app connected! Completing connection...', { duration: 2000 });
 
-            // Automatically redirect to the new authorization URL after a brief delay
-            setTimeout(() => {
-              window.location.href = newAuthUrl;
-            }, 2000);
+              // Set flag in sessionStorage to track that we're doing an auto-retry
+              sessionStorage.setItem('clover_oauth_retry_attempt', 'true');
 
-            return; // Exit early
+              // Automatically redirect to the new authorization URL after a brief delay
+              setTimeout(() => {
+                window.location.href = newAuthUrl;
+              }, 2000);
+
+              return; // Exit early
+            } else {
+              // We've already retried once, don't retry again to prevent infinite loop
+              console.warn('Auto-retry already attempted, preventing infinite loop');
+              errorMessage = 'Connection failed after retry. Please try connecting again from Settings.';
+              setStatus('error');
+              setMessage(errorMessage);
+              setIsRetryable(false);
+              toast.error('Connection failed. Please try again.');
+              return;
+            }
           }
 
           // Fall back to manual retry if auto-retry not available
@@ -160,6 +195,9 @@ function CloverOAuthCallback() {
         } else if (error.message) {
           errorMessage = `Connection error: ${error.message}`;
         }
+
+        // Clear retry flag on non-retryable errors
+        sessionStorage.removeItem('clover_oauth_retry_attempt');
 
         setStatus('error');
         setMessage(errorMessage);
