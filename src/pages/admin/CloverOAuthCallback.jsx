@@ -65,14 +65,60 @@ function CloverOAuthCallback() {
         return;
       }
 
+      // Check if we're in a new tab without auth context
+      // This happens when Clover opens callback in a new tab
       if (!user?.token || !user?.tenantId) {
-        setStatus('error');
-        setMessage('Not authenticated. Please log in and try again.');
-        return;
+        console.log('No auth context - checking localStorage for credentials...');
+
+        // Try to get auth from localStorage (persisted by RestaurantAuthContext)
+        const storedUser = localStorage.getItem('restaurant_user');
+        const storedToken = localStorage.getItem('restaurant_token');
+
+        if (storedUser && storedToken) {
+          console.log('Found stored credentials, will use them for callback');
+
+          // We have stored credentials, we can proceed with the callback
+          // We'll use these directly in the API call instead of relying on context
+        } else {
+          // No stored credentials either - user needs to log in
+          setStatus('error');
+          setMessage('Session expired. Please log in and try connecting Clover again.');
+
+          // Close this tab after a delay and redirect user to login
+          setTimeout(() => {
+            window.close(); // Try to close the popup/tab
+            // If close doesn't work, redirect to login
+            if (!window.closed) {
+              navigate('/admin/login');
+            }
+          }, 3000);
+
+          return;
+        }
       }
 
       try {
         setMessage('Completing Clover authorization...');
+
+        // Get auth credentials - either from context or localStorage
+        let authToken = user?.token;
+        let tenantId = user?.tenantId;
+
+        if (!authToken || !tenantId) {
+          // Fallback to localStorage (for new tab scenario)
+          authToken = localStorage.getItem('restaurant_token');
+          const storedUser = localStorage.getItem('restaurant_user');
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              tenantId = parsedUser.tenantId || parsedUser.tenant_id;
+            } catch (e) {
+              console.error('Failed to parse stored user:', e);
+            }
+          }
+        }
+
+        console.log('Making callback request with token:', authToken ? 'present' : 'missing', 'tenantId:', tenantId);
 
         // Make request to our OAuth callback endpoint
         const response = await axios.get('/admin/clover/oauth/callback', {
@@ -84,8 +130,8 @@ function CloverOAuthCallback() {
             state
           },
           headers: {
-            'Authorization': `Bearer ${user.token}`,
-            'X-Tenant-Id': user.tenantId,
+            'Authorization': `Bearer ${authToken}`,
+            'X-Tenant-Id': tenantId,
             'Content-Type': 'application/json'
           },
           // Ensure default includes '/api' for consistency with backend routing
@@ -108,10 +154,27 @@ function CloverOAuthCallback() {
 
           toast.success('Clover POS connected successfully!');
 
-          // Redirect to settings after 3 seconds
-          setTimeout(() => {
-            navigate('/admin/settings?tab=clover', { replace: true });
-          }, 3000);
+          // Notify other tabs/windows about successful connection
+          localStorage.setItem('clover_oauth_success', Date.now().toString());
+
+          // Check if we're in a popup/new tab (opened by OAuth flow)
+          if (window.opener) {
+            // This is a popup - notify the opener and close
+            try {
+              window.opener.postMessage({ type: 'CLOVER_OAUTH_SUCCESS', data: response.data }, window.location.origin);
+            } catch (e) {
+              console.error('Failed to notify opener window:', e);
+            }
+
+            setTimeout(() => {
+              window.close();
+            }, 2000);
+          } else {
+            // Regular navigation
+            setTimeout(() => {
+              navigate('/admin/settings?tab=clover', { replace: true });
+            }, 3000);
+          }
 
         } else {
           // Clear retry flag on failure
