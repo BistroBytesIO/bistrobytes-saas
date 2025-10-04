@@ -118,7 +118,21 @@ function CloverOAuthCallback() {
           setMessage(errorMessage);
           setIsRetryable(true);
 
-          // Show countdown and auto-redirect to settings to retry
+          // Check if backend provided a new authorization URL for automatic retry
+          if (error.response.data?.autoRetry && error.response.data?.newAuthorizationUrl) {
+            const newAuthUrl = error.response.data.newAuthorizationUrl;
+
+            toast.info('Clover app connected! Completing connection...', { duration: 2000 });
+
+            // Automatically redirect to the new authorization URL after a brief delay
+            setTimeout(() => {
+              window.location.href = newAuthUrl;
+            }, 2000);
+
+            return; // Exit early
+          }
+
+          // Fall back to manual retry if auto-retry not available
           let countdown = 3;
           setRetryCountdown(countdown);
 
