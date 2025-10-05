@@ -186,10 +186,9 @@ function CloverOAuthCallback() {
 
         // Check if this is a retryable error (auth code expired)
         if (error.response?.status === 409 && error.response?.data?.retryable) {
-          // This is the auth code expiration error - handle gracefully with auto-retry
-          retryable = true;
-          errorMessage = error.response.data?.userMessage || error.response.data?.error ||
-                        'Clover connection timed out during first-time setup. Retrying automatically...';
+          console.log('Received 409 retryable error from backend');
+          console.log('Error response data:', error.response.data);
+          console.log('isRetryAttempt flag:', isRetryAttempt);
 
           // Check if backend provided a new authorization URL for automatic retry
           if (error.response.data?.autoRetry && error.response.data?.newAuthorizationUrl) {
@@ -197,45 +196,44 @@ function CloverOAuthCallback() {
 
             // Only retry if we haven't already done an auto-retry
             if (!isRetryAttempt) {
-              console.log('Auto-retry triggered - isRetryAttempt:', isRetryAttempt);
-              console.log('Redirecting to new auth URL:', newAuthUrl);
+              console.log('=== AUTO-RETRY REDIRECT STARTING ===');
+              console.log('New auth URL:', newAuthUrl);
 
-              // Set flag in sessionStorage to track that we're doing an auto-retry
+              // Set flag in sessionStorage FIRST to track that we're doing an auto-retry
               sessionStorage.setItem('clover_oauth_retry_attempt', 'true');
+              console.log('Set retry flag in sessionStorage');
 
-              // Use location.replace instead of href for more reliable redirect
+              // Immediately redirect without any UI updates
+              // Use location.replace to avoid adding to browser history
+              console.log('Executing window.location.replace...');
               window.location.replace(newAuthUrl);
 
-              return; // Exit early
+              // Exit immediately - don't do anything else
+              return;
             } else {
               // We've already retried once, don't retry again to prevent infinite loop
-              console.warn('Auto-retry already attempted, preventing infinite loop');
-              console.warn('isRetryAttempt is true, blocking redirect');
-              errorMessage = 'Connection failed after retry. Please try connecting again from Settings.';
+              console.warn('=== BLOCKING SECOND AUTO-RETRY ===');
+              console.warn('isRetryAttempt is true, preventing infinite loop');
+
+              // Clear the retry flag
+              sessionStorage.removeItem('clover_oauth_retry_attempt');
+
               setStatus('error');
-              setMessage(errorMessage);
+              setMessage('Connection failed after retry. Please try connecting again from Settings.');
               setIsRetryable(false);
-              toast.error('Connection failed. Please try again.');
+              toast.error('Connection failed. Please try again from Settings.');
               return;
             }
           }
 
-          // Fall back to manual retry if auto-retry not available
-          let countdown = 3;
-          setRetryCountdown(countdown);
+          // Backend didn't provide auto-retry URL - this shouldn't happen
+          console.warn('Backend returned 409 but no auto-retry URL provided');
+          console.warn('Falling back to manual navigation');
 
-          const countdownInterval = setInterval(() => {
-            countdown--;
-            setRetryCountdown(countdown);
-
-            if (countdown <= 0) {
-              clearInterval(countdownInterval);
-              navigate('/admin/settings?tab=clover&retry=true', { replace: true });
-            }
-          }, 1000);
-
-          toast.info('Clover app connected! Retrying connection in 3 seconds...', { duration: 3000 });
-          return; // Exit early, don't set error status
+          // Navigate back to settings immediately
+          sessionStorage.removeItem('clover_oauth_retry_attempt');
+          navigate('/admin/settings?tab=clover&retry=true', { replace: true });
+          return;
         }
 
         // Handle other errors
