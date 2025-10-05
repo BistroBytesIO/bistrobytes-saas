@@ -191,31 +191,26 @@ function CloverOAuthCallback() {
           errorMessage = error.response.data?.userMessage || error.response.data?.error ||
                         'Clover connection timed out during first-time setup. Retrying automatically...';
 
-          setStatus('retrying');
-          setMessage(errorMessage);
-          setIsRetryable(true);
-
           // Check if backend provided a new authorization URL for automatic retry
           if (error.response.data?.autoRetry && error.response.data?.newAuthorizationUrl) {
             const newAuthUrl = error.response.data.newAuthorizationUrl;
 
             // Only retry if we haven't already done an auto-retry
             if (!isRetryAttempt) {
-              console.log('Auto-retry: redirecting to new auth URL:', newAuthUrl);
+              console.log('Auto-retry triggered - isRetryAttempt:', isRetryAttempt);
+              console.log('Redirecting to new auth URL:', newAuthUrl);
 
               // Set flag in sessionStorage to track that we're doing an auto-retry
               sessionStorage.setItem('clover_oauth_retry_attempt', 'true');
 
-              // Show brief message and redirect immediately
-              toast.info('Clover app connected! Completing connection...', { duration: 1000 });
-
-              // Redirect to new authorization URL immediately
-              window.location.href = newAuthUrl;
+              // Use location.replace instead of href for more reliable redirect
+              window.location.replace(newAuthUrl);
 
               return; // Exit early
             } else {
               // We've already retried once, don't retry again to prevent infinite loop
               console.warn('Auto-retry already attempted, preventing infinite loop');
+              console.warn('isRetryAttempt is true, blocking redirect');
               errorMessage = 'Connection failed after retry. Please try connecting again from Settings.';
               setStatus('error');
               setMessage(errorMessage);
