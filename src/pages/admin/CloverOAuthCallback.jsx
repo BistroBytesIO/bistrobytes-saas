@@ -74,17 +74,19 @@ function CloverOAuthCallback() {
         console.log('No auth context - checking localStorage for credentials...');
 
         // Fallback to localStorage (for new tab scenario)
-        authToken = localStorage.getItem('restaurant_token');
         const storedUser = localStorage.getItem('restaurant_user');
 
         if (storedUser) {
           try {
             const parsedUser = JSON.parse(storedUser);
+            authToken = parsedUser.token;
             tenantId = parsedUser.tenantId || parsedUser.tenant_id;
-            console.log('Found stored credentials in localStorage');
+            console.log('Found stored credentials in localStorage - token:', authToken ? 'present' : 'missing', 'tenantId:', tenantId);
           } catch (e) {
             console.error('Failed to parse stored user:', e);
           }
+        } else {
+          console.error('No restaurant_user found in localStorage');
         }
       }
 
