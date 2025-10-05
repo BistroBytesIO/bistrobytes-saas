@@ -31,18 +31,18 @@ function CloverOAuthCallback() {
 
   useEffect(() => {
     const processCallback = async () => {
-      // Prevent duplicate processing using ref
-      if (hasProcessedRef.current) {
+      // Check if we're coming back from an auto-retry (check sessionStorage)
+      const retryAttempt = sessionStorage.getItem('clover_oauth_retry_attempt');
+      const isRetryAttempt = retryAttempt === 'true';
+
+      // Prevent duplicate processing using ref, but allow retry attempts
+      if (hasProcessedRef.current && !isRetryAttempt) {
         console.log('Already processed callback, skipping duplicate attempt');
         return;
       }
 
       // Mark as processed immediately to prevent race conditions
       hasProcessedRef.current = true;
-
-      // Check if we're coming back from an auto-retry (check sessionStorage)
-      const retryAttempt = sessionStorage.getItem('clover_oauth_retry_attempt');
-      const isRetryAttempt = retryAttempt === 'true';
 
       // Check for OAuth errors first
       if (error) {
@@ -199,15 +199,16 @@ function CloverOAuthCallback() {
 
             // Only retry if we haven't already done an auto-retry
             if (!isRetryAttempt) {
-              toast.info('Clover app connected! Completing connection...', { duration: 2000 });
+              console.log('Auto-retry: redirecting to new auth URL:', newAuthUrl);
 
               // Set flag in sessionStorage to track that we're doing an auto-retry
               sessionStorage.setItem('clover_oauth_retry_attempt', 'true');
 
-              // Automatically redirect to the new authorization URL after a brief delay
-              setTimeout(() => {
-                window.location.href = newAuthUrl;
-              }, 2000);
+              // Show brief message and redirect immediately
+              toast.info('Clover app connected! Completing connection...', { duration: 1000 });
+
+              // Redirect to new authorization URL immediately
+              window.location.href = newAuthUrl;
 
               return; // Exit early
             } else {
