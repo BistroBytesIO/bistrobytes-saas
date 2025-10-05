@@ -65,59 +65,49 @@ function CloverOAuthCallback() {
         return;
       }
 
-      // Check if we're in a new tab without auth context
-      // This happens when Clover opens callback in a new tab
-      if (!user?.token || !user?.tenantId) {
+      // Get auth credentials - try context first, then fallback to localStorage
+      // This handles the case where Clover opens callback in a new tab
+      let authToken = user?.token;
+      let tenantId = user?.tenantId;
+
+      if (!authToken || !tenantId) {
         console.log('No auth context - checking localStorage for credentials...');
 
-        // Try to get auth from localStorage (persisted by RestaurantAuthContext)
+        // Fallback to localStorage (for new tab scenario)
+        authToken = localStorage.getItem('restaurant_token');
         const storedUser = localStorage.getItem('restaurant_user');
-        const storedToken = localStorage.getItem('restaurant_token');
 
-        if (storedUser && storedToken) {
-          console.log('Found stored credentials, will use them for callback');
-
-          // We have stored credentials, we can proceed with the callback
-          // We'll use these directly in the API call instead of relying on context
-        } else {
-          // No stored credentials either - user needs to log in
-          setStatus('error');
-          setMessage('Session expired. Please log in and try connecting Clover again.');
-
-          // Close this tab after a delay and redirect user to login
-          setTimeout(() => {
-            window.close(); // Try to close the popup/tab
-            // If close doesn't work, redirect to login
-            if (!window.closed) {
-              navigate('/admin/login');
-            }
-          }, 3000);
-
-          return;
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            tenantId = parsedUser.tenantId || parsedUser.tenant_id;
+            console.log('Found stored credentials in localStorage');
+          } catch (e) {
+            console.error('Failed to parse stored user:', e);
+          }
         }
+      }
+
+      // If we still don't have credentials, user needs to log in
+      if (!authToken || !tenantId) {
+        console.error('No authentication credentials available');
+        setStatus('error');
+        setMessage('Session expired. Please log in and try connecting Clover again.');
+
+        // Close this tab after a delay and redirect user to login
+        setTimeout(() => {
+          window.close(); // Try to close the popup/tab
+          // If close doesn't work, redirect to login
+          if (!window.closed) {
+            navigate('/admin/login');
+          }
+        }, 3000);
+
+        return;
       }
 
       try {
         setMessage('Completing Clover authorization...');
-
-        // Get auth credentials - either from context or localStorage
-        let authToken = user?.token;
-        let tenantId = user?.tenantId;
-
-        if (!authToken || !tenantId) {
-          // Fallback to localStorage (for new tab scenario)
-          authToken = localStorage.getItem('restaurant_token');
-          const storedUser = localStorage.getItem('restaurant_user');
-          if (storedUser) {
-            try {
-              const parsedUser = JSON.parse(storedUser);
-              tenantId = parsedUser.tenantId || parsedUser.tenant_id;
-            } catch (e) {
-              console.error('Failed to parse stored user:', e);
-            }
-          }
-        }
-
         console.log('Making callback request with token:', authToken ? 'present' : 'missing', 'tenantId:', tenantId);
 
         // Make request to our OAuth callback endpoint
