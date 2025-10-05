@@ -35,6 +35,8 @@ function CloverOAuthCallback() {
       const retryAttempt = sessionStorage.getItem('clover_oauth_retry_attempt');
       const isRetryAttempt = retryAttempt === 'true';
 
+      console.log('Processing callback - isRetryAttempt:', isRetryAttempt, 'hasProcessedRef:', hasProcessedRef.current);
+
       // Prevent duplicate processing using ref, but allow retry attempts
       if (hasProcessedRef.current && !isRetryAttempt) {
         console.log('Already processed callback, skipping duplicate attempt');

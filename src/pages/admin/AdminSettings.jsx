@@ -370,6 +370,10 @@ function AdminSettings() {
   const handleCloverConnect = async () => {
     try {
       setCloverStatus(prev => ({ ...prev, loading: true }));
+
+      // Clear any stale retry flags from previous OAuth attempts
+      sessionStorage.removeItem('clover_oauth_retry_attempt');
+
       const response = await adminApiUtils.initiateCloverOAuth();
       if (response.data.success && response.data.authorizationUrl) {
         // Redirect to Clover OAuth
