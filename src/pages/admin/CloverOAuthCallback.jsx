@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +18,7 @@ function CloverOAuthCallback() {
   const [details, setDetails] = useState(null);
   const [isRetryable, setIsRetryable] = useState(false);
   const [retryCountdown, setRetryCountdown] = useState(null);
-  const [hasAttempted, setHasAttempted] = useState(false); // Prevent multiple retry attempts
+  const hasProcessedRef = useRef(false); // Use ref to prevent duplicate processing across renders
 
   // Get OAuth parameters from URL
   const code = searchParams.get('code');
@@ -31,18 +31,18 @@ function CloverOAuthCallback() {
 
   useEffect(() => {
     const processCallback = async () => {
-      // Check if we're coming back from an auto-retry (check sessionStorage)
-      const retryAttempt = sessionStorage.getItem('clover_oauth_retry_attempt');
-      const isRetryAttempt = retryAttempt === 'true';
-
-      // Prevent processing if we've already attempted and are in retry state
-      if (hasAttempted) {
-        console.log('Already processing callback, skipping duplicate attempt');
+      // Prevent duplicate processing using ref
+      if (hasProcessedRef.current) {
+        console.log('Already processed callback, skipping duplicate attempt');
         return;
       }
 
-      // Mark as attempted to prevent duplicate processing
-      setHasAttempted(true);
+      // Mark as processed immediately to prevent race conditions
+      hasProcessedRef.current = true;
+
+      // Check if we're coming back from an auto-retry (check sessionStorage)
+      const retryAttempt = sessionStorage.getItem('clover_oauth_retry_attempt');
+      const isRetryAttempt = retryAttempt === 'true';
 
       // Check for OAuth errors first
       if (error) {
