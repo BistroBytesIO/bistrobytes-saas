@@ -13,11 +13,9 @@ function CloverOAuthCallback() {
   const [searchParams] = useSearchParams();
   const { user } = useRestaurantAuth();
 
-  const [status, setStatus] = useState('processing'); // processing, success, error, retrying
+  const [status, setStatus] = useState('processing'); // processing, success, error
   const [message, setMessage] = useState('Processing Clover authorization...');
   const [details, setDetails] = useState(null);
-  const [isRetryable, setIsRetryable] = useState(false);
-  const [retryCountdown, setRetryCountdown] = useState(null);
   const hasProcessedRef = useRef(false); // Use ref to prevent duplicate processing across renders
 
   // Get OAuth parameters from URL
@@ -31,14 +29,8 @@ function CloverOAuthCallback() {
 
   useEffect(() => {
     const processCallback = async () => {
-      // Check if we're coming back from an auto-retry (check sessionStorage)
-      const retryAttempt = sessionStorage.getItem('clover_oauth_retry_attempt');
-      const isRetryAttempt = retryAttempt === 'true';
-
-      console.log('Processing callback - isRetryAttempt:', isRetryAttempt, 'hasProcessedRef:', hasProcessedRef.current);
-
-      // Prevent duplicate processing using ref, but allow retry attempts
-      if (hasProcessedRef.current && !isRetryAttempt) {
+      // Prevent duplicate processing using ref
+      if (hasProcessedRef.current) {
         console.log('Already processed callback, skipping duplicate attempt');
         return;
       }
@@ -135,9 +127,6 @@ function CloverOAuthCallback() {
         console.log('OAuth callback response:', response.data);
 
         if (response.data.success) {
-          // Clear the retry attempt flag on success
-          sessionStorage.removeItem('clover_oauth_retry_attempt');
-
           setStatus('success');
           setMessage('Successfully connected to Clover POS!');
           setDetails({
@@ -171,9 +160,6 @@ function CloverOAuthCallback() {
           }
 
         } else {
-          // Clear retry flag on failure
-          sessionStorage.removeItem('clover_oauth_retry_attempt');
-
           setStatus('error');
           setMessage(response.data.error || 'Failed to complete OAuth authorization');
         }
@@ -182,62 +168,11 @@ function CloverOAuthCallback() {
         console.error('OAuth callback processing error:', error);
 
         let errorMessage = 'Failed to process OAuth callback';
-        let retryable = false;
 
-        // Check if this is a retryable error (auth code expired)
-        if (error.response?.status === 409 && error.response?.data?.retryable) {
-          console.log('Received 409 retryable error from backend');
-          console.log('Error response data:', error.response.data);
-          console.log('isRetryAttempt flag:', isRetryAttempt);
-
-          // Check if backend provided a new authorization URL for automatic retry
-          if (error.response.data?.autoRetry && error.response.data?.newAuthorizationUrl) {
-            const newAuthUrl = error.response.data.newAuthorizationUrl;
-
-            // Only retry if we haven't already done an auto-retry
-            if (!isRetryAttempt) {
-              console.log('=== AUTO-RETRY REDIRECT STARTING ===');
-              console.log('New auth URL:', newAuthUrl);
-
-              // Set flag in sessionStorage FIRST to track that we're doing an auto-retry
-              sessionStorage.setItem('clover_oauth_retry_attempt', 'true');
-              console.log('Set retry flag in sessionStorage');
-
-              // Immediately redirect without any UI updates
-              // Use location.replace to avoid adding to browser history
-              console.log('Executing window.location.replace...');
-              window.location.replace(newAuthUrl);
-
-              // Exit immediately - don't do anything else
-              return;
-            } else {
-              // We've already retried once, don't retry again to prevent infinite loop
-              console.warn('=== BLOCKING SECOND AUTO-RETRY ===');
-              console.warn('isRetryAttempt is true, preventing infinite loop');
-
-              // Clear the retry flag
-              sessionStorage.removeItem('clover_oauth_retry_attempt');
-
-              setStatus('error');
-              setMessage('Connection failed after retry. Please try connecting again from Settings.');
-              setIsRetryable(false);
-              toast.error('Connection failed. Please try again from Settings.');
-              return;
-            }
-          }
-
-          // Backend didn't provide auto-retry URL - this shouldn't happen
-          console.warn('Backend returned 409 but no auto-retry URL provided');
-          console.warn('Falling back to manual navigation');
-
-          // Navigate back to settings immediately
-          sessionStorage.removeItem('clover_oauth_retry_attempt');
-          navigate('/admin/settings?tab=clover&retry=true', { replace: true });
-          return;
-        }
-
-        // Handle other errors
-        if (error.response?.status === 401) {
+        // Check if this is an app not installed error
+        if (error.response?.status === 409 && error.response?.data?.appNotInstalled) {
+          errorMessage = 'Please install the BistroBytes app from Clover App Market first, then try connecting again.';
+        } else if (error.response?.status === 401) {
           errorMessage = 'Authentication failed. Please log in and try again.';
         } else if (error.response?.status === 400) {
           errorMessage = error.response.data?.error || 'Invalid OAuth request';
@@ -247,12 +182,8 @@ function CloverOAuthCallback() {
           errorMessage = `Connection error: ${error.message}`;
         }
 
-        // Clear retry flag on non-retryable errors
-        sessionStorage.removeItem('clover_oauth_retry_attempt');
-
         setStatus('error');
         setMessage(errorMessage);
-        setIsRetryable(retryable);
         toast.error('Failed to connect to Clover POS');
       }
     };
@@ -273,7 +204,7 @@ function CloverOAuthCallback() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full">
-            {(status === 'processing' || status === 'retrying') && (
+            {status === 'processing' && (
               <div className="bg-blue-100">
                 <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
               </div>
@@ -292,9 +223,8 @@ function CloverOAuthCallback() {
 
           <CardTitle className="text-2xl font-bold text-gray-900">
             {status === 'processing' && 'Connecting to Clover...'}
-            {status === 'retrying' && 'App Connected - Retrying...'}
             {status === 'success' && 'Connection Successful!'}
-            {status === 'error' && (isRetryable ? 'Retry Required' : 'Connection Failed')}
+            {status === 'error' && 'Connection Failed'}
           </CardTitle>
 
           <CardDescription className="mt-2">
@@ -366,26 +296,6 @@ function CloverOAuthCallback() {
                   <li>Contact support if the issue persists</li>
                 </ul>
               </div>
-            </div>
-          )}
-
-          {status === 'retrying' && retryCountdown !== null && (
-            <div className="space-y-4">
-              <Alert className="border-blue-200 bg-blue-50">
-                <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
-                <AlertDescription className="text-blue-800">
-                  <strong>Great news!</strong> Your Clover app is now connected to your merchant account.
-                  <br />
-                  <span className="text-sm">Automatically retrying connection in {retryCountdown} second{retryCountdown !== 1 ? 's' : ''}...</span>
-                </AlertDescription>
-              </Alert>
-
-              <Button
-                onClick={() => navigate('/admin/settings?tab=clover&retry=true', { replace: true })}
-                className="w-full"
-              >
-                Retry Connection Now
-              </Button>
             </div>
           )}
 

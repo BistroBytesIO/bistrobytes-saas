@@ -371,9 +371,6 @@ function AdminSettings() {
     try {
       setCloverStatus(prev => ({ ...prev, loading: true }));
 
-      // Clear any stale retry flags from previous OAuth attempts
-      sessionStorage.removeItem('clover_oauth_retry_attempt');
-
       const response = await adminApiUtils.initiateCloverOAuth();
       if (response.data.success && response.data.authorizationUrl) {
         // Redirect to Clover OAuth
@@ -1168,21 +1165,53 @@ function AdminSettings() {
                 ) : (
                   // Not connected state
                   <div className="space-y-4">
-                    <Alert>
-                      <AlertDescription>
-                        Connect your restaurant to Clover POS to enable automatic menu synchronization 
-                        and seamless order management between BistroBytes and your point-of-sale system.
+                    <Alert className="border-blue-200 bg-blue-50">
+                      <AlertDescription className="text-blue-800">
+                        <strong>Important:</strong> Before connecting, you must install the BistroBytes app in your Clover App Market.
                       </AlertDescription>
                     </Alert>
-                    
+
+                    <div className="border rounded-lg p-6 bg-gray-50">
+                      <h4 className="font-medium text-gray-900 mb-3">Setup Instructions (First-Time Connection)</h4>
+                      <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                        <li className="font-medium">
+                          Install the BistroBytes App
+                          <p className="ml-6 mt-1 text-gray-600">
+                            Visit the{' '}
+                            <a
+                              href={`https://sandbox.dev.clover.com/appmarket/apps/${import.meta.env.VITE_CLOVER_APP_ID || 'T0WRP6E4WNB3Y'}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-700 underline"
+                            >
+                              Clover App Market
+                            </a>
+                            {' '}and click "Connect" to install BistroBytes to your merchant account.
+                          </p>
+                        </li>
+                        <li className="font-medium">
+                          Return here and click "Connect to Clover POS"
+                          <p className="ml-6 mt-1 text-gray-600">
+                            After installing the app in Clover, come back to this page and click the green button below.
+                          </p>
+                        </li>
+                        <li className="font-medium">
+                          Complete the authorization
+                          <p className="ml-6 mt-1 text-gray-600">
+                            You'll be redirected to Clover to select your merchant and authorize the connection.
+                          </p>
+                        </li>
+                      </ol>
+                    </div>
+
                     <div className="text-center space-y-4 p-6 border-2 border-dashed border-gray-300 rounded-lg">
                       <div className="text-gray-500">
                         <Link2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p className="text-lg font-medium">No Clover POS Connected</p>
-                        <p className="text-sm">Link your Clover account to get started</p>
+                        <p className="text-sm">Follow the instructions above, then click below</p>
                       </div>
-                      
-                      <Button 
+
+                      <Button
                         onClick={handleCloverConnect}
                         disabled={cloverStatus.loading}
                         className="bg-green-600 hover:bg-green-700"
@@ -1197,12 +1226,12 @@ function AdminSettings() {
                     </div>
 
                     <div className="space-y-2 text-sm text-gray-600">
-                      <h4 className="font-medium text-gray-900">What happens when you connect:</h4>
+                      <h4 className="font-medium text-gray-900">What you'll get after connecting:</h4>
                       <ul className="list-disc list-inside space-y-1">
                         <li>Your Clover menu items will sync to BistroBytes</li>
                         <li>Orders from BistroBytes will appear in your Clover POS</li>
                         <li>Inventory and pricing stay synchronized</li>
-                        <li>Customer payments are processed through Clover</li>
+                        <li>Customer payments can be processed through Clover</li>
                       </ul>
                     </div>
                   </div>
