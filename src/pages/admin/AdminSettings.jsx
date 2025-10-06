@@ -486,7 +486,7 @@ function AdminSettings() {
     if (!confirm('Are you sure you want to disconnect from Square? This will disable menu sync and order integration.')) {
       return;
     }
-    
+
     try {
       setSquareStatus(prev => ({ ...prev, loading: true }));
       await adminApiUtils.disconnectSquare();
@@ -498,6 +498,8 @@ function AdminSettings() {
         environment: 'sandbox',
         loading: false
       });
+      // Reload payment config to synchronize connection state
+      await loadPaymentConfig();
       toast.success('Disconnected from Square successfully');
     } catch (error) {
       console.error('Square disconnect error:', error);
