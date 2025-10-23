@@ -12,17 +12,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Edit,
+  Trash2,
   AlertTriangle,
   UtensilsCrossed,
   DollarSign,
   Package,
   Star,
   Search,
-  Filter
+  Filter,
+  Gift
 } from 'lucide-react';
 
 // Set app element for react-modal accessibility
@@ -54,6 +55,8 @@ function AdminMenu() {
     price: '',
     stockQuantity: '',
     isFeatured: false,
+    isRewardItem: false,
+    pointsToRedeem: '',
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -184,13 +187,15 @@ function AdminMenu() {
       price: item?.price != null ? item.price.toString() : '',
       stockQuantity: item?.stockQuantity != null ? item.stockQuantity.toString() : '',
       isFeatured: item.isFeatured,
+      isRewardItem: item.isRewardItem || false,
+      pointsToRedeem: item?.pointsToRedeem != null ? item.pointsToRedeem.toString() : '',
     });
     setIsModalOpen(true);
   };
 
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
     if (!modalForm.name || !modalForm.description || !modalForm.price || !modalForm.stockQuantity) {
       toast.error('Please fill in all required fields');
@@ -207,12 +212,23 @@ function AdminMenu() {
       return;
     }
 
+    // Validate reward item fields
+    if (modalForm.isRewardItem) {
+      if (!modalForm.pointsToRedeem || parseInt(modalForm.pointsToRedeem) <= 0) {
+        toast.error('Points to redeem must be greater than 0 for reward items');
+        return;
+      }
+    }
+
     setUpdateLoading(true);
     try {
       const itemData = {
         ...modalForm,
         price: parseFloat(modalForm.price),
-        stockQuantity: parseInt(modalForm.stockQuantity)
+        stockQuantity: parseInt(modalForm.stockQuantity),
+        pointsToRedeem: modalForm.isRewardItem && modalForm.pointsToRedeem
+          ? parseInt(modalForm.pointsToRedeem)
+          : null
       };
 
       await adminApiUtils.updateMenuItem(selectedItem.id, itemData);
@@ -232,6 +248,8 @@ function AdminMenu() {
         price: '',
         stockQuantity: '',
         isFeatured: false,
+        isRewardItem: false,
+        pointsToRedeem: '',
       });
     }
   };
@@ -630,7 +648,7 @@ function AdminMenu() {
                 />
               </div>
             </div>
-            <div className="flex items-center h-full pt-6">
+            <div className="flex flex-col gap-3 pt-6">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -645,6 +663,52 @@ function AdminMenu() {
                 </span>
               </label>
             </div>
+          </div>
+
+          {/* Reward Item Section */}
+          <div className="border-t pt-4">
+            <div className="mb-3">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isRewardItem"
+                  checked={modalForm.isRewardItem}
+                  onChange={handleModalChange}
+                  className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                />
+                <span className="ml-2 text-gray-700 flex items-center gap-1 font-medium">
+                  <Gift size={16} className="text-purple-600" />
+                  Reward Item
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 ml-6 mt-1">
+                Allow customers to redeem this item with loyalty points
+              </p>
+            </div>
+
+            {modalForm.isRewardItem && (
+              <div className="ml-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Points to Redeem *
+                </label>
+                <div className="relative max-w-xs">
+                  <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <Input
+                    type="number"
+                    name="pointsToRedeem"
+                    placeholder="e.g., 100"
+                    min="1"
+                    value={modalForm.pointsToRedeem}
+                    onChange={handleModalChange}
+                    className="pl-10"
+                    required={modalForm.isRewardItem}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Number of loyalty points required to redeem this item
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
@@ -671,6 +735,8 @@ function AdminMenu() {
                   price: '',
                   stockQuantity: '',
                   isFeatured: false,
+                  isRewardItem: false,
+                  pointsToRedeem: '',
                 });
                 setIsModalOpen(false);
               }}
