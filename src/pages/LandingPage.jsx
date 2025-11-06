@@ -141,7 +141,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <nav className="border-b bg-white/95 backdrop-blur-sm sticky top-0 z-50">
+      <nav className="border-b border-white/60 bg-[#C8E1F5] sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-8">
             <div className="flex items-center">
@@ -165,12 +165,12 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <section className="relative overflow-hidden bg-[#C8E1F5]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
               The Future of
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent block">
+              <span className="block mt-2 inline-block rounded-xl bg-white px-6 py-2 text-4xl md:text-6xl font-bold text-gray-900">
                 Restaurant Ordering
               </span>
             </h1>
@@ -259,15 +259,15 @@ const LandingPage = () => {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="card-hover border-0 shadow-lg">
+              <Card key={index} className="card-hover border border-[#C8E1F5] shadow-lg">
                 <CardHeader>
-                  <div className="h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white mb-4">
+                  <div className="h-12 w-12 rounded-lg flex items-center justify-center text-gray-900 mb-4 bg-white border border-[#C8E1F5]">
                     {feature.icon}
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl text-gray-900">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-gray-600">
+                  <CardDescription className="text-gray-700">
                     {feature.description}
                   </CardDescription>
                 </CardContent>
@@ -278,7 +278,7 @@ const LandingPage = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 bg-gray-50">
+      <section id="pricing" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -295,7 +295,7 @@ const LandingPage = () => {
               </span>
               <button
                 onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
-                className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600 transition-colors"
+                className="relative inline-flex h-6 w-11 items-center rounded-full bg-[#C8E1F5] transition-colors"
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -305,7 +305,7 @@ const LandingPage = () => {
               </button>
               <span className={billingCycle === 'annual' ? 'text-gray-900 font-medium' : 'text-gray-500'}>
                 Annual
-                <span className="ml-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="ml-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white border border-[#C8E1F5] text-gray-900">
                   Save 15%
                 </span>
               </span>
@@ -314,10 +314,10 @@ const LandingPage = () => {
 
           <div className="grid md:grid-cols-3 gap-8">
             {pricingPlans.map((plan, index) => (
-              <Card key={index} className={`relative card-hover ${plan.popular ? 'ring-2 ring-blue-600 shadow-xl scale-105' : 'shadow-lg'}`}>
+              <Card key={index} className={`relative card-hover ${plan.popular ? 'ring-2 ring-[#C8E1F5] shadow-xl scale-105' : 'shadow-lg border border-[#C8E1F5]'}`}>
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="px-4 py-1 bg-blue-600 text-white">Most Popular</Badge>
+                    <Badge className="px-4 py-1 bg-[#C8E1F5] text-gray-900 border border-white/60">Most Popular</Badge>
                   </div>
                 )}
                 <CardHeader className="text-center">
@@ -331,15 +331,15 @@ const LandingPage = () => {
                   )}
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start space-x-3">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <CardContent>
+                    <ul className="space-y-3 mb-6">
+                      {plan.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-start space-x-3">
+                          <CheckCircle className="h-5 w-5 text-[#C8E1F5] mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
                   <Button 
                     className="w-full" 
                     variant={plan.popular ? "default" : "outline"}
@@ -398,12 +398,12 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-24 bg-[#C8E1F5]">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-white mb-4">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Ready to transform your restaurant?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-gray-700 mb-8">
             Join thousands of restaurants already using BistroBytes
           </p>
           <Button size="lg" variant="secondary" className="text-lg px-8 py-6" asChild>
@@ -415,37 +415,40 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-[#C8E1F5] text-gray-900 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
-                <span className="text-xl font-bold">BistroBytes</span>
+                <img
+                  src="/BizBytes Logo.png"
+                  alt="BistroBytes logo"
+                  className="h-8 w-auto"
+                />
               </div>
-              <p className="text-gray-400">
+              <p className="text-gray-700">
                 The future of restaurant ordering, powered by AI.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
+              <ul className="space-y-2 text-gray-700">
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Integrations</a></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+              <ul className="space-y-2 text-gray-700">
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Contact</a></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Contact</h3>
-              <div className="space-y-2 text-gray-400">
+              <div className="space-y-2 text-gray-700">
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4" />
                   <span>hello@bistrobytes.app</span>
@@ -457,7 +460,7 @@ const LandingPage = () => {
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <div className="border-t border-white/60 mt-8 pt-8 text-center text-gray-700">
             <p>&copy; 2025 BistroBytes. All rights reserved.</p>
           </div>
         </div>
