@@ -123,7 +123,11 @@ const AdminLayout = ({ children }) => {
           <div className="flex items-center">
             <Building2 className="h-8 w-8 text-blue-600" />
             <div className="ml-2">
-              <span className="text-lg font-bold text-blue-600">BistroBytes</span>
+              <img
+                src="/BizBytes Logo.png"
+                alt="BistroBytes logo"
+                className="h-6 w-auto"
+              />
             </div>
           </div>
           <button
