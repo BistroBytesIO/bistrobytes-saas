@@ -130,12 +130,12 @@ const LandingPage = () => {
                   <img
                     src={slide.src}
                     alt={slide.alt}
-                    className="h-[420px] w-full object-cover"
+                    className="h-[460px] w-full object-cover"
                   />
                 </div>
               ))}
-              <div className="relative flex h-[420px] w-full items-end bg-gradient-to-t from-black/30 to-transparent p-6">
-                <p className="rounded-lg bg-black/50 px-4 py-2 text-sm text-white">
+              <div className="relative flex h-[460px] w-full items-end justify-end bg-gradient-to-t from-black/30 to-transparent p-6">
+                <p className="max-w-sm rounded-lg bg-black/50 px-4 py-2 text-right text-sm text-white">
                   {heroSlides[activeSlide].caption}
                 </p>
               </div>
