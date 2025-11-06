@@ -66,7 +66,7 @@ const AboutPage = () => {
           <h2 className="text-3xl font-semibold text-gray-900 text-center">Milestones</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {milestones.map((milestone) => (
-              <Card key={milestone.year} className="border border-[#C8E1F5] shadow-lg">
+              <Card key={milestone.year} className="card-hover border border-[#C8E1F5] shadow-lg">
                 <CardHeader>
                   <CardTitle className="text-2xl text-gray-900">{milestone.year}</CardTitle>
                   <CardDescription className="text-base text-gray-700">{milestone.title}</CardDescription>

@@ -178,7 +178,7 @@ const LandingPage = () => {
             </p>
           </div>
           <div className="grid gap-8 md:grid-cols-3">
-            <Card className="border border-[#C8E1F5] shadow-lg">
+            <Card className="card-hover border border-[#C8E1F5] shadow-lg">
               <CardHeader>
                 <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white">
                   <MonitorSmartphone className="h-7 w-7 text-[#3B82F6]" />
@@ -191,7 +191,7 @@ const LandingPage = () => {
                 </CardDescription>
               </CardContent>
             </Card>
-            <Card className="border border-[#C8E1F5] shadow-lg">
+            <Card className="card-hover border border-[#C8E1F5] shadow-lg">
               <CardHeader>
                 <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white">
                   <Cable className="h-7 w-7 text-[#3B82F6]" />
@@ -204,7 +204,7 @@ const LandingPage = () => {
                 </CardDescription>
               </CardContent>
             </Card>
-            <Card className="border border-[#C8E1F5] shadow-lg">
+            <Card className="card-hover border border-[#C8E1F5] shadow-lg">
               <CardHeader>
                 <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white">
                   <BarChart3 className="h-7 w-7 text-[#3B82F6]" />

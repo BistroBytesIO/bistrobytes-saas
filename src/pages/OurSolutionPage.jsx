@@ -70,7 +70,7 @@ const OurSolutionPage = () => {
         <section className="mx-auto mt-16 max-w-6xl">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {solutionPillars.map((pillar) => (
-              <Card key={pillar.title} className="border border-[#C8E1F5] shadow-lg">
+              <Card key={pillar.title} className="card-hover border border-[#C8E1F5] shadow-lg">
                 <CardHeader>
                   <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white">
                     {pillar.icon}
