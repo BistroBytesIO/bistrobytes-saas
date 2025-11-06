@@ -2,6 +2,10 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { RestaurantAuthProvider } from './contexts/RestaurantAuthContext'
 import LandingPage from './pages/LandingPage'
+import OurSolutionPage from './pages/OurSolutionPage'
+import PricingPage from './pages/PricingPage'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
 import SignupPage from './pages/SignupPage'
 import SignupSuccessPage from './pages/SignupSuccessPage'
 import PasswordSetupPage from './pages/admin/PasswordSetupPage'
@@ -28,6 +32,10 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
+            <Route path="/our-solution" element={<OurSolutionPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/signup-success" element={<SignupSuccessPage />} />
             

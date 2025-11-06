@@ -1,0 +1,150 @@
+import React from 'react'
+import { Link } from 'react-router-dom'
+import PublicNavbar from '../components/layout/PublicNavbar'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Badge } from '../components/ui/badge'
+import { CheckCircle, ArrowRight } from 'lucide-react'
+
+const pricingPlans = [
+  {
+    name: 'Starter',
+    price: 99,
+    description: 'Perfect for small restaurants getting online',
+    features: [
+      'Custom restaurant website (full branding — no “Powered by” badge)',
+      'Online ordering (pickup)',
+      'Menu management with basic customization',
+      'Stripe payments (credit and debit cards)',
+      'One-click POS integration (Clover, Square, Toast)',
+      'Basic order management dashboard',
+      'Customer accounts & order history',
+      'Email order confirmations',
+      'SSL security & mobile-responsive design',
+      'Email support'
+    ],
+    cta: 'Start Starter Plan',
+    popular: false
+  },
+  {
+    name: 'Professional',
+    price: 159,
+    description: 'Complete solution for growing restaurants',
+    features: [
+      'Everything in Starter',
+      'Customer Loyalty Program (points, rewards, redemption)',
+      'Advanced payment options (Apple Pay, Google Pay, PayPal)',
+      'Advanced menu features (modifiers, combos, scheduled menus)',
+      'Real-time analytics dashboard (sales trends, popular items, customer insights)',
+      'Discount & promo codes',
+      'Custom domain support (yourrestaurant.com)',
+      'Automated email reports (daily/weekly sales summaries)',
+      'Real-time order notifications (WebSocket updates)',
+      'Priority support (chat + phone)'
+    ],
+    cta: 'Upgrade to Professional',
+    popular: true
+  },
+  {
+    name: 'Enterprise',
+    price: 349,
+    description: 'Premium solution with multi-location management',
+    features: [
+      'Everything in Professional',
+      'Multi-location management (manage multiple business locations)',
+      'Advanced analytics & reporting (customer lifetime value, profitability analysis)',
+      'Role-based access control (manager vs staff permissions)',
+      'API access & webhooks (custom integrations)',
+      'Advanced POS features (inventory sync, customer data sync)',
+      'Dedicated account manager + 24/7 support'
+    ],
+    cta: 'Talk to Sales',
+    popular: false
+  }
+]
+
+const PricingPage = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#C8E1F5] via-white to-white">
+      <PublicNavbar />
+      <main className="px-4 py-16 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-4xl text-center">
+          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
+            Pricing built to launch and scale your restaurant online
+          </h1>
+          <p className="mt-4 text-lg text-gray-600">
+            Choose the plan that matches your operations today and upgrade as your business grows.
+          </p>
+        </section>
+
+        <section className="mx-auto mt-12 max-w-6xl">
+          <div className="grid gap-8 md:grid-cols-3">
+            {pricingPlans.map((plan) => (
+              <Card
+                key={plan.name}
+                className={`relative border border-[#C8E1F5] shadow-lg transition-transform hover:-translate-y-1 ${plan.popular ? 'ring-2 ring-[#3B82F6] scale-105' : ''}`}
+              >
+                {plan.popular && (
+                  <Badge className="absolute left-1/2 top-0 -translate-y-1/2 -translate-x-1/2 bg-[#3B82F6] text-white">
+                    Most Popular
+                  </Badge>
+                )}
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <div className="mt-4 flex items-baseline justify-center space-x-2">
+                    <span className="text-4xl font-bold">${plan.price}</span>
+                    <span className="text-gray-500 text-base">/month</span>
+                  </div>
+                  <CardDescription className="mt-2 text-gray-600">
+                    {plan.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 text-left">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start space-x-3">
+                        <CheckCircle className="mt-1 h-5 w-5 text-[#3B82F6]" />
+                        <span className="text-sm text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className="mt-8 w-full"
+                    size="lg"
+                    variant={plan.popular ? 'default' : 'outline'}
+                    asChild
+                  >
+                    <Link to={plan.popular ? '/signup' : '/contact'}>
+                      {plan.cta}
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto mt-16 max-w-4xl rounded-3xl bg-white/70 px-8 py-10 shadow-lg backdrop-blur">
+          <div className="flex flex-col items-center text-center">
+            <h2 className="text-3xl font-semibold text-gray-900">Not sure which plan fits?</h2>
+            <p className="mt-3 text-gray-600">
+              Our team can help you map your current workflows and recommend the package that delivers the fastest ROI.
+            </p>
+            <div className="mt-6 flex flex-col gap-4 sm:flex-row">
+              <Button asChild size="lg">
+                <Link to="/signup">
+                  Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/contact">Talk to us</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  )
+}
+
+export default PricingPage
