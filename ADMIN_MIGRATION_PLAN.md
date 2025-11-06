@@ -1,4 +1,4 @@
-# Admin Dashboard Migration Plan: Bistro-Template to BistroBytes-SaaS
+# Admin Dashboard Migration Plan: Bistro-Template to BizBytes-SaaS
 
 ## Overview
 Migrate the complete admin dashboard functionality from `bistro-template` to `bistrobytes-saas`, creating a centralized restaurant management platform accessible via the SaaS website with a proper onboarding flow.
@@ -24,7 +24,7 @@ Migrate the complete admin dashboard functionality from `bistro-template` to `bi
 - **AdminAuthContext.jsx**: Authentication state management
 - **Supporting Files**: CSS files, admin API service, WebSocket hooks
 
-### BistroBytes-SaaS Current State
+### BizBytes-SaaS Current State
 - Simple SaaS landing/signup flow (LandingPage, SignupPage, SignupSuccessPage)
 - Basic API configuration pointing to localhost:8443
 - Tailwind CSS + shadcn/ui component library
@@ -194,7 +194,7 @@ bistrobytes-saas/
 2. **Website Provisioning**: Backend creates tenant, website, and database
 3. **Email Notification**: Restaurant owner receives email:
    ```
-   Subject: Your BistroBytes Website is Ready! 🍽️
+   Subject: Your BizBytes Website is Ready! 🍽️
    
    Congratulations! Your restaurant website has been successfully created.
    

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import PublicNavbar from '../components/layout/PublicNavbar'
@@ -18,6 +18,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion'
 
 const LandingPage = () => {
+  const heroSlides = [
+    {
+      src: '/images/mock-restaurant-site.png',
+      alt: 'BizBytes restaurant website mockup',
+      caption: 'Launch a polished restaurant site with online ordering in minutes.'
+    },
+    {
+      src: '/images/mock-retail-site.png',
+      alt: 'BizBytes retail website mockup',
+      caption: 'Showcase retail inventory with instant checkout and loyalty rewards.'
+    },
+    {
+      src: '/images/mock-services-site.png',
+      alt: 'BizBytes services website mockup',
+      caption: 'Book appointments and take payments for service businesses on one page.'
+    }
+  ]
+
+  const [activeSlide, setActiveSlide] = useState(0)
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length)
+    }, 6000)
+    return () => window.clearInterval(id)
+  }, [heroSlides.length])
+
+  const handleContactSubmit = (event) => {
+    event.preventDefault()
+  }
+
   const features = [
     {
       icon: <MonitorSmartphone className="h-8 w-8" />,
@@ -27,7 +58,7 @@ const LandingPage = () => {
     {
       icon: <Cable className="h-8 w-8" />,
       title: "Seamless POS Sync",
-      description: "Connect Clover, Square, or Toast with one click so menus and orders stay in sync."
+      description: "Connect Clover or Square with one click so menus and orders stay in sync."
     },
     {
       icon: <CreditCard className="h-8 w-8" />,
@@ -86,6 +117,44 @@ const LandingPage = () => {
             </p>
           </div>
         </div>
+        <div className="px-4 pb-10 sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-5xl flex-col items-center">
+            <div className="relative w-full overflow-hidden rounded-3xl border border-[#C8E1F5] bg-white shadow-lg">
+              {heroSlides.map((slide, index) => (
+                <div
+                  key={slide.src}
+                  className={`absolute inset-0 flex h-full w-full items-center justify-center transition-opacity duration-700 ${
+                    index === activeSlide ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <img
+                    src={slide.src}
+                    alt={slide.alt}
+                    className="h-[320px] w-full object-cover"
+                  />
+                </div>
+              ))}
+              <div className="relative flex h-[320px] w-full items-end bg-gradient-to-t from-black/30 to-transparent p-6">
+                <p className="rounded-lg bg-black/50 px-4 py-2 text-sm text-white">
+                  {heroSlides[activeSlide].caption}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex items-center space-x-3">
+              {heroSlides.map((slide, index) => (
+                <button
+                  key={slide.src}
+                  aria-label={`Show slide ${index + 1}`}
+                  className={`h-3 w-3 rounded-full transition ${
+                    activeSlide === index ? 'bg-[#3B82F6]' : 'bg-gray-300 hover:bg-[#90CAF9]'
+                  }`}
+                  onClick={() => setActiveSlide(index)}
+                  type="button"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
         <div className="pb-10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-center gap-8 opacity-60">
@@ -95,6 +164,59 @@ const LandingPage = () => {
               <div className="h-6 w-24 bg-gray-300 rounded" />
               <div className="h-6 w-24 bg-gray-300 rounded" />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why BizBytes */}
+      <section className="py-24 bg-gradient-to-b from-[#C8E1F5]/30 via-white to-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Why use BizBytes?</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We automate the entire digital stack so you can focus on serving guests, not stitching software together.
+            </p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3">
+            <Card className="border border-[#C8E1F5] shadow-lg">
+              <CardHeader>
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white">
+                  <MonitorSmartphone className="h-7 w-7 text-[#3B82F6]" />
+                </div>
+                <CardTitle className="text-xl text-gray-900">Launch in hours</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-gray-700">
+                  Provision a branded site, domain, SSL, and ordering experience in the time it takes to brew a fresh pot of coffee.
+                </CardDescription>
+              </CardContent>
+            </Card>
+            <Card className="border border-[#C8E1F5] shadow-lg">
+              <CardHeader>
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white">
+                  <Cable className="h-7 w-7 text-[#3B82F6]" />
+                </div>
+                <CardTitle className="text-xl text-gray-900">Connect your tools</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-gray-700">
+                  Sync menus, inventory, and orders with your POS, payment processor, and loyalty system—no custom dev required.
+                </CardDescription>
+              </CardContent>
+            </Card>
+            <Card className="border border-[#C8E1F5] shadow-lg">
+              <CardHeader>
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white">
+                  <BarChart3 className="h-7 w-7 text-[#3B82F6]" />
+                </div>
+                <CardTitle className="text-xl text-gray-900">Grow with data</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-gray-700">
+                  Real-time dashboards and automated reports surface trends so you can promote top items and retain loyal guests.
+                </CardDescription>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -127,7 +249,7 @@ const LandingPage = () => {
             </TabsContent>
             <TabsContent tabValue="integrate">
               <Card className="max-w-3xl mx-auto">
-                <CardContent className="p-8 text-center text-gray-700">Connect Clover, Square, or Toast, sync inventory, and activate Stripe, Apple Pay, and Google Pay in one step.</CardContent>
+                <CardContent className="p-8 text-center text-gray-700">Connect Clover or Square, sync inventory, and activate Stripe, Apple Pay, and Google Pay in one step.</CardContent>
               </Card>
             </TabsContent>
             <TabsContent tabValue="grow">
@@ -181,6 +303,94 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Contact */}
+      <section className="py-24 bg-gradient-to-b from-[#C8E1F5]/30 via-white to-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto mb-12 max-w-xl text-center">
+            <h2 className="text-3xl font-bold text-gray-900">Ready to talk?</h2>
+            <p className="mt-3 text-gray-600">
+              Book a walkthrough or ask a question—our onboarding specialists reply within one business day.
+            </p>
+          </div>
+          <div className="grid gap-12 lg:grid-cols-2">
+            <div className="space-y-6 rounded-3xl bg-white/80 p-8 shadow-lg backdrop-blur">
+              <div className="flex items-center space-x-3 text-gray-700">
+                <Mail className="h-6 w-6 text-[#3B82F6]" />
+                <span>hello@bizbytes.app</span>
+              </div>
+              <div className="flex items-center space-x-3 text-gray-700">
+                <Phone className="h-6 w-6 text-[#3B82F6]" />
+                <span>+1 (555) 123-4567</span>
+              </div>
+              <div className="rounded-2xl bg-[#C8E1F5]/40 p-4 text-gray-700">
+                Our customer success team is available Monday through Friday, 8am–6pm CT, with emergency support after hours for Enterprise plans.
+              </div>
+            </div>
+            <form
+              onSubmit={handleContactSubmit}
+              className="space-y-6 rounded-3xl bg-white/80 p-8 shadow-lg backdrop-blur"
+            >
+              <div>
+                <label htmlFor="lp-name" className="block text-sm font-medium text-gray-700">
+                  Full name
+                </label>
+                <input
+                  id="lp-name"
+                  name="name"
+                  type="text"
+                  required
+                  placeholder="Alex Rivera"
+                  className="mt-2 w-full rounded-lg border border-[#C8E1F5] px-4 py-3 text-gray-900 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/40"
+                />
+              </div>
+              <div>
+                <label htmlFor="lp-email" className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <input
+                  id="lp-email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="you@business.com"
+                  className="mt-2 w-full rounded-lg border border-[#C8E1F5] px-4 py-3 text-gray-900 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/40"
+                />
+              </div>
+              <div>
+                <label htmlFor="lp-company" className="block text-sm font-medium text-gray-700">
+                  Business or brand
+                </label>
+                <input
+                  id="lp-company"
+                  name="company"
+                  type="text"
+                  placeholder="Rivera Hospitality Group"
+                  className="mt-2 w-full rounded-lg border border-[#C8E1F5] px-4 py-3 text-gray-900 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/40"
+                />
+              </div>
+              <div>
+                <label htmlFor="lp-message" className="block text-sm font-medium text-gray-700">
+                  How can we help?
+                </label>
+                <textarea
+                  id="lp-message"
+                  name="message"
+                  rows="5"
+                  placeholder="Tell us about your project, timeline, and goals."
+                  className="mt-2 w-full rounded-lg border border-[#C8E1F5] px-4 py-3 text-gray-900 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/40"
+                />
+              </div>
+              <Button type="submit" size="lg" className="w-full">
+                Send message
+              </Button>
+              <p className="text-xs text-gray-500">
+                By submitting, you agree to receive updates from BizBytes. You can unsubscribe at any time.
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-r from-[#C8E1F5] via-[#E9F4FC] to-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
@@ -206,7 +416,7 @@ const LandingPage = () => {
               <div className="flex items-center space-x-2 mb-4">
                 <img
                   src="/BizBytes Logo.png"
-                  alt="BistroBytes logo"
+                  alt="BizBytes logo"
                   className="h-8 w-auto"
                 />
               </div>
@@ -245,7 +455,7 @@ const LandingPage = () => {
             </div>
           </div>
           <div className="border-t border-white/60 mt-8 pt-8 text-center text-gray-700">
-            <p>&copy; 2025 BistroBytes. All rights reserved.</p>
+            <p>&copy; 2025 BizBytes. All rights reserved.</p>
           </div>
         </div>
       </footer>
@@ -260,7 +470,7 @@ const FAQ = () => {
   const [open, setOpen] = React.useState(null)
   const items = [
     { q: 'How fast can my website go live?', a: 'Most businesses publish in under ten minutes. Start with our templates, drop in your branding, and launch instantly.' },
-    { q: 'Which POS systems can I connect?', a: 'BistroBytes integrates with Clover, Square, and Toast out of the box. We handle menu sync, inventory updates, and order push.' },
+    { q: 'Which POS systems can I connect?', a: 'BizBytes integrates with Clover and Square out of the box. We handle menu sync, inventory updates, and order push.' },
     { q: 'Do you support digital wallets and online payments?', a: 'Yes. Stripe powers credit and debit cards, Apple Pay, Google Pay, and PayPal so guests can pay however they prefer.' },
     { q: 'Can I manage multiple locations?', a: 'Our platform scales with your business. Enterprise plans support multi-location menus, reporting, and role-based access for staff.' },
   ]

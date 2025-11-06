@@ -1,6 +1,6 @@
-# BistroBytes SaaS Landing Page
+# BizBytes SaaS Landing Page
 
-A modern, professional SaaS landing page for BistroBytes - the AI-powered restaurant ordering platform. Built with React, Vite, and Tailwind CSS, inspired by enterprise SaaS design patterns.
+A modern, professional SaaS landing page for BizBytes - the AI-powered restaurant ordering platform. Built with React, Vite, and Tailwind CSS, inspired by enterprise SaaS design patterns.
 
 ## 🚀 Features
 
@@ -183,8 +183,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Related Projects
 
-- [BistroBytes Backend](https://github.com/YOUR_USERNAME/bistro-template-backend) - Multi-tenant backend API
-- [BistroBytes Frontend Template](https://github.com/YOUR_USERNAME/bistro-template) - Restaurant ordering application
+- [BizBytes Backend](https://github.com/YOUR_USERNAME/bistro-template-backend) - Multi-tenant backend API
+- [BizBytes Frontend Template](https://github.com/YOUR_USERNAME/bistro-template) - Restaurant ordering application
 
 ## 📞 Support
 

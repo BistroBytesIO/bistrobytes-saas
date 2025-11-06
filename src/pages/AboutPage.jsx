@@ -4,19 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 
 const milestones = [
   {
-    year: '2022',
-    title: 'Founded with restaurant-first DNA',
-    description: 'BistroBytes launched with a mission to help independent restaurants compete online without massive engineering teams.'
+    year: 'Q1 2025',
+    title: 'BizBytes launches for modern businesses',
+    description: 'We opened our platform to hospitality, retail, and service businesses that need instant websites and connected operations.'
   },
   {
-    year: '2023',
-    title: 'POS integrations go live',
-    description: 'Deep Clover, Square, and Toast integrations enabled true menu sync and automated order routing.'
+    year: 'Q2 2025',
+    title: 'Deep POS and payments connectivity',
+    description: 'Native Clover and Square integrations shipped alongside advanced Stripe capabilities for Apple Pay, Google Pay, and PayPal.'
   },
   {
-    year: '2024',
-    title: 'Customer growth toolkit',
-    description: 'We introduced loyalty, promo campaigns, and analytics dashboards to help operators grow repeat business.'
+    year: 'Q3 2025',
+    title: 'Growth intelligence suite',
+    description: 'Automated analytics, loyalty, and campaign tooling helped operators increase repeat revenue without adding new software.'
   }
 ]
 
@@ -27,7 +27,7 @@ const AboutPage = () => {
       <main className="px-4 py-16 sm:px-6 lg:px-8">
         <section className="mx-auto max-w-4xl text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-            Helping restaurants thrive in a digital-first world
+            Helping businesses thrive in a digital-first world
           </h1>
           <p className="mt-4 text-lg text-gray-600">
             We’re a team of hospitality operators, engineers, and designers building software that keeps the guest experience at the core.
@@ -39,7 +39,7 @@ const AboutPage = () => {
             <div>
               <h2 className="text-3xl font-semibold text-gray-900">Our philosophy</h2>
               <p className="mt-4 text-gray-600">
-                Restaurants should spend time delighting guests—not wrestling with technology. BistroBytes removes the heavy lifting by automating websites, syncing operations, and surfacing insights in a single place.
+                Businesses should spend time delighting guests—not wrestling with technology. BizBytes removes the heavy lifting by automating websites, syncing operations, and surfacing insights in a single place.
               </p>
               <p className="mt-3 text-gray-600">
                 Every product decision is tested in real dining rooms alongside our customer advisory council to ensure we ship features that drive measurable results.
@@ -48,7 +48,7 @@ const AboutPage = () => {
             <div className="space-y-4 text-gray-700">
               <div className="rounded-2xl bg-[#C8E1F5]/40 p-4">
                 <strong className="block text-gray-900">Hospitality-led</strong>
-                <span className="text-sm">Our leadership team has launched and scaled restaurant concepts across the U.S.</span>
+                <span className="text-sm">Our leadership team has launched and scaled hospitality concepts across the U.S.</span>
               </div>
               <div className="rounded-2xl bg-[#C8E1F5]/40 p-4">
                 <strong className="block text-gray-900">Data-driven</strong>
@@ -81,9 +81,9 @@ const AboutPage = () => {
 
         <section className="mx-auto mt-16 max-w-4xl text-center">
           <div className="rounded-3xl bg-gradient-to-r from-[#C8E1F5] via-[#E9F4FC] to-white px-8 py-16 shadow-lg">
-            <h2 className="text-3xl font-semibold text-gray-900">Join the BistroBytes journey</h2>
+            <h2 className="text-3xl font-semibold text-gray-900">Join the BizBytes journey</h2>
             <p className="mt-4 text-gray-600">
-              We’re hiring across product, success, and growth to help restaurants everywhere modernize operations.
+              We’re hiring across product, success, and growth to help businesses everywhere modernize operations.
             </p>
             <a
               href="mailto:careers@bistrobytes.app"

@@ -171,7 +171,7 @@ function CloverOAuthCallback() {
 
         // Check if this is an app not installed error
         if (error.response?.status === 409 && error.response?.data?.appNotInstalled) {
-          errorMessage = 'Please install the BistroBytes app from Clover App Market first, then try connecting again.';
+          errorMessage = 'Please install the BizBytes app from Clover App Market first, then try connecting again.';
         } else if (error.response?.status === 401) {
           errorMessage = 'Authentication failed. Please log in and try again.';
         } else if (error.response?.status === 400) {

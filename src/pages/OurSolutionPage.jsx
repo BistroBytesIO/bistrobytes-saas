@@ -21,7 +21,7 @@ const solutionPillars = [
   {
     icon: <Cable className="h-8 w-8 text-[#3B82F6]" />,
     title: 'POS Sync Engine',
-    description: 'One-click integrations with Clover, Square, and Toast keep menus and orders perfectly aligned.'
+    description: 'One-click integrations with Clover and Square keep menus and orders perfectly aligned.'
   },
   {
     icon: <CreditCard className="h-8 w-8 text-[#3B82F6]" />,
@@ -55,7 +55,7 @@ const OurSolutionPage = () => {
             The all-in-one digital platform for modern restaurants
           </h1>
           <p className="mt-4 text-lg text-gray-600">
-            BistroBytes combines one-click website deployment, deep POS integrations, and customer engagement tools so you can focus on hospitality—not technology.
+            BizBytes combines one-click website deployment, deep POS integrations, and customer engagement tools so you can focus on hospitality—not technology.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button asChild size="lg">
@@ -90,7 +90,7 @@ const OurSolutionPage = () => {
             <div>
               <h2 className="text-3xl font-semibold text-gray-900">Built for the full guest journey</h2>
               <p className="mt-4 text-gray-600">
-                From discovery to repeat visits, BistroBytes keeps the guest experience connected. Publish new menu items instantly, trigger loyalty rewards at the register, and keep guests engaged with automated marketing.
+                From discovery to repeat visits, BizBytes keeps the guest experience connected. Publish new menu items instantly, trigger loyalty rewards at the register, and keep guests engaged with automated marketing.
               </p>
             </div>
             <div className="space-y-4 text-gray-700">
@@ -112,7 +112,7 @@ const OurSolutionPage = () => {
 
         <section className="mx-auto mt-16 max-w-4xl text-center">
           <div className="rounded-3xl bg-gradient-to-r from-[#C8E1F5] via-[#E9F4FC] to-white px-8 py-16 shadow-lg">
-            <h2 className="text-3xl font-semibold text-gray-900">See BistroBytes in action</h2>
+            <h2 className="text-3xl font-semibold text-gray-900">See BizBytes in action</h2>
             <p className="mt-4 text-gray-600">
               We’ll connect your POS, import your menu, and spin up a live demo so you can test the full experience before launch.
             </p>

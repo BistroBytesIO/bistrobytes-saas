@@ -64,13 +64,13 @@ const ContactPage = () => {
                 name="email"
                 type="email"
                 required
-                placeholder="you@restaurant.com"
+                placeholder="you@business.com"
                 className="mt-2 w-full rounded-lg border border-[#C8E1F5] px-4 py-3 text-gray-900 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/40"
               />
             </div>
             <div>
               <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-                Restaurant or brand
+                Business or brand
               </label>
               <input
                 id="company"
@@ -96,7 +96,7 @@ const ContactPage = () => {
               Send message
             </Button>
             <p className="text-xs text-gray-500">
-              By submitting, you agree to receive updates and communications about BistroBytes. You can unsubscribe at any time.
+              By submitting, you agree to receive updates and communications about BizBytes. You can unsubscribe at any time.
             </p>
           </form>
         </section>

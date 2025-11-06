@@ -26,7 +26,7 @@ const PublicNavbar = () => {
         <Link to="/" className="flex items-center">
           <img
             src="/BizBytes Logo.png"
-            alt="BistroBytes logo"
+            alt="BizBytes logo"
             className="h-12 w-auto"
           />
         </Link>

@@ -61,7 +61,7 @@ const SignupSuccessPage = () => {
             <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
             <img
               src="/BizBytes Logo.png"
-              alt="BistroBytes logo"
+              alt="BizBytes logo"
               className="h-8 w-auto"
             />
           </Link>
@@ -80,7 +80,7 @@ const SignupSuccessPage = () => {
               )}
             </div>
             <CardTitle className="text-3xl font-bold text-gray-900">
-              {buildStatus === 'processing' ? 'Payment Successful!' : 'Welcome to BistroBytes!'}
+              {buildStatus === 'processing' ? 'Payment Successful!' : 'Welcome to BizBytes!'}
             </CardTitle>
           </CardHeader>
           

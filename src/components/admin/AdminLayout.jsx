@@ -125,7 +125,7 @@ const AdminLayout = ({ children }) => {
             <div className="ml-2">
               <img
                 src="/BizBytes Logo.png"
-                alt="BistroBytes logo"
+                alt="BizBytes logo"
                 className="h-6 w-auto"
               />
             </div>

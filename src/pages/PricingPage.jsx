@@ -16,7 +16,7 @@ const pricingPlans = [
       'Online ordering (pickup)',
       'Menu management with basic customization',
       'Stripe payments (credit and debit cards)',
-      'One-click POS integration (Clover, Square, Toast)',
+      'One-click POS integration (Clover, Square)',
       'Basic order management dashboard',
       'Customer accounts & order history',
       'Email order confirmations',

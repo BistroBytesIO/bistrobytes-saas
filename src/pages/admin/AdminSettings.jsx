@@ -1112,7 +1112,7 @@ function AdminSettings() {
                       <div className="flex justify-between items-center mb-4">
                         <div>
                           <h3 className="text-lg font-medium">Menu Synchronization</h3>
-                          <p className="text-sm text-gray-600">Sync menu items from your Clover POS to BistroBytes</p>
+                          <p className="text-sm text-gray-600">Sync menu items from your Clover POS to BizBytes</p>
                         </div>
                         <Button 
                           onClick={handleMenuSync}
@@ -1159,8 +1159,8 @@ function AdminSettings() {
 
                     <Alert>
                       <AlertDescription>
-                        Once connected, menu items from your Clover POS will automatically sync with BistroBytes. 
-                        Orders placed through BistroBytes will appear in your Clover dashboard.
+                        Once connected, menu items from your Clover POS will automatically sync with BizBytes. 
+                        Orders placed through BizBytes will appear in your Clover dashboard.
                       </AlertDescription>
                     </Alert>
                   </div>
@@ -1169,7 +1169,7 @@ function AdminSettings() {
                   <div className="space-y-4">
                     <Alert className="border-blue-200 bg-blue-50">
                       <AlertDescription className="text-blue-800">
-                        <strong>Important:</strong> Before connecting, you must install the BistroBytes app in your Clover App Market.
+                        <strong>Important:</strong> Before connecting, you must install the BizBytes app in your Clover App Market.
                       </AlertDescription>
                     </Alert>
 
@@ -1177,7 +1177,7 @@ function AdminSettings() {
                       <h4 className="font-medium text-gray-900 mb-3">Setup Instructions (First-Time Connection)</h4>
                       <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
                         <li className="font-medium">
-                          Install the BistroBytes App
+                          Install the BizBytes App
                           <p className="ml-6 mt-1 text-gray-600">
                             Visit the{' '}
                             <a
@@ -1188,7 +1188,7 @@ function AdminSettings() {
                             >
                               Clover App Market
                             </a>
-                            {' '}and click "Connect" to install BistroBytes to your merchant account.
+                            {' '}and click "Connect" to install BizBytes to your merchant account.
                           </p>
                         </li>
                         <li className="font-medium">
@@ -1230,8 +1230,8 @@ function AdminSettings() {
                     <div className="space-y-2 text-sm text-gray-600">
                       <h4 className="font-medium text-gray-900">What you'll get after connecting:</h4>
                       <ul className="list-disc list-inside space-y-1">
-                        <li>Your Clover menu items will sync to BistroBytes</li>
-                        <li>Orders from BistroBytes will appear in your Clover POS</li>
+                        <li>Your Clover menu items will sync to BizBytes</li>
+                        <li>Orders from BizBytes will appear in your Clover POS</li>
                         <li>Inventory and pricing stay synchronized</li>
                         <li>Customer payments can be processed through Clover</li>
                       </ul>
@@ -1332,7 +1332,7 @@ function AdminSettings() {
                       <div className="flex justify-between items-center mb-4">
                         <div>
                           <h3 className="text-lg font-medium">Menu Synchronization</h3>
-                          <p className="text-sm text-gray-600">Sync menu items from your Square POS to BistroBytes</p>
+                          <p className="text-sm text-gray-600">Sync menu items from your Square POS to BizBytes</p>
                         </div>
                         <Button
                           onClick={handleSquareMenuSync}
@@ -1379,8 +1379,8 @@ function AdminSettings() {
 
                     <Alert>
                       <AlertDescription>
-                        Once connected, menu items from your Square POS will automatically sync with BistroBytes.
-                        Orders placed through BistroBytes will appear in your Square dashboard.
+                        Once connected, menu items from your Square POS will automatically sync with BizBytes.
+                        Orders placed through BizBytes will appear in your Square dashboard.
                       </AlertDescription>
                     </Alert>
                   </div>
@@ -1389,7 +1389,7 @@ function AdminSettings() {
                   <div className="space-y-4">
                     <Alert className="border-orange-200 bg-orange-50">
                       <AlertDescription className="text-orange-800">
-                        Connect your Square POS to sync menu items and manage orders from BistroBytes.
+                        Connect your Square POS to sync menu items and manage orders from BizBytes.
                       </AlertDescription>
                     </Alert>
 
@@ -1397,7 +1397,7 @@ function AdminSettings() {
                       <div className="max-w-md mx-auto">
                         <h3 className="text-lg font-medium mb-3">Connect to Square POS</h3>
                         <p className="text-sm text-gray-600 mb-6">
-                          Authorize BistroBytes to access your Square merchant account for menu synchronization and order management.
+                          Authorize BizBytes to access your Square merchant account for menu synchronization and order management.
                         </p>
                         
                         <Button 

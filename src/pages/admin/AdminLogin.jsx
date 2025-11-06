@@ -260,7 +260,7 @@ function AdminLogin() {
               onClick={() => navigate('/')}
               className="text-sm text-gray-600 hover:text-gray-800"
             >
-              ← Back to BistroBytes Home
+              ← Back to BizBytes Home
             </Button>
           </div>
         </CardContent>

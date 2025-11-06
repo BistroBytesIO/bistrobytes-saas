@@ -145,7 +145,6 @@ const SignupPage = () => {
   const posOptions = [
     { value: 'clover', label: 'Clover' },
     { value: 'square', label: 'Square' },
-    { value: 'toast', label: 'Toast' },
     { value: 'resy', label: 'Resy' },
     { value: 'other', label: 'Other' },
     { value: 'none', label: 'No POS System' }
@@ -1021,7 +1020,7 @@ const SignupPage = () => {
               <Check className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to BistroBytes!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to BizBytes!</h2>
               <p className="text-gray-600">
                 Your restaurant website is being created. You'll receive an email with login details shortly.
               </p>
@@ -1055,7 +1054,7 @@ const SignupPage = () => {
                 <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
                 <img
                   src="/BizBytes Logo.png"
-                  alt="BistroBytes logo"
+                  alt="BizBytes logo"
                   className="h-8 w-auto"
                 />
               </div>
