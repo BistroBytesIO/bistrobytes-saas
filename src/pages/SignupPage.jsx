@@ -1058,18 +1058,15 @@ const SignupPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-3">
               <ArrowLeft className="h-5 w-5 text-gray-500" />
-              <div className="flex items-center space-x-2">
-                <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
-                <img
-                  src="/BizBytes Logo.png"
-                  alt="BizBytes logo"
-                  className="h-8 w-auto"
-                />
-              </div>
+              <img
+                src="/BizBytes Logo.png"
+                alt="BizBytes logo"
+                className="h-12 w-auto"
+              />
             </Link>
             {step < 6 && (
               <div className="text-sm text-gray-500">
