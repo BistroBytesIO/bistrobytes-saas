@@ -12,11 +12,12 @@ const pricingPlans = [
     price: 99,
     description: 'Perfect for small restaurants getting online',
     features: [
-      'Custom restaurant website (full branding — no “Powered by” badge)',
+      'Custom restaurant website (full branding)',
       'Online ordering (pickup)',
       'Menu management with basic customization',
       'Stripe payments (credit and debit cards)',
       'One-click POS integration (Clover, Square)',
+      'POS inventory sync',
       'Basic order management dashboard',
       'Customer accounts & order history',
       'Email order confirmations',
@@ -32,14 +33,14 @@ const pricingPlans = [
     description: 'Complete solution for growing restaurants',
     features: [
       'Everything in Starter',
-      'Customer Loyalty Program (points, rewards, redemption)',
+      'Customer Loyalty Program (points/rewards)',
       'Advanced payment options (Apple Pay, Google Pay, PayPal)',
-      'Advanced menu features (modifiers, combos, scheduled menus)',
-      'Real-time analytics dashboard (sales trends, popular items, customer insights)',
+      'Advanced menu features (modifiers, combos)',
+      'Real-time analytics dashboard',
       'Discount & promo codes',
       'Custom domain support (yourrestaurant.com)',
-      'Automated email reports (daily/weekly sales summaries)',
-      'Real-time order notifications (WebSocket updates)',
+      'Automated email reports (daily/weekly)',
+      'Real-time order notifications',
       'Priority support (chat + phone)'
     ],
     cta: 'Upgrade to Professional',
@@ -51,11 +52,11 @@ const pricingPlans = [
     description: 'Premium solution with multi-location management',
     features: [
       'Everything in Professional',
-      'Multi-location management (manage multiple business locations)',
-      'Advanced analytics & reporting (customer lifetime value, profitability analysis)',
-      'Role-based access control (manager vs staff permissions)',
+      'Multi-location management',
+      'Advanced analytics & reporting',
+      'Role-based access control (manager vs staff)',
       'API access & webhooks (custom integrations)',
-      'Advanced POS features (inventory sync, customer data sync)',
+      'Advanced POS features',
       'Dedicated account manager + 24/7 support'
     ],
     cta: 'Talk to Sales',
@@ -82,7 +83,7 @@ const PricingPage = () => {
             {pricingPlans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`relative border border-[#C8E1F5] shadow-lg transition-transform hover:-translate-y-1 ${plan.popular ? 'ring-2 ring-[#3B82F6] scale-105' : ''}`}
+                className={`relative border border-[#C8E1F5] shadow-lg transition-transform hover:-translate-y-3 ${plan.popular ? 'ring-2 ring-[#3B82F6] scale-105' : ''}`}
               >
                 {plan.popular && (
                   <Badge className="absolute left-1/2 top-0 -translate-y-1/2 -translate-x-1/2 bg-[#3B82F6] text-white">

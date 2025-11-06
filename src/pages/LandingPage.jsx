@@ -20,17 +20,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 const LandingPage = () => {
   const heroSlides = [
     {
-      src: '/images/mock-restaurant-site.png',
+      src: '/mock-restaurant-site.png',
       alt: 'BizBytes restaurant website mockup',
       caption: 'Launch a polished restaurant site with online ordering in minutes.'
     },
     {
-      src: '/images/mock-retail-site.png',
+      src: '/mock-retail-site.png',
       alt: 'BizBytes retail website mockup',
       caption: 'Showcase retail inventory with instant checkout and loyalty rewards.'
     },
     {
-      src: '/images/mock-services-site.png',
+      src: '/mock-services-site.png',
       alt: 'BizBytes services website mockup',
       caption: 'Book appointments and take payments for service businesses on one page.'
     }
