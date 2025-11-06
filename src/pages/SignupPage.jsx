@@ -127,14 +127,16 @@ const SignupPage = () => {
   })
 
   const businessTypes = [
-    { value: 'restaurant', label: 'Restaurant' },
-    { value: 'cafe', label: 'Cafe' },
-    { value: 'food_truck', label: 'Food Truck' },
-    { value: 'bakery', label: 'Bakery' },
-    { value: 'bar', label: 'Bar/Pub' },
-    { value: 'pizza', label: 'Pizza Shop' },
-    { value: 'fast_food', label: 'Fast Food' },
-    { value: 'fine_dining', label: 'Fine Dining' }
+    { value: 'professionalServices', label: 'Professional Services' },
+    { value: 'healthcareMedical', label: 'Healthcare & Medical' },
+    { value: 'realEstate', label: 'Real Estate' },
+    { value: 'restaurant', label: 'Restaurants & Food Services' },
+    { value: 'beautyPersonalCare', label: 'Beauty & Personal Care' },
+    { value: 'retailEcommerce', label: 'Retail & E-commerce' },
+    { value: 'homeServices', label: 'Home Services' },
+    { value: 'technologySoftware', label: 'Technology & Software' },
+    { value: 'educationTraining', label: 'Education & Training' },
+    { value: 'creativeMarketing', label: 'Creative & Marketing' }
   ]
 
   const cuisineTypes = [
@@ -156,6 +158,14 @@ const SignupPage = () => {
     professional: ['Up to 2,000 orders/month', 'Loyalty program', 'Priority support', 'Advanced analytics', 'Custom branding', 'POS integrations'],
     enterprise: ['Unlimited orders', 'AI voice ordering', '24/7 support', 'White-label options', 'Custom integrations', 'Dedicated account manager']
   }
+
+  const selectedBusinessType = watch('businessType')
+
+  useEffect(() => {
+    if (selectedBusinessType !== 'restaurant') {
+      setValue('cuisine', '')
+    }
+  }, [selectedBusinessType, setValue])
 
   // Fetch subscription plans from API
   useEffect(() => {
@@ -220,20 +230,20 @@ const SignupPage = () => {
     setIsLoading(true)
     
     try {
-      // Generate clean tenant slug from restaurant name (no underscores or spaces)
+      // Generate clean tenant slug from business name (no underscores or spaces)
       const tenantSlug = data.restaurantName
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '')  // Remove all non-alphanumeric characters (including spaces and special chars)
         .replace(/^[0-9]+/, '')     // Remove leading numbers if any
         .substring(0, 50)           // Limit length to 50 chars
-        || 'restaurant'             // Fallback if empty
+        || 'business'             // Fallback if empty
 
       // Create flat tenant configuration for Stripe metadata
       const tenantConfig = {
         // Basic tenant info (flat structure as expected by backend)
         tenantSlug: tenantSlug,
         tenantName: data.restaurantName,
-        domain: data.websiteUrl || `${tenantSlug}.bistrobytes.app`,
+        domain: data.websiteUrl || `${tenantSlug}.bizbytes.app`,
         
         // Business information (flat fields)
         businessType: data.businessType,
@@ -327,16 +337,16 @@ const SignupPage = () => {
         return (
           <div className="space-y-6" key="step-1">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell us about your restaurant</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell us about your business</h2>
               <p className="text-gray-600">Let's start with the basics</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block">Restaurant Name *</Label>
+                <Label className="mb-1 block">Business Name *</Label>
                 <Input
-                  {...register('restaurantName', { required: 'Restaurant name is required' })}
-                  placeholder="Pizza Palace"
+                  {...register('restaurantName', { required: 'Business name is required' })}
+                  placeholder="Acme Services Co."
                   className={errors.restaurantName ? 'border-red-500' : ''}
                 />
                 {errors.restaurantName && (
@@ -356,18 +366,20 @@ const SignupPage = () => {
                 </Select>
               </div>
               
-              <div>
-                <Label className="mb-1 block">Cuisine Type</Label>
-                <Select
-                  {...register('cuisine')}
-                  className=""
-                >
-                  <option value="">Select cuisine...</option>
-                  {cuisineTypes.map(cuisine => (
-                    <option key={cuisine} value={cuisine}>{cuisine}</option>
-                  ))}
-                </Select>
-              </div>
+              {selectedBusinessType === 'restaurant' && (
+                <div>
+                  <Label className="mb-1 block">Cuisine Type</Label>
+                  <Select
+                    {...register('cuisine')}
+                    className=""
+                  >
+                    <option value="">Select cuisine...</option>
+                    {cuisineTypes.map(cuisine => (
+                      <option key={cuisine} value={cuisine}>{cuisine}</option>
+                    ))}
+                  </Select>
+                </div>
+              )}
               
               <div>
                 <Label className="mb-1 block">Website URL (optional)</Label>
@@ -384,7 +396,7 @@ const SignupPage = () => {
                 {...register('description')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
-                placeholder="Tell customers about your restaurant's story, cuisine, and unique features..."
+                placeholder="Tell customers about your business' story, offerings, and what makes you unique..."
               />
             </div>
             
@@ -456,7 +468,7 @@ const SignupPage = () => {
             </div>
             
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Restaurant Address</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Business Address</h3>
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <Label className="mb-1 block">Street Address *</Label>
@@ -519,7 +531,7 @@ const SignupPage = () => {
           <div className="space-y-6" key="step-3">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Business Settings</h2>
-              <p className="text-gray-600">Configure your restaurant operations</p>
+              <p className="text-gray-600">Configure your business operations</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -566,7 +578,7 @@ const SignupPage = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <Label className="mb-1 block">Tax Rate (%)</Label>
-                  <Tooltip content="Typical restaurant sales tax e.g. 8.875% in NYC">
+                  <Tooltip content="Typical sales tax rate e.g. 8.875% in NYC">
                     <Info className="h-4 w-4 text-muted-foreground" aria-hidden />
                   </Tooltip>
                 </div>
@@ -740,12 +752,12 @@ const SignupPage = () => {
             <div className="mt-8 space-y-6 border-4 border-blue-500 p-6 bg-blue-50 rounded-lg">
               <div>
                 <h3 className="text-xl font-bold text-blue-900 mb-2">🎨 Customize Your Brand</h3>
-                <p className="text-blue-700 text-sm mb-4">Make your restaurant website uniquely yours with custom branding.</p>
+              <p className="text-blue-700 text-sm mb-4">Make your business website uniquely yours with custom branding.</p>
                 {console.log('Visual Branding section is rendering')}
                 
                 {/* Logo Section */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Restaurant Logo</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Business Logo</label>
                   <div className="space-y-4">
                     {/* Generate Logo Toggle */}
                     <div className="flex items-center space-x-3">
@@ -775,7 +787,7 @@ const SignupPage = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             rows={3}
                           />
-                          <p className="text-xs text-gray-500 mt-1">Leave blank to auto-generate based on your restaurant details</p>
+                          <p className="text-xs text-gray-500 mt-1">Leave blank to auto-generate based on your business details</p>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">
@@ -812,7 +824,7 @@ const SignupPage = () => {
                         </div>
                         
                         <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
-                          ℹ️ Your logo will be automatically generated after payment and included in your restaurant website.
+                          ℹ️ Your logo will be automatically generated after payment and included in your business website.
                         </div>
                       </div>
                     )}
@@ -880,7 +892,7 @@ const SignupPage = () => {
                             </svg>
                           </div>
                           <p className="text-sm text-blue-800">
-                            We'll generate a custom logo for <strong>{watch('restaurantName') || 'your restaurant'}</strong> using AI based on your cuisine and style preferences.
+                            We'll generate a custom logo for <strong>{watch('restaurantName') || 'your business'}</strong> using AI based on your industry and style preferences.
                           </p>
                         </div>
                       </div>
@@ -910,7 +922,7 @@ const SignupPage = () => {
                       />
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">These colors will be used throughout your restaurant's website theme.</p>
+                          <p className="text-xs text-gray-500 mt-2">These colors will be used throughout your business' website theme.</p>
                 </div>
               </div>
               
@@ -948,7 +960,7 @@ const SignupPage = () => {
           <div className="space-y-6" key="step-5">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment & Account Setup</h2>
-              <p className="text-gray-600">Complete your payment to create your restaurant website</p>
+              <p className="text-gray-600">Complete your payment to create your business website</p>
             </div>
             
             <div className="bg-blue-50 rounded-lg p-6">
@@ -1022,7 +1034,7 @@ const SignupPage = () => {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to BizBytes!</h2>
               <p className="text-gray-600">
-                Your restaurant website is being created. You'll receive an email with login details shortly.
+                Your business website is being created. You'll receive an email with login details shortly.
               </p>
             </div>
             <div className="bg-blue-50 rounded-lg p-4">
