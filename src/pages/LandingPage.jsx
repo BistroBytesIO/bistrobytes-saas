@@ -141,7 +141,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <nav className="border-b border-white/60 bg-[#C8E1F5] sticky top-0 z-50 shadow-sm">
+      <nav className="border-b border-[#C8E1F5]/50 bg-gradient-to-b from-[#C8E1F5] to-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-8">
             <div className="flex items-center">
@@ -165,7 +165,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-[#C8E1F5]">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#C8E1F5] via-white to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
@@ -207,7 +207,7 @@ const LandingPage = () => {
       </section>
 
       {/* How it works */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-gradient-to-b from-[#C8E1F5]/40 via-white to-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900">How it works</h2>
@@ -247,7 +247,7 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-white">
+      <section id="features" className="py-24 bg-gradient-to-b from-[#C8E1F5]/40 via-white to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -278,7 +278,7 @@ const LandingPage = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 bg-white">
+      <section id="pricing" className="py-24 bg-gradient-to-b from-[#C8E1F5]/30 via-white to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -356,7 +356,7 @@ const LandingPage = () => {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-24 bg-white">
+      <section id="testimonials" className="py-24 bg-gradient-to-b from-[#C8E1F5]/30 via-white to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -388,7 +388,7 @@ const LandingPage = () => {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-gradient-to-b from-[#C8E1F5]/40 via-white to-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900">Frequently asked questions</h2>
@@ -398,7 +398,7 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-[#C8E1F5]">
+      <section className="py-24 bg-gradient-to-r from-[#C8E1F5] via-[#E9F4FC] to-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Ready to transform your restaurant?
@@ -415,7 +415,7 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#C8E1F5] text-gray-900 py-12">
+      <footer className="bg-gradient-to-b from-[#C8E1F5] via-[#E9F4FC] to-white text-gray-900 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
