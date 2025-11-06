@@ -148,7 +148,7 @@ const LandingPage = () => {
               <img
                 src="/BizBytes Logo.png"
                 alt="BistroBytes logo"
-                className="h-12 w-auto"
+                className="h-20 w-auto"
               />
             </div>
             <div className="hidden md:flex items-center space-x-8">
