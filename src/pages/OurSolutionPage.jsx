@@ -5,43 +5,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/button'
 import {
   MonitorSmartphone,
-  Cable,
   CreditCard,
-  BarChart3,
-  Gift,
-  ShieldCheck
+  Palette,
+  Store,
+  Rocket,
+  Headphones
 } from 'lucide-react'
 
 const solutionPillars = [
   {
     icon: <MonitorSmartphone className="h-8 w-8 text-[#3B82F6]" />,
-    title: 'Instant Websites',
-    description: 'Launch a fully branded ordering site in minutes with pages for menus, locations, and promos.'
+    title: 'One-Click Website Creation',
+    description: 'Instantly launch a fully functional website with just one click, no coding or design experience required.'
   },
   {
-    icon: <Cable className="h-8 w-8 text-[#3B82F6]" />,
-    title: 'POS Sync Engine',
-    description: 'One-click integrations with Clover and Square keep menus and orders perfectly aligned.'
+    icon: <Palette className="h-8 w-8 text-[#3B82F6]" />,
+    title: 'Seamless Customization',
+    description: 'Easily personalize your site\'s layout, colors, and content to reflect your brand and business goals.'
   },
   {
     icon: <CreditCard className="h-8 w-8 text-[#3B82F6]" />,
-    title: 'Modern Payments',
-    description: 'Accept cards plus Apple Pay, Google Pay, and PayPal with Stripe vaulting for repeat guests.'
+    title: 'Built-In Payment Integration',
+    description: 'Accept payments effortlessly through Stripe, Google Pay, and Apple Pay for a smooth checkout experience.'
   },
   {
-    icon: <BarChart3 className="h-8 w-8 text-[#3B82F6]" />,
-    title: 'Operational Intelligence',
-    description: 'Real-time dashboards show sales trends, menu performance, and loyalty insights.'
+    icon: <Store className="h-8 w-8 text-[#3B82F6]" />,
+    title: 'Versatile for Any Industry',
+    description: 'Designed to serve SaaS platforms, retail stores, and service providers with equal efficiency.'
   },
   {
-    icon: <Gift className="h-8 w-8 text-[#3B82F6]" />,
-    title: 'Customer Growth',
-    description: 'Deliver loyalty programs, promo codes, and automated email campaigns out of the box.'
+    icon: <Rocket className="h-8 w-8 text-[#3B82F6]" />,
+    title: 'Continuous Innovation',
+    description: 'Our dedicated R&D team consistently adds new tools and features to keep your website ahead of the curve.'
   },
   {
-    icon: <ShieldCheck className="h-8 w-8 text-[#3B82F6]" />,
-    title: 'Enterprise Reliability',
-    description: 'Role-based access, secure infrastructure, and 24/7 monitoring keep operations online.'
+    icon: <Headphones className="h-8 w-8 text-[#3B82F6]" />,
+    title: '24/7 Customer Support',
+    description: 'Experience exceptional, around-the-clock assistance from our expert support team whenever you need it.'
   }
 ]
 
@@ -57,12 +57,9 @@ const OurSolutionPage = () => {
           <p className="mt-4 text-lg text-gray-600">
             BizBytes combines one-click website deployment, deep POS integrations, and customer engagement tools so you can focus on hospitality—not technology.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-6 flex justify-center">
             <Button asChild size="lg">
               <Link to="/pricing">Explore Pricing</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/contact">Schedule a demo</Link>
             </Button>
           </div>
         </section>
