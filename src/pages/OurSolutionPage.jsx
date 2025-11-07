@@ -52,7 +52,7 @@ const OurSolutionPage = () => {
       <main className="px-4 py-16 sm:px-6 lg:px-8">
         <section className="mx-auto max-w-4xl text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-            The all-in-one digital platform for modern restaurants
+            The all-in-one digital platform for modern businesses
           </h1>
           <p className="mt-4 text-lg text-gray-600">
             BizBytes combines one-click website deployment, deep POS integrations, and customer engagement tools so you can focus on hospitality—not technology.
@@ -97,7 +97,7 @@ const OurSolutionPage = () => {
               </div>
               <div className="rounded-2xl bg-[#C8E1F5]/40 p-4">
                 <strong className="block text-gray-900">Operations-first design</strong>
-                <span className="text-sm">Ticket routing, prep status visibility, and order throttling keep the kitchen running smoothly.</span>
+                <span className="text-sm">Ticket routing, prep status visibility, and order throttling keep your operations running smoothly.</span>
               </div>
               <div className="rounded-2xl bg-[#C8E1F5]/40 p-4">
                 <strong className="block text-gray-900">Data you can act on</strong>
