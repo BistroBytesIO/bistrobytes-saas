@@ -94,7 +94,7 @@ const LandingPage = () => {
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
               Your Website
-              <span className="block mt-2 inline-block rounded-xl bg-white px-6 py-2 text-4xl md:text-6xl font-bold text-gray-900">
+              <span className="block mt-2 text-4xl md:text-6xl font-bold text-gray-900">
                 In One Click
               </span>
             </h1>
