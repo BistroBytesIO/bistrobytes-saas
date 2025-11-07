@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import PublicNavbar from '../components/layout/PublicNavbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { AnimatedCard } from '../components/ui/animated-card'
 import { Button } from '../components/ui/button'
 import {
   MonitorSmartphone,
@@ -67,7 +68,7 @@ const OurSolutionPage = () => {
         <section className="mx-auto mt-16 max-w-6xl">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {solutionPillars.map((pillar) => (
-              <Card key={pillar.title} className="card-hover border border-[#C8E1F5] shadow-lg">
+              <AnimatedCard key={pillar.title} className="border border-[#C8E1F5] shadow-lg">
                 <CardHeader>
                   <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white">
                     {pillar.icon}
@@ -77,7 +78,7 @@ const OurSolutionPage = () => {
                 <CardContent>
                   <CardDescription className="text-gray-700">{pillar.description}</CardDescription>
                 </CardContent>
-              </Card>
+              </AnimatedCard>
             ))}
           </div>
         </section>

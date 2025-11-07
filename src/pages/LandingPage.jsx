@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import PublicNavbar from '../components/layout/PublicNavbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { AnimatedCard } from '../components/ui/animated-card'
 import {
   MonitorSmartphone,
   CreditCard,
@@ -160,7 +161,7 @@ const LandingPage = () => {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="card-hover border border-[#C8E1F5] shadow-lg">
+              <AnimatedCard key={index} className="border border-[#C8E1F5] shadow-lg">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-lg flex items-center justify-center text-gray-900 mb-4 bg-white border border-[#C8E1F5]">
                     {feature.icon}
@@ -172,7 +173,7 @@ const LandingPage = () => {
                     {feature.description}
                   </CardDescription>
                 </CardContent>
-              </Card>
+              </AnimatedCard>
             ))}
           </div>
         </div>
