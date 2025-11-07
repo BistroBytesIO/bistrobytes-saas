@@ -90,15 +90,12 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#C8E1F5] via-white to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
-              Your Website
-              <span className="block mt-2 text-4xl md:text-6xl font-bold text-gray-900">
-                In One Click
-              </span>
+              Your Website In One Click
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 mb-4 max-w-3xl mx-auto">
               Transform your business with one-click websites, seamless POS integration,
               and comprehensive customer management. Set up in minutes, not months.
             </p>
