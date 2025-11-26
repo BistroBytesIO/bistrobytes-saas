@@ -88,7 +88,7 @@ const OurSolutionPage = () => {
             <div>
               <h2 className="text-3xl font-semibold text-gray-900">Built for the full guest journey</h2>
               <p className="mt-4 text-gray-600">
-                From discovery to repeat visits, BizBytes keeps the guest experience connected. Publish new menu items instantly, trigger loyalty rewards at the register, and keep guests engaged with automated marketing.
+                Turn first-time visitors into loyal customers with a fully connected digital experience. Launch your website in one click, publish updates instantly, accept payments with ease, and keep customers coming back through automated marketing.
               </p>
             </div>
             <div className="space-y-4 text-gray-700">

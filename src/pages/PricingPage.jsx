@@ -4,15 +4,15 @@ import PublicNavbar from '../components/layout/PublicNavbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { CheckCircle, ArrowRight } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 
 const pricingPlans = [
   {
     name: 'Starter',
     price: 99,
-    description: 'Perfect for small restaurants getting online',
+    description: 'Perfect for small businesses getting online',
     features: [
-      'Custom restaurant website (full branding)',
+      'Custom business website (full branding)',
       'Online ordering (pickup)',
       'Menu management with basic customization',
       'Stripe payments (credit and debit cards)',
@@ -30,7 +30,7 @@ const pricingPlans = [
   {
     name: 'Professional',
     price: 159,
-    description: 'Complete solution for growing restaurants',
+    description: 'Complete solution for growing businesses',
     features: [
       'Everything in Starter',
       'Customer Loyalty Program (points/rewards)',
@@ -71,7 +71,7 @@ const PricingPage = () => {
       <main className="px-4 py-16 sm:px-6 lg:px-8">
         <section className="mx-auto max-w-4xl text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-            Pricing built to launch and scale your restaurant online
+            Pricing built to launch and scale your business online
           </h1>
           <p className="mt-4 text-lg text-gray-600">
             Choose the plan that matches your operations today and upgrade as your business grows.
@@ -134,7 +134,7 @@ const PricingPage = () => {
             <div className="mt-6 flex flex-col gap-4 sm:flex-row">
               <Button asChild size="lg">
                 <Link to="/signup">
-                  Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+                  Start Free Trial
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
