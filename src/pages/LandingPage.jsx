@@ -140,17 +140,6 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-        <div className="pb-10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-center gap-8 opacity-60">
-              <div className="h-6 w-24 bg-gray-300 rounded" />
-              <div className="h-6 w-24 bg-gray-300 rounded" />
-              <div className="h-6 w-24 bg-gray-300 rounded" />
-              <div className="h-6 w-24 bg-gray-300 rounded" />
-              <div className="h-6 w-24 bg-gray-300 rounded" />
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* Why BizBytes */}
@@ -342,7 +331,7 @@ export default LandingPage
 const FAQ = () => {
   const [open, setOpen] = React.useState(null)
   const items = [
-    { q: 'How fast can my website go live?', a: 'Most businesses publish in under ten minutes. Start with our templates, drop in your branding, and launch instantly.' },
+    { q: 'How quickly can my website be launched?', a: 'Most businesses publish in under ten minutes. Start with our templates, drop in your branding, and launch instantly.' },
     { q: 'Which POS systems can I connect?', a: 'BizBytes integrates with Clover and Square out of the box. We handle menu sync, inventory updates, and order push.' },
     { q: 'Do you support digital wallets and online payments?', a: 'Yes. Stripe powers credit and debit cards, Apple Pay, Google Pay, and PayPal so guests can pay however they prefer.' },
     { q: 'Can I manage multiple locations?', a: 'Our platform scales with your business. Enterprise plans support multi-location menus, reporting, and role-based access for staff.' },

@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { RestaurantAuthProvider } from './contexts/RestaurantAuthContext'
+import ScrollToTop from './components/ScrollToTop'
 import LandingPage from './pages/LandingPage'
 import OurSolutionPage from './pages/OurSolutionPage'
 import PricingPage from './pages/PricingPage'
@@ -27,6 +28,7 @@ import SquareOAuthCallback from './pages/admin/SquareOAuthCallback'
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <RestaurantAuthProvider>
         <div className="min-h-screen bg-background">
           <Routes>
