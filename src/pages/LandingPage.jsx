@@ -71,7 +71,7 @@ const LandingPage = () => {
     {
       icon: <Store className="h-8 w-8" />,
       title: "Versatile for Any Industry",
-      description: "Designed to serve SaaS platforms, retail stores, and service providers with equal efficiency."
+      description: "Designed to serve SaaS platforms, restaurants, retail stores, and service providers with equal efficiency."
     },
     {
       icon: <Rocket className="h-8 w-8" />,
