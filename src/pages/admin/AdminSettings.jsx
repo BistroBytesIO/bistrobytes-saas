@@ -51,6 +51,9 @@ function AdminSettings() {
     logoUrl: '',
   });
 
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState('');
+
   const [hours, setHours] = useState(defaultHours);
   
   // Clover integration state
@@ -258,6 +261,13 @@ function AdminSettings() {
     }));
   }, [squareStatus.connected, squareStatus.valid]);
 
+  // Set logo preview when branding.logoUrl changes
+  useEffect(() => {
+    if (branding.logoUrl) {
+      setLogoPreview(branding.logoUrl);
+    }
+  }, [branding.logoUrl]);
+
   const handleSaveProfile = async () => {
     if (!profile.name?.trim()) {
       toast.error('Restaurant name is required');
@@ -291,11 +301,27 @@ function AdminSettings() {
     }
   };
 
+  const handleLogoUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLogoFile(file);
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+
+    // Read as base64 data URL
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      setBranding({ ...branding, logoUrl: base64 });
+    };
+    reader.onerror = () => console.error('Failed to read logo file');
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveBranding = async () => {
-    if (branding.logoUrl && !/^https?:\/\//i.test(branding.logoUrl)) {
-      toast.error('Logo URL must start with http or https');
-      return;
-    }
     setSaving(true);
     try {
       await adminApiUtils.updateRestaurantSettings({ branding });
@@ -759,11 +785,48 @@ function AdminSettings() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Logo</label>
-                  <div className="flex items-center gap-3">
-                    <Input type="url" placeholder="https://…" value={branding.logoUrl} onChange={(e) => setBranding({ ...branding, logoUrl: e.target.value })} />
-                    <Button type="button" variant="outline"><Upload className="h-4 w-4 mr-2" /> Upload (soon)</Button>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          {logoPreview ? (
+                            <img src={logoPreview} alt="Logo preview" className="max-h-32 max-w-full object-contain mb-2" />
+                          ) : (
+                            <>
+                              <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                              <p className="mb-2 text-sm text-gray-500">
+                                <span className="font-semibold">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                        />
+                      </label>
+                    </div>
+                    {logoPreview && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-green-600">✓ Logo uploaded</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setLogoPreview('');
+                            setLogoFile(null);
+                            setBranding({ ...branding, logoUrl: '' });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Image upload to be implemented with backend file handling.</p>
                 </div>
                 <div className="flex justify-end">
                   <Button onClick={handleSaveBranding} disabled={saving}>
