@@ -20,6 +20,7 @@ const defaultHours = {
   friday: { open: '09:00', close: '21:00', closed: false },
   saturday: { open: '10:00', close: '21:00', closed: false },
   sunday: { open: '10:00', close: '16:00', closed: true },
+  timezone: 'America/New_York'
 };
 
 function AdminSettings() {
@@ -145,8 +146,34 @@ function AdminSettings() {
         
         // Process basic results
         if (results[0].status === 'fulfilled' && results[0].value?.data) {
-          setProfile((prev) => ({ ...prev, ...results[0].value.data }));
-          updateRestaurantData?.({ name: results[0].value.data.name });
+          const profileData = results[0].value.data;
+          setProfile((prev) => ({
+            ...prev,
+            name: profileData.name || '',
+            description: profileData.description || ''
+          }));
+
+          // Load contact information
+          setContact((prev) => ({
+            ...prev,
+            phone: profileData.phone || '',
+            email: profileData.email || '',
+            addressLine1: profileData.address || '',
+            addressLine2: profileData.addressLine2 || '',
+            city: profileData.city || '',
+            state: profileData.state || '',
+            zip: profileData.zipCode || ''
+          }));
+
+          // Load branding information
+          setBranding((prev) => ({
+            ...prev,
+            primaryColor: profileData.primaryColor || '#3B82F6',
+            secondaryColor: profileData.secondaryColor || '#10B981',
+            logoUrl: profileData.logoUrl || ''
+          }));
+
+          updateRestaurantData?.({ name: profileData.name });
         }
         if (results[1].status === 'fulfilled' && results[1].value?.data) {
           setHours({ ...defaultHours, ...results[1].value.data });
@@ -624,7 +651,20 @@ function AdminSettings() {
                 <CardDescription>Configure opening and closing times</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {Object.entries(hours).map(([day, data]) => (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Timezone</label>
+                  <select
+                    value={hours.timezone || 'America/New_York'}
+                    onChange={(e) => setHours({ ...hours, timezone: e.target.value })}
+                    className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="America/New_York">Eastern Time</option>
+                    <option value="America/Chicago">Central Time</option>
+                    <option value="America/Denver">Mountain Time</option>
+                    <option value="America/Los_Angeles">Pacific Time</option>
+                  </select>
+                </div>
+                {Object.entries(hours).filter(([day]) => day !== 'timezone').map(([day, data]) => (
                   <div key={day} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
                     <div className="capitalize text-sm font-medium">{day}</div>
                     <div className="flex items-center gap-2">

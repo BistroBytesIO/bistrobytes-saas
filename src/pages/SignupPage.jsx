@@ -88,10 +88,15 @@ const SignupPage = () => {
       zipCode: '',
       country: 'United States',
       
-      // Business Hours (simplified for now)
-      openTime: '09:00',
-      closeTime: '21:00',
+      // Business Hours
       timezone: 'America/New_York',
+      monday: { open: '09:00', close: '17:00', closed: false },
+      tuesday: { open: '09:00', close: '17:00', closed: false },
+      wednesday: { open: '09:00', close: '17:00', closed: false },
+      thursday: { open: '09:00', close: '17:00', closed: false },
+      friday: { open: '09:00', close: '21:00', closed: false },
+      saturday: { open: '10:00', close: '21:00', closed: false },
+      sunday: { open: '10:00', close: '16:00', closed: true },
       
       // Business Configuration
       currency: 'USD',
@@ -202,7 +207,7 @@ const SignupPage = () => {
       case 2:
         return ['ownerName', 'email', 'phone', 'address', 'city', 'state', 'zipCode', 'country']
       case 3:
-        return ['openTime', 'closeTime', 'timezone', 'currency', 'taxRate', 'serviceFeeRate', 'minimumOrder', 'hasExistingPOS', 'posSystem']
+        return ['timezone', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'currency', 'taxRate', 'serviceFeeRate', 'minimumOrder', 'hasExistingPOS', 'posSystem']
       case 4:
         return ['plan', 'billingCycle', 'primaryColor', 'secondaryColor', 'logoUrl', 'heroImage1', 'heroImage2', 'heroImage3', 'howDidYouHear', 'marketingEmails']
       case 5:
@@ -264,9 +269,17 @@ const SignupPage = () => {
         country: data.country,
         
         // Business settings (flat fields)
-        openTime: data.openTime,
-        closeTime: data.closeTime,
         timezone: data.timezone,
+        // Business hours for each day
+        businessHours: JSON.stringify({
+          monday: data.monday,
+          tuesday: data.tuesday,
+          wednesday: data.wednesday,
+          thursday: data.thursday,
+          friday: data.friday,
+          saturday: data.saturday,
+          sunday: data.sunday
+        }),
         currency: data.currency,
         taxRate: parseFloat(data.taxRate) || 8.875,
         serviceFeeName: data.serviceFeeName,
@@ -534,24 +547,10 @@ const SignupPage = () => {
               <p className="text-gray-600">Configure your business operations</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="mb-1 block">Opening Time</Label>
-                <Input
-                  type="time"
-                  {...register('openTime')}
-                />
-              </div>
-              
-              <div>
-                <Label className="mb-1 block">Closing Time</Label>
-                <Input
-                  type="time"
-                  {...register('closeTime')}
-                />
-              </div>
-              
-              <div>
+            <div>
+              <Label className="mb-3 block text-lg font-semibold">Business Hours</Label>
+
+              <div className="mb-4">
                 <Label className="mb-1 block">Timezone</Label>
                 <Select
                   {...register('timezone')}
@@ -563,6 +562,43 @@ const SignupPage = () => {
                   <option value="America/Los_Angeles">Pacific Time</option>
                 </Select>
               </div>
+
+              <div className="space-y-3">
+                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                  <div key={day} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center border-b pb-3">
+                    <div className="capitalize text-sm font-medium">{day}</div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-600">Open</label>
+                      <Input
+                        type="time"
+                        {...register(`${day}.open`)}
+                        disabled={watch(`${day}.closed`)}
+                        className="h-9"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-600">Close</label>
+                      <Input
+                        type="time"
+                        {...register(`${day}.close`)}
+                        disabled={watch(`${day}.closed`)}
+                        className="h-9"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        {...register(`${day}.closed`)}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm">Closed</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
               <div>
                 <Label className="mb-1 block">Currency</Label>
