@@ -203,7 +203,7 @@ const SignupPage = () => {
   const getFieldsForStep = (stepNumber) => {
     switch (stepNumber) {
       case 1:
-        return ['restaurantName', 'businessType', 'cuisine', 'websiteUrl', 'description', 'heroTagline']
+        return ['restaurantName', 'businessType', 'cuisine', 'description', 'heroTagline']
       case 2:
         return ['ownerName', 'email', 'phone', 'address', 'city', 'state', 'zipCode', 'country']
       case 3:
@@ -393,14 +393,6 @@ const SignupPage = () => {
                   </Select>
                 </div>
               )}
-              
-              <div>
-                <Label className="mb-1 block">Website URL (optional)</Label>
-                <Input
-                  {...register('websiteUrl')}
-                  placeholder="https://pizzapalace.com"
-                />
-              </div>
             </div>
             
             <div>
