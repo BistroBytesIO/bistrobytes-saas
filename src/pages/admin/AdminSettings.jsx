@@ -381,6 +381,14 @@ function AdminSettings() {
       toast.error('Enter a domain before saving');
       return;
     }
+
+    // Prevent using bizbytes.app subdomains - they work automatically
+    const normalizedDomain = domainInput.trim().toLowerCase();
+    if (normalizedDomain.endsWith('.bizbytes.app') || normalizedDomain === 'bizbytes.app') {
+      toast.error('bizbytes.app subdomains work automatically - no setup needed! This feature is for your own custom domain (e.g., www.yourrestaurant.com)');
+      return;
+    }
+
     setDomainSaving(true);
     try {
       const payload = {
@@ -969,9 +977,14 @@ function AdminSettings() {
                         <Alert>
                           <AlertDescription className="flex items-start gap-2">
                             <Globe2 className="h-4 w-4 mt-0.5 text-blue-600" />
-                            <span>
-                              Add your domain, create the DNS record shown, then click <strong>Verify & Activate</strong>. Default verification uses a TXT record at <code>_bistrobytes-verification.&lt;your-domain&gt;</code>.
-                            </span>
+                            <div>
+                              <p className="mb-2">
+                                Use your own domain (e.g., <strong>www.yourrestaurant.com</strong>) instead of your bizbytes.app subdomain.
+                              </p>
+                              <p className="text-sm">
+                                <strong>Note:</strong> Your bizbytes.app subdomain already works automatically - no setup needed! This feature is only for using your own custom domain.
+                              </p>
+                            </div>
                           </AlertDescription>
                         </Alert>
 
