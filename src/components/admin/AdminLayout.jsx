@@ -121,12 +121,12 @@ const AdminLayout = ({ children }) => {
         {/* Sidebar header */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
-            <Building2 className="h-8 w-8 text-blue-600" />
+            {/* <Building2 className="h-8 w-8 text-blue-600" /> */}
             <div className="ml-2">
               <img
                 src="/BizBytes Logo.png"
                 alt="BizBytes logo"
-                className="h-6 w-auto"
+                className="h-12 w-auto"
               />
             </div>
           </div>
