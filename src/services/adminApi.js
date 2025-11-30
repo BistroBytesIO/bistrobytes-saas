@@ -138,6 +138,12 @@ export const adminEndpoints = {
     profile: '/admin/restaurant/profile',
     settings: '/admin/restaurant/settings',
     hours: '/admin/restaurant/hours'
+  },
+
+  // Custom Domains
+  customDomains: {
+    root: '/admin/custom-domains',
+    verify: '/admin/custom-domains/verify'
   }
 };
 
@@ -239,6 +245,23 @@ adminApiUtils.updateBusinessHours = function (data) {
   return this.withRetry(() => adminApi.put(adminEndpoints.restaurant.hours, data));
 };
 
+// Custom Domain utilities
+adminApiUtils.getCustomDomain = function () {
+  return this.withRetry(() => adminApi.get(adminEndpoints.customDomains.root));
+};
+
+adminApiUtils.saveCustomDomain = function (payload) {
+  return this.withRetry(() => adminApi.post(adminEndpoints.customDomains.root, payload));
+};
+
+adminApiUtils.verifyCustomDomain = function () {
+  return this.withRetry(() => adminApi.post(adminEndpoints.customDomains.verify));
+};
+
+adminApiUtils.disableCustomDomain = function () {
+  return this.withRetry(() => adminApi.delete(adminEndpoints.customDomains.root));
+};
+
 // Clover OAuth Integration utilities
 adminApiUtils.getCloverStatus = function () {
   return this.withRetry(() => adminApi.get('/admin/clover/oauth/status'));
@@ -330,6 +353,39 @@ adminApiUtils.getPaymentConfig = function () {
 
 adminApiUtils.updatePaymentProcessor = function (processor) {
   return this.withRetry(() => adminApi.put('/tenant/payments/processor', { processor }));
+};
+
+// Promo Code Management utilities (Professional/Enterprise tier feature)
+adminApiUtils.getAllPromoCodes = function () {
+  return this.withRetry(() => adminApi.get('/admin/promo-codes'));
+};
+
+adminApiUtils.getActivePromoCodes = function () {
+  return this.withRetry(() => adminApi.get('/admin/promo-codes/active'));
+};
+
+adminApiUtils.getPromoCodeStats = function () {
+  return this.withRetry(() => adminApi.get('/admin/promo-codes/stats'));
+};
+
+adminApiUtils.createPromoCode = function (promoCodeData) {
+  return this.withRetry(() => adminApi.post('/admin/promo-codes', promoCodeData));
+};
+
+adminApiUtils.updatePromoCode = function (promoCodeId, promoCodeData) {
+  return this.withRetry(() => adminApi.put(`/admin/promo-codes/${promoCodeId}`, promoCodeData));
+};
+
+adminApiUtils.togglePromoCodeStatus = function (promoCodeId) {
+  return this.withRetry(() => adminApi.patch(`/admin/promo-codes/${promoCodeId}/toggle`));
+};
+
+adminApiUtils.deletePromoCode = function (promoCodeId) {
+  return this.withRetry(() => adminApi.delete(`/admin/promo-codes/${promoCodeId}`));
+};
+
+adminApiUtils.validatePromoCode = function (validationData) {
+  return this.withRetry(() => adminApi.post('/admin/promo-codes/validate', validationData));
 };
 
 export default adminApi;

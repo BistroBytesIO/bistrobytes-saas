@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -14,9 +14,12 @@ import toast from 'react-hot-toast'
 import api from '../lib/api'
 
 const SignupPage = () => {
+  const [searchParams] = useSearchParams()
+  const planFromUrl = searchParams.get('plan') || 'professional'
+
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState('professional')
+  const [selectedPlan, setSelectedPlan] = useState(planFromUrl)
   const [subscriptionPlans, setSubscriptionPlans] = useState([])
   const [plansLoading, setPlansLoading] = useState(true)
   const [generateLogo, setGenerateLogo] = useState(false)
@@ -75,19 +78,19 @@ const SignupPage = () => {
       cuisine: '',
       description: '',
       heroTagline: '',
-      
+
       // Contact Information
       ownerName: '',
       email: '',
       phone: '',
-      
+
       // Address Information
       address: '',
       city: '',
       state: '',
       zipCode: '',
       country: 'United States',
-      
+
       // Business Hours
       timezone: 'America/New_York',
       monday: { open: '09:00', close: '17:00', closed: false },
@@ -97,14 +100,14 @@ const SignupPage = () => {
       friday: { open: '09:00', close: '21:00', closed: false },
       saturday: { open: '10:00', close: '21:00', closed: false },
       sunday: { open: '10:00', close: '16:00', closed: true },
-      
+
       // Business Configuration
       currency: 'USD',
       taxRate: '8.875',
       serviceFeeName: 'Service Fee',
       serviceFeeRate: '3',
       minimumOrder: '10.00',
-      
+
       // Branding & Customization
       primaryColor: '#4F46E5',
       secondaryColor: '#F59E0B',
@@ -116,15 +119,15 @@ const SignupPage = () => {
       heroImage1: '',
       heroImage2: '',
       heroImage3: '',
-      
-      // Features & Plan
-      plan: 'professional',
+
+      // Features & Plan - Use plan from URL parameter
+      plan: planFromUrl,
       billingCycle: 'monthly',
-      
+
       // POS Integration
       posSystem: '',
       hasExistingPOS: 'no',
-      
+
       // Marketing
       howDidYouHear: '',
       marketingEmails: true

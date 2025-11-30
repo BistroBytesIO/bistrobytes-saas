@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
 import adminApi, { adminApiUtils } from '@/services/adminApi';
@@ -33,11 +34,13 @@ if (typeof window !== 'undefined') {
 
 function AdminMenu() {
   const { user, getTenantId } = useRestaurantAuth();
+  const navigate = useNavigate();
   const [menuItems, setMenuItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterFeatured, setFilterFeatured] = useState('all'); // 'all', 'featured', 'regular'
   const [isLoadingItems, setIsLoadingItems] = useState(true);
+  const [planType, setPlanType] = useState(''); // BASIC, PREMIUM, or ENTERPRISE
 
   // Form for adding new items
   const [form, setForm] = useState({
@@ -66,9 +69,13 @@ function AdminMenu() {
 
   const tenantId = getTenantId();
 
+  // Check if current plan allows rewards features
+  const canUseRewards = planType !== 'BASIC'; // Only PREMIUM and ENTERPRISE can use rewards
+
   useEffect(() => {
     console.log('🚀 AdminMenu component mounted');
     fetchMenuItems();
+    loadRestaurantProfile();
   }, []);
 
   // Filter items based on search and featured filter
@@ -110,6 +117,19 @@ function AdminMenu() {
       toast.error('Failed to fetch menu items');
     } finally {
       setIsLoadingItems(false);
+    }
+  };
+
+  const loadRestaurantProfile = async () => {
+    try {
+      const response = await adminApiUtils.getRestaurantProfile();
+      if (response?.data) {
+        setPlanType(response.data.planType || 'BASIC');
+      }
+    } catch (error) {
+      console.error('❌ Error loading restaurant profile:', error);
+      // Default to BASIC if loading fails
+      setPlanType('BASIC');
     }
   };
 
@@ -363,6 +383,21 @@ function AdminMenu() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Plan Upgrade Prompt for Starter users */}
+        {planType === 'BASIC' && (
+          <Alert className="bg-blue-50 border-blue-200">
+            <AlertDescription className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <strong>Starter Plan:</strong> You have full menu management including modifiers and options.
+                Upgrade to Professional for combo meals, menu analytics, loyalty rewards, and advanced upsells.
+              </div>
+              <Button size="sm" variant="outline" onClick={() => navigate('/settings?tab=billing')}>
+                View Upgrade Options
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Add New Item Form */}
         <Card>
@@ -665,51 +700,62 @@ function AdminMenu() {
             </div>
           </div>
 
-          {/* Reward Item Section */}
-          <div className="border-t pt-4">
-            <div className="mb-3">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="isRewardItem"
-                  checked={modalForm.isRewardItem}
-                  onChange={handleModalChange}
-                  className="h-4 w-4 text-purple-600 rounded border-gray-300"
-                />
-                <span className="ml-2 text-gray-700 flex items-center gap-1 font-medium">
-                  <Gift size={16} className="text-purple-600" />
-                  Reward Item
-                </span>
-              </label>
-              <p className="text-xs text-gray-500 ml-6 mt-1">
-                Allow customers to redeem this item with loyalty points
-              </p>
-            </div>
-
-            {modalForm.isRewardItem && (
-              <div className="ml-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Points to Redeem *
-                </label>
-                <div className="relative max-w-xs">
-                  <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                  <Input
-                    type="number"
-                    name="pointsToRedeem"
-                    placeholder="e.g., 100"
-                    min="1"
-                    value={modalForm.pointsToRedeem}
+          {/* Reward Item Section - Only for PREMIUM and ENTERPRISE plans */}
+          {canUseRewards && (
+            <div className="border-t pt-4">
+              <div className="mb-3">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="isRewardItem"
+                    checked={modalForm.isRewardItem}
                     onChange={handleModalChange}
-                    className="pl-10"
-                    required={modalForm.isRewardItem}
+                    className="h-4 w-4 text-purple-600 rounded border-gray-300"
                   />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Number of loyalty points required to redeem this item
+                  <span className="ml-2 text-gray-700 flex items-center gap-1 font-medium">
+                    <Gift size={16} className="text-purple-600" />
+                    Reward Item
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 ml-6 mt-1">
+                  Allow customers to redeem this item with loyalty points
                 </p>
               </div>
-            )}
-          </div>
+
+              {modalForm.isRewardItem && (
+                <div className="ml-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Points to Redeem *
+                  </label>
+                  <div className="relative max-w-xs">
+                    <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <Input
+                      type="number"
+                      name="pointsToRedeem"
+                      placeholder="e.g., 100"
+                      min="1"
+                      value={modalForm.pointsToRedeem}
+                      onChange={handleModalChange}
+                      className="pl-10"
+                      required={modalForm.isRewardItem}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Number of loyalty points required to redeem this item
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!canUseRewards && (
+            <Alert className="mt-4">
+              <AlertDescription>
+                <strong>Starter Plan:</strong> Loyalty rewards are available on Professional and Enterprise plans.
+                Upgrade your plan to enable reward items and customer loyalty programs.
+              </AlertDescription>
+            </Alert>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button

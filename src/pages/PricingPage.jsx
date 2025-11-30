@@ -8,34 +8,37 @@ import { CheckCircle } from 'lucide-react'
 
 const pricingPlans = [
   {
+    id: 'starter',
     name: 'Starter',
     price: 99,
     description: 'Perfect for small businesses getting online',
     features: [
       'Custom business website (full branding)',
       'Online ordering (pickup)',
-      'Menu management with basic customization',
+      'Full menu management with modifiers & options',
       'Stripe payments (credit and debit cards)',
       'One-click POS integration (Clover, Square)',
-      'POS inventory sync',
+      'POS inventory & modifier sync',
       'Basic order management dashboard',
-      'Customer accounts & order history',
       'Email order confirmations',
       'SSL security & mobile-responsive design',
       'Email support'
     ],
     cta: 'Start Starter Plan',
-    popular: false
+    popular: false,
+    signupLink: '/signup?plan=starter'
   },
   {
+    id: 'professional',
     name: 'Professional',
     price: 159,
     description: 'Complete solution for growing businesses',
     features: [
       'Everything in Starter',
+      'Customer accounts & order history',
       'Customer Loyalty Program (points/rewards)',
       'Advanced payment options (Apple Pay, Google Pay, PayPal)',
-      'Advanced menu features (modifiers, combos)',
+      'Advanced menu features (combos, upsells)',
       'Real-time analytics dashboard',
       'Discount & promo codes',
       'Custom domain support (yourrestaurant.com)',
@@ -44,9 +47,11 @@ const pricingPlans = [
       'Priority support (chat + phone)'
     ],
     cta: 'Upgrade to Professional',
-    popular: true
+    popular: true,
+    signupLink: '/signup?plan=professional'
   },
   {
+    id: 'enterprise',
     name: 'Enterprise',
     price: 349,
     description: 'Premium solution with multi-location management',
@@ -60,7 +65,8 @@ const pricingPlans = [
       'Dedicated account manager + 24/7 support'
     ],
     cta: 'Talk to Sales',
-    popular: false
+    popular: false,
+    signupLink: '/contact'
   }
 ]
 
@@ -115,7 +121,7 @@ const PricingPage = () => {
                     variant={plan.popular ? 'default' : 'outline'}
                     asChild
                   >
-                    <Link to={plan.popular ? '/signup' : '/contact'}>
+                    <Link to={plan.signupLink}>
                       {plan.cta}
                     </Link>
                   </Button>
