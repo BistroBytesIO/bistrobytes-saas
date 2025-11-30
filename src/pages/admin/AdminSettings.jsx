@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw, Globe2, ShieldCheck, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminApiUtils } from '@/services/adminApi';
 
@@ -33,6 +33,7 @@ function AdminSettings() {
   const [profile, setProfile] = useState({
     name: restaurant?.name || '',
     description: '',
+    planType: '', // BASIC, PREMIUM, or ENTERPRISE
   });
 
   const [contact, setContact] = useState({
@@ -55,6 +56,15 @@ function AdminSettings() {
   const [logoPreview, setLogoPreview] = useState('');
 
   const [hours, setHours] = useState(defaultHours);
+
+  // Custom domain state
+  const [customDomain, setCustomDomain] = useState(null);
+  const [domainInput, setDomainInput] = useState('');
+  const [verificationMethod, setVerificationMethod] = useState('DNS_TXT');
+  const [domainLoading, setDomainLoading] = useState(true);
+  const [domainSaving, setDomainSaving] = useState(false);
+  const [domainVerifying, setDomainVerifying] = useState(false);
+  const [domainDisabling, setDomainDisabling] = useState(false);
   
   // Clover integration state
   const [cloverStatus, setCloverStatus] = useState({
@@ -113,9 +123,15 @@ function AdminSettings() {
   const initialTab = searchParams.get('tab') || 'profile';
   const [activeTab, setActiveTab] = useState(initialTab);
 
+  // Check if current plan allows POS payment processors
+  const isBasicPlan = profile.planType === 'BASIC';
+  const canUsePosPayments = !isBasicPlan; // Only PREMIUM and ENTERPRISE can use POS payments
+  const hasCustomDomainAccess = ['PREMIUM', 'ENTERPRISE', 'PROFESSIONAL'].includes(profile.planType);
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      setDomainLoading(true);
       try {
         // First load tenant config to know which POS provider to load
         const tenantConfigResponse = await adminApiUtils.getTenantConfig();
@@ -129,6 +145,7 @@ function AdminSettings() {
           adminApiUtils.getRestaurantProfile(),
           adminApiUtils.getBusinessHours(),
           adminApiUtils.getPaymentConfig(), // Load payment configuration
+          adminApiUtils.getCustomDomain()
         ];
         
         // Only load POS status for the configured provider or if none is set
@@ -153,7 +170,8 @@ function AdminSettings() {
           setProfile((prev) => ({
             ...prev,
             name: profileData.name || '',
-            description: profileData.description || ''
+            description: profileData.description || '',
+            planType: profileData.planType || 'BASIC'
           }));
 
           // Load contact information
@@ -184,9 +202,17 @@ function AdminSettings() {
         if (results[2].status === 'fulfilled' && results[2].value?.data) {
           setPaymentConfig(prev => ({ ...prev, ...results[2].value.data }));
         }
+        if (results[3].status === 'fulfilled' && results[3].value?.data) {
+          const domainPayload = results[3].value.data?.data;
+          if (domainPayload) {
+            setCustomDomain(domainPayload);
+            setDomainInput(domainPayload.domain || '');
+            setVerificationMethod(domainPayload.verificationMethod || 'DNS_TXT');
+          }
+        }
         
         // Process POS-specific results
-        let resultIndex = 3;
+        let resultIndex = 4;
         
         if (cloverPromise) {
           const cloverResult = results[resultIndex];
@@ -214,6 +240,7 @@ function AdminSettings() {
         // Fallback to defaults
       } finally {
         setLoading(false);
+        setDomainLoading(false);
       }
     };
     load();
@@ -342,6 +369,85 @@ function AdminSettings() {
       toast.error('Failed to save hours');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveCustomDomain = async () => {
+    if (!hasCustomDomainAccess) {
+      toast.error('Upgrade to Professional or Enterprise to use custom domains');
+      return;
+    }
+    if (!domainInput?.trim()) {
+      toast.error('Enter a domain before saving');
+      return;
+    }
+    setDomainSaving(true);
+    try {
+      const payload = {
+        domain: domainInput.trim(),
+        verificationMethod
+      };
+      const response = await adminApiUtils.saveCustomDomain(payload);
+      const domainData = response?.data?.data || null;
+      if (domainData) {
+        setCustomDomain(domainData);
+        setVerificationMethod(domainData.verificationMethod || verificationMethod);
+      }
+      toast.success(response?.data?.message || 'Custom domain saved');
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to save custom domain';
+      toast.error(message);
+    } finally {
+      setDomainSaving(false);
+    }
+  };
+
+  const handleVerifyCustomDomain = async () => {
+    if (!hasCustomDomainAccess) {
+      toast.error('Upgrade to Professional or Enterprise to verify a custom domain');
+      return;
+    }
+    if (!customDomain) {
+      toast.error('Save a domain first, then verify');
+      return;
+    }
+    setDomainVerifying(true);
+    try {
+      const response = await adminApiUtils.verifyCustomDomain();
+      const domainData = response?.data?.data || null;
+      if (domainData) {
+        setCustomDomain(domainData);
+        setVerificationMethod(domainData.verificationMethod || verificationMethod);
+      }
+      if (domainData?.active) {
+        toast.success('Domain verified and active');
+      } else if (response?.data?.message) {
+        toast(response.data.message);
+      } else {
+        toast.success('Verification attempted, awaiting DNS propagation');
+      }
+    } catch (error) {
+      const message = error.response?.data?.error || 'Verification failed';
+      toast.error(message);
+    } finally {
+      setDomainVerifying(false);
+    }
+  };
+
+  const handleDisableCustomDomain = async () => {
+    if (!customDomain) return;
+    if (!confirm('Disable custom domain and revert to your tenant URL?')) return;
+    setDomainDisabling(true);
+    try {
+      const response = await adminApiUtils.disableCustomDomain();
+      const domainData = response?.data?.data || null;
+      setCustomDomain(domainData);
+      toast.success(response?.data?.message || 'Custom domain disabled');
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to disable domain';
+      toast.error(message);
+    } finally {
+      setDomainDisabling(false);
     }
   };
 
@@ -635,6 +741,7 @@ function AdminSettings() {
             <TabsTrigger tabValue="hours">Business Hours</TabsTrigger>
             <TabsTrigger tabValue="contact">Contact</TabsTrigger>
             <TabsTrigger tabValue="branding">Branding</TabsTrigger>
+            <TabsTrigger tabValue="custom-domain">Custom Domain</TabsTrigger>
             <TabsTrigger tabValue="payments">Payment Processing</TabsTrigger>
             {(tenantConfig.posProvider === 'clover' || tenantConfig.posProvider === 'none') && (
               <TabsTrigger tabValue="clover">Clover POS</TabsTrigger>
@@ -838,6 +945,139 @@ function AdminSettings() {
             </Card>
           </TabsContent>
 
+          <TabsContent tabValue="custom-domain">
+            <Card>
+              <CardHeader>
+                <CardTitle>Custom Domain</CardTitle>
+                <CardDescription>Use your own URL for ordering (Professional & Enterprise)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {!hasCustomDomainAccess && (
+                  <Alert>
+                    <AlertDescription>
+                      <strong>Starter plan:</strong> Custom domains are available on Professional and Enterprise plans. Upgrade to enable `www.yourrestaurant.com`.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {hasCustomDomainAccess && (
+                  <>
+                    {domainLoading ? (
+                      <div className="flex items-center text-gray-600"><Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading domain settings…</div>
+                    ) : (
+                      <>
+                        <Alert>
+                          <AlertDescription className="flex items-start gap-2">
+                            <Globe2 className="h-4 w-4 mt-0.5 text-blue-600" />
+                            <span>
+                              Add your domain, create the DNS record shown, then click <strong>Verify & Activate</strong>. Default verification uses a TXT record at <code>_bistrobytes-verification.&lt;your-domain&gt;</code>.
+                            </span>
+                          </AlertDescription>
+                        </Alert>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Domain</label>
+                            <Input
+                              placeholder="www.yourrestaurant.com"
+                              value={domainInput}
+                              disabled={domainSaving || domainVerifying}
+                              onChange={(e) => setDomainInput(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Verification Method</label>
+                            <select
+                              value={verificationMethod}
+                              onChange={(e) => setVerificationMethod(e.target.value)}
+                              disabled={domainSaving || domainVerifying}
+                              className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="DNS_TXT">DNS TXT (recommended)</option>
+                              <option value="DNS_CNAME">DNS CNAME</option>
+                              <option value="HTTP_FILE">HTTP file fallback</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                          <Button onClick={handleSaveCustomDomain} disabled={domainSaving || domainVerifying}>
+                            {domainSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                            Save Domain
+                          </Button>
+                          <Button
+                            onClick={handleVerifyCustomDomain}
+                            disabled={domainVerifying || domainSaving || !domainInput}
+                            variant="outline"
+                          >
+                            {domainVerifying ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
+                            Verify & Activate
+                          </Button>
+                          {customDomain?.active && (
+                            <Button
+                              onClick={handleDisableCustomDomain}
+                              disabled={domainDisabling}
+                              variant="ghost"
+                            >
+                              {domainDisabling ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Unlink className="h-4 w-4 mr-2" />}
+                              Disable Domain
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="rounded-lg border p-4 bg-gray-50 space-y-3">
+                          <div className="flex items-center gap-3">
+                            {customDomain?.active ? (
+                              <ShieldCheck className="h-5 w-5 text-green-600" />
+                            ) : (
+                              <AlertTriangle className="h-5 w-5 text-amber-500" />
+                            )}
+                            <div>
+                              <p className="text-xs uppercase text-gray-500">Status</p>
+                              <p className={`font-semibold ${customDomain?.active ? 'text-green-700' : 'text-gray-800'}`}>
+                                {customDomain?.status || 'Not configured'}
+                              </p>
+                              {customDomain?.cloudfrontDomainName && (
+                                <p className="text-xs text-gray-600">Edge: {customDomain.cloudfrontDomainName}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                              <p className="text-xs text-gray-500">Record Type</p>
+                              <p className="font-mono text-sm">{customDomain?.verificationRecordType || 'TXT'}</p>
+                            </div>
+                            <div className="md:col-span-2">
+                              <p className="text-xs text-gray-500">Record Name</p>
+                              <p className="font-mono text-sm break-words">
+                                {customDomain?.verificationRecordName || `_bistrobytes-verification.${domainInput || 'yourdomain.com'}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Record Value / Content</p>
+                            <p className="font-mono text-sm break-words">
+                              {customDomain?.verificationRecordValue || 'value will appear after saving your domain'}
+                            </p>
+                          </div>
+
+                          {customDomain?.errorMessage && (
+                            <Alert className="bg-red-50 border-red-200">
+                              <AlertDescription className="text-red-700">
+                                {customDomain.errorMessage}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent tabValue="payments">
             <Card>
               <CardHeader>
@@ -863,7 +1103,17 @@ function AdminSettings() {
                     Choose which payment system will process customer transactions
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Plan restriction notice */}
+                  {isBasicPlan && (
+                    <Alert className="mb-4">
+                      <AlertDescription>
+                        <strong>Starter Plan:</strong> You're currently on the Starter plan which includes Stripe payment processing.
+                        Upgrade to Professional or Enterprise to unlock Clover and Square POS payment processing.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className={`grid grid-cols-1 gap-4 ${canUsePosPayments ? 'md:grid-cols-3' : 'md:grid-cols-1'}`}>
                     {/* Stripe Option */}
                     <div
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
@@ -901,7 +1151,8 @@ function AdminSettings() {
                       )}
                     </div>
 
-                    {/* Clover Option */}
+                    {/* Clover Option - Only for PREMIUM and ENTERPRISE plans */}
+                    {canUsePosPayments && (
                     <div
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
                         paymentConfig.paymentProcessor === 'CLOVER'
@@ -947,8 +1198,10 @@ function AdminSettings() {
                         </div>
                       )}
                     </div>
+                    )}
 
-                    {/* Square Option */}
+                    {/* Square Option - Only for PREMIUM and ENTERPRISE plans */}
+                    {canUsePosPayments && (
                     <div
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
                         paymentConfig.paymentProcessor === 'SQUARE'
@@ -994,6 +1247,7 @@ function AdminSettings() {
                         </div>
                       )}
                     </div>
+                    )}
                   </div>
                 </div>
 
@@ -1014,7 +1268,8 @@ function AdminSettings() {
                       </div>
                     </div>
 
-                    {/* Clover Status */}
+                    {/* Clover Status - Only for PREMIUM and ENTERPRISE plans */}
+                    {canUsePosPayments && (
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${
@@ -1036,8 +1291,10 @@ function AdminSettings() {
                         )}
                       </div>
                     </div>
+                    )}
 
-                    {/* Square Status */}
+                    {/* Square Status - Only for PREMIUM and ENTERPRISE plans */}
+                    {canUsePosPayments && (
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${
@@ -1059,9 +1316,11 @@ function AdminSettings() {
                         )}
                       </div>
                     </div>
+                    )}
                   </div>
 
-                  {!paymentConfig.cloverConfigured && (
+                  {/* Clover connection info - Only for PREMIUM and ENTERPRISE plans */}
+                  {canUsePosPayments && !paymentConfig.cloverConfigured && (
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">
                         <strong>Want to use Clover for payments?</strong> Connect your Clover POS in the
@@ -1079,7 +1338,8 @@ function AdminSettings() {
                     </div>
                   )}
 
-                  {!paymentConfig.squareConfigured && (
+                  {/* Square connection info - Only for PREMIUM and ENTERPRISE plans */}
+                  {canUsePosPayments && !paymentConfig.squareConfigured && (
                     <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                       <p className="text-sm text-orange-800">
                         <strong>Want to use Square for payments?</strong> Connect your Square POS in the

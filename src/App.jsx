@@ -24,6 +24,7 @@ import AdminSettings from './pages/admin/AdminSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import CloverOAuthCallback from './pages/admin/CloverOAuthCallback'
 import SquareOAuthCallback from './pages/admin/SquareOAuthCallback'
+import PromoCodesManager from './pages/admin/PromoCodesManager'
 
 function App() {
   return (
@@ -98,15 +99,23 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/admin/settings" 
+            <Route
+              path="/admin/settings"
               element={
                 <ProtectedRoute>
                   <AdminSettings />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+            <Route
+              path="/admin/promo-codes"
+              element={
+                <ProtectedRoute>
+                  <PromoCodesManager />
+                </ProtectedRoute>
+              }
+            />
+
             {/* TODO: Add more protected admin routes for analytics, settings, etc. */}
           </Routes>
           <Toaster

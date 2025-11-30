@@ -12,12 +12,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import ClipLoader from 'react-spinners/ClipLoader';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { 
-  CreditCard, 
-  Users, 
-  ShoppingBag, 
-  TrendingUp, 
-  Plus, 
+import {
+  CreditCard,
+  Users,
+  ShoppingBag,
+  TrendingUp,
+  Plus,
   AlertTriangle,
   BarChart3,
   Clock,
@@ -27,7 +27,8 @@ import {
   UtensilsCrossed,
   ArrowRight,
   Wifi,
-  WifiOff
+  WifiOff,
+  Tag
 } from 'lucide-react';
 
 function AdminDashboard() {
@@ -58,6 +59,15 @@ function AdminDashboard() {
     categoryPerformance: []
   });
   const [loadingPerformance, setLoadingPerformance] = useState(true);
+
+  // Promo code statistics
+  const [promoCodeStats, setPromoCodeStats] = useState({
+    activePromoCodesCount: 0,
+    totalRedemptions: 0,
+    totalDiscountGiven: 0,
+    topPerformingCode: null
+  });
+  const [loadingPromoCodeStats, setLoadingPromoCodeStats] = useState(true);
 
   const tenantId = getTenantId();
 
@@ -124,7 +134,8 @@ function AdminDashboard() {
       fetchDashboardStats(),
       fetchMonthlyRevenue(),
       fetchLowStockItems(),
-      fetchPerformanceStats()
+      fetchPerformanceStats(),
+      fetchPromoCodeStats()
     ]);
   };
 
@@ -215,6 +226,26 @@ function AdminDashboard() {
       });
     } finally {
       setLoadingPerformance(false);
+    }
+  };
+
+  const fetchPromoCodeStats = async () => {
+    setLoadingPromoCodeStats(true);
+    try {
+      const response = await adminApiUtils.getPromoCodeStats();
+      setPromoCodeStats(response.data);
+      console.log('✅ Promo code stats loaded:', response.data);
+    } catch (error) {
+      console.error('❌ Error fetching promo code stats:', error);
+      // Use default empty stats if API fails
+      setPromoCodeStats({
+        activePromoCodesCount: 0,
+        totalRedemptions: 0,
+        totalDiscountGiven: 0,
+        topPerformingCode: null
+      });
+    } finally {
+      setLoadingPromoCodeStats(false);
     }
   };
 
@@ -410,14 +441,31 @@ function AdminDashboard() {
                 </div>
                 <ArrowRight size={16} />
               </Button>
-              <Button 
+              <Button
                 onClick={() => navigate('/admin/orders/ready')}
-                className="w-full justify-between" 
+                className="w-full justify-between"
                 variant="outline"
               >
                 <div className="flex items-center">
                   <Package className="mr-2 h-4 w-4" />
                   Ready for Pickup
+                </div>
+                <ArrowRight size={16} />
+              </Button>
+              <Button
+                onClick={() => navigate('/admin/promo-codes')}
+                className="w-full justify-between"
+                variant="outline"
+                disabled={user?.planType === 'BASIC'}
+              >
+                <div className="flex items-center">
+                  <Tag className="mr-2 h-4 w-4" />
+                  Manage Promo Codes
+                  {user?.planType === 'BASIC' && (
+                    <Badge className="ml-2 bg-purple-100 text-purple-800 text-xs">
+                      Pro
+                    </Badge>
+                  )}
                 </div>
                 <ArrowRight size={16} />
               </Button>
@@ -608,6 +656,107 @@ function AdminDashboard() {
                   </div>
                 </div>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Promo Code Performance */}
+        <Card className="border-2 border-green-100 bg-gradient-to-br from-green-50/50 to-white">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Tag className="h-5 w-5 text-green-600" />
+                Promo Code Performance
+              </div>
+              {user?.planType === 'BASIC' && (
+                <Badge className="bg-purple-100 text-purple-800">
+                  Professional Feature
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>Active promotions and redemption analytics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {user?.planType === 'BASIC' ? (
+              <div className="text-center py-8">
+                <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Upgrade to Professional
+                </h3>
+                <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                  Create unlimited promo codes, track redemptions, and boost customer engagement with targeted discounts.
+                </p>
+                <Button onClick={() => navigate('/admin/subscription')} className="bg-purple-600 hover:bg-purple-700">
+                  Upgrade Now
+                </Button>
+              </div>
+            ) : loadingPromoCodeStats ? (
+              <div className="space-y-4 animate-pulse">
+                {[1, 2, 3].map(i => (
+                  <div key={i}>
+                    <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                    <div className="h-6 bg-gray-200 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-600 mb-1">Active Codes</p>
+                    <p className="text-2xl font-bold text-green-700">
+                      {promoCodeStats.activePromoCodesCount || 0}
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-600 mb-1">Total Redemptions</p>
+                    <p className="text-2xl font-bold text-blue-700">
+                      {promoCodeStats.totalRedemptions || 0}
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <p className="text-sm text-purple-600 mb-1">Discount Given</p>
+                    <p className="text-2xl font-bold text-purple-700">
+                      ${parseFloat(promoCodeStats.totalDiscountGiven || 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                {promoCodeStats.topPerformingCode && (
+                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 mb-4 border border-yellow-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Top Performing Code</p>
+                        <p className="text-xl font-bold text-gray-900">{promoCodeStats.topPerformingCode.code}</p>
+                        <p className="text-sm text-gray-600">
+                          {promoCodeStats.topPerformingCode.usageCount} redemptions •
+                          ${parseFloat(promoCodeStats.topPerformingCode.totalDiscount || 0).toFixed(2)} total discount
+                        </p>
+                      </div>
+                      <Star className="h-8 w-8 text-yellow-500" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => navigate('/admin/promo-codes')}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    Manage Promo Codes
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/admin/promo-codes?create=true')}
+                    variant="outline"
+                    className="border-green-600 text-green-600 hover:bg-green-50"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create New
+                  </Button>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
