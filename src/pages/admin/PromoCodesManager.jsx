@@ -107,8 +107,8 @@ function PromoCodesManager() {
       maxDiscountAmount: promoCode.maxDiscountAmount?.toString() || '',
       maxUses: promoCode.maxUses?.toString() || '',
       maxUsesPerCustomer: promoCode.maxUsesPerCustomer?.toString() || '1',
-      validFrom: promoCode.validFrom ? new Date(promoCode.validFrom).toISOString().slice(0, 16) : '',
-      validUntil: promoCode.validUntil ? new Date(promoCode.validUntil).toISOString().slice(0, 16) : '',
+      validFrom: promoCode.validFrom ? promoCode.validFrom.slice(0, 16) : '',
+      validUntil: promoCode.validUntil ? promoCode.validUntil.slice(0, 16) : '',
       firstTimeCustomersOnly: promoCode.firstTimeCustomersOnly || false
     });
     setShowModal(true);
