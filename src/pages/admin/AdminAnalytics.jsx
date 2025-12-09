@@ -23,7 +23,7 @@ import {
   Percent
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { adminApiUtils } from '@/services/adminApi';
+import adminApi, { adminApiUtils } from '@/services/adminApi';
 import {
   LineChart,
   Line,
@@ -90,36 +90,17 @@ function AdminAnalytics() {
       // Only fetch analytics data if on Professional or Enterprise plan
       if (currentPlanType !== 'BASIC') {
         const [dashboardRes, monthlyRes, performanceRes] = await Promise.all([
-          fetch('/api/admin/stats/dashboard', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('restaurant_user') ? JSON.parse(localStorage.getItem('restaurant_user')).token : ''}`,
-              'X-Tenant-Id': localStorage.getItem('restaurant_user') ? JSON.parse(localStorage.getItem('restaurant_user')).tenantId : ''
-            }
-          }),
-          fetch('/api/admin/stats/revenue/monthly', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('restaurant_user') ? JSON.parse(localStorage.getItem('restaurant_user')).token : ''}`,
-              'X-Tenant-Id': localStorage.getItem('restaurant_user') ? JSON.parse(localStorage.getItem('restaurant_user')).tenantId : ''
-            }
-          }),
-          fetch('/api/admin/stats/performance', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('restaurant_user') ? JSON.parse(localStorage.getItem('restaurant_user')).token : ''}`,
-              'X-Tenant-Id': localStorage.getItem('restaurant_user') ? JSON.parse(localStorage.getItem('restaurant_user')).tenantId : ''
-            }
-          })
+          adminApiUtils.getDashboardStats(),
+          adminApiUtils.getMonthlyRevenue(),
+          adminApiUtils.getPerformanceStats()
         ]);
 
-        const dashboardData = await dashboardRes.json();
-        const monthlyData = await monthlyRes.json();
-        const performanceData = await performanceRes.json();
-
-        setDashboardStats(dashboardData);
-        setMonthlyRevenue(monthlyData.map(item => ({
+        setDashboardStats(dashboardRes.data);
+        setMonthlyRevenue(monthlyRes.data.map(item => ({
           month: item.month,
           revenue: parseFloat(item.revenue || 0)
         })));
-        setPerformanceStats(performanceData);
+        setPerformanceStats(performanceRes.data);
 
         // Fetch report preferences
         await fetchReportPreferences();
@@ -137,19 +118,12 @@ function AdminAnalytics() {
 
   const fetchReportPreferences = async () => {
     try {
-      const user = localStorage.getItem('restaurant_user') ? JSON.parse(localStorage.getItem('restaurant_user')) : null;
-      if (!user) return;
+      const response = await adminApiUtils.withRetry(() =>
+        adminApi.get('/admin/report-preferences')
+      );
 
-      const response = await fetch('/api/admin/report-preferences', {
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-          'X-Tenant-Id': user.tenantId
-        }
-      });
-
-      const data = await response.json();
-      if (data.success && data.data) {
-        setReportPreferences(data.data);
+      if (response.data.success && response.data.data) {
+        setReportPreferences(response.data.data);
       }
     } catch (error) {
       console.error('Error fetching report preferences:', error);
@@ -171,28 +145,16 @@ function AdminAnalytics() {
   const saveReportPreferences = async () => {
     try {
       setSavingPreferences(true);
-      const user = localStorage.getItem('restaurant_user') ? JSON.parse(localStorage.getItem('restaurant_user')) : null;
-      if (!user) {
-        toast.error('User not authenticated');
-        return;
-      }
 
-      const response = await fetch('/api/admin/report-preferences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`,
-          'X-Tenant-Id': user.tenantId
-        },
-        body: JSON.stringify(reportPreferences)
-      });
+      const response = await adminApiUtils.withRetry(() =>
+        adminApi.post('/admin/report-preferences', reportPreferences)
+      );
 
-      const data = await response.json();
-      if (data.success) {
+      if (response.data.success) {
         toast.success('Report preferences saved successfully');
-        setReportPreferences(data.data);
+        setReportPreferences(response.data.data);
       } else {
-        toast.error(data.error || 'Failed to save preferences');
+        toast.error(response.data.error || 'Failed to save preferences');
       }
     } catch (error) {
       console.error('Error saving report preferences:', error);
