@@ -67,6 +67,8 @@ function AdminAnalytics() {
     lastWeeklyReportSent: null
   });
   const [savingPreferences, setSavingPreferences] = useState(false);
+  const [sendingTestDaily, setSendingTestDaily] = useState(false);
+  const [sendingTestWeekly, setSendingTestWeekly] = useState(false);
   const [promoCodeStats, setPromoCodeStats] = useState({
     activePromoCodesCount: 0,
     totalRedemptions: 0,
@@ -161,6 +163,43 @@ function AdminAnalytics() {
       toast.error('Failed to save report preferences');
     } finally {
       setSavingPreferences(false);
+    }
+  };
+
+  const sendTestReport = async (reportType) => {
+    if (!reportPreferences.recipientEmail) {
+      toast.error('Please enter a recipient email address first');
+      return;
+    }
+
+    try {
+      if (reportType === 'daily') {
+        setSendingTestDaily(true);
+      } else {
+        setSendingTestWeekly(true);
+      }
+
+      const response = await adminApiUtils.withRetry(() =>
+        adminApi.post('/admin/report-preferences/test', {
+          reportType,
+          recipientEmail: reportPreferences.recipientEmail
+        })
+      );
+
+      if (response.data.success) {
+        toast.success(`Test ${reportType} report sent to ${reportPreferences.recipientEmail}!`);
+      } else {
+        toast.error(response.data.error || 'Failed to send test report');
+      }
+    } catch (error) {
+      console.error('Error sending test report:', error);
+      toast.error('Failed to send test report');
+    } finally {
+      if (reportType === 'daily') {
+        setSendingTestDaily(false);
+      } else {
+        setSendingTestWeekly(false);
+      }
     }
   };
 
@@ -803,6 +842,27 @@ function AdminAnalytics() {
                     </p>
                   </div>
                 )}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => sendTestReport('daily')}
+                    disabled={!reportPreferences.recipientEmail || sendingTestDaily}
+                    className="w-full"
+                  >
+                    {sendingTestDaily ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-3 w-3 mr-2" />
+                        Send Test Daily Report
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {/* Weekly Reports */}
@@ -854,6 +914,27 @@ function AdminAnalytics() {
                     </p>
                   </div>
                 )}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => sendTestReport('weekly')}
+                    disabled={!reportPreferences.recipientEmail || sendingTestWeekly}
+                    className="w-full"
+                  >
+                    {sendingTestWeekly ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600 mr-2"></div>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-3 w-3 mr-2" />
+                        Send Test Weekly Report
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
 
