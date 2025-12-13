@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import ImageUpload from '@/components/admin/ImageUpload';
 import {
   Plus,
   Edit,
@@ -24,7 +25,8 @@ import {
   Star,
   Search,
   Filter,
-  Gift
+  Gift,
+  Lock
 } from 'lucide-react';
 
 // Set app element for react-modal accessibility
@@ -60,6 +62,9 @@ function AdminMenu() {
     isFeatured: false,
     isRewardItem: false,
     pointsToRedeem: '',
+    imageUrl: '',
+    cloverItemId: null,
+    squareItemId: null,
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -131,6 +136,20 @@ function AdminMenu() {
       // Default to BASIC if loading fails
       setPlanType('BASIC');
     }
+  };
+
+  // Helper functions for POS-aware field locking
+  const isPOSSynced = (item) => {
+    return !!(item?.cloverItemId || item?.squareItemId);
+  };
+
+  const isSquareImage = (imageUrl) => {
+    if (!imageUrl) return false;
+    return imageUrl.includes('squarecdn.com') || imageUrl.includes('square.com');
+  };
+
+  const isImageReadOnly = (item) => {
+    return item?.squareItemId && isSquareImage(item?.imageUrl);
   };
 
   const handleChange = (e) => {
@@ -209,8 +228,41 @@ function AdminMenu() {
       isFeatured: item.isFeatured,
       isRewardItem: item.isRewardItem || false,
       pointsToRedeem: item?.pointsToRedeem != null ? item.pointsToRedeem.toString() : '',
+      imageUrl: item.imageUrl || '',
+      cloverItemId: item.cloverItemId || null,
+      squareItemId: item.squareItemId || null,
     });
     setIsModalOpen(true);
+  };
+
+  const handleImageUpload = async (file) => {
+    try {
+      const response = await adminApiUtils.uploadMenuItemImage(selectedItem.id, file);
+      if (response.data?.imageUrl) {
+        setModalForm(prev => ({ ...prev, imageUrl: response.data.imageUrl }));
+        toast.success('Image uploaded successfully');
+        // Refresh menu items to update the list
+        await loadMenuItems();
+      }
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+      toast.error('Failed to upload image');
+      throw error; // Re-throw to trigger error state in ImageUpload component
+    }
+  };
+
+  const handleImageRemove = async () => {
+    try {
+      await adminApiUtils.deleteMenuItemImage(selectedItem.id);
+      setModalForm(prev => ({ ...prev, imageUrl: '' }));
+      toast.success('Image removed');
+      // Refresh menu items to update the list
+      await loadMenuItems();
+    } catch (error) {
+      console.error('Failed to remove image:', error);
+      toast.error('Failed to remove image');
+      throw error; // Re-throw to trigger error state in ImageUpload component
+    }
   };
 
   const handleUpdateSubmit = async (e) => {
@@ -618,22 +670,46 @@ function AdminMenu() {
       >
         <h2 className="text-xl font-bold mb-4">Update Menu Item</h2>
         <form onSubmit={handleUpdateSubmit} className="space-y-4">
+          {/* POS Sync Notice */}
+          {isPOSSynced(selectedItem) && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <Lock className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                <strong>POS-Synced Item:</strong> Name and Price are managed by{' '}
+                {selectedItem?.cloverItemId ? 'Clover' : 'Square'} POS.
+                {selectedItem?.cloverItemId && ' Add images and descriptions manually.'}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Image Upload Section */}
+          <ImageUpload
+            currentImageUrl={modalForm.imageUrl}
+            onImageUpload={handleImageUpload}
+            onImageRemove={handleImageRemove}
+            readOnly={isImageReadOnly(selectedItem)}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
                 Item Name *
+                {isPOSSynced(selectedItem) && <Lock size={12} className="text-gray-400" />}
               </label>
               <Input
                 type="text"
                 name="name"
                 value={modalForm.name}
                 onChange={handleModalChange}
+                disabled={isPOSSynced(selectedItem)}
+                className={isPOSSynced(selectedItem) ? 'bg-gray-100 cursor-not-allowed' : ''}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
                 Price ($) *
+                {isPOSSynced(selectedItem) && <Lock size={12} className="text-gray-400" />}
               </label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -644,7 +720,8 @@ function AdminMenu() {
                   min="0"
                   value={modalForm.price}
                   onChange={handleModalChange}
-                  className="pl-10"
+                  disabled={isPOSSynced(selectedItem)}
+                  className={isPOSSynced(selectedItem) ? 'bg-gray-100 cursor-not-allowed pl-10' : 'pl-10'}
                   required
                 />
               </div>

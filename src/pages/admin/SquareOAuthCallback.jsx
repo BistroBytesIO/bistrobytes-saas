@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,10 +12,11 @@ function SquareOAuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useRestaurantAuth();
-  
+
   const [status, setStatus] = useState('processing'); // processing, success, error
   const [message, setMessage] = useState('Processing Square authorization...');
   const [details, setDetails] = useState(null);
+  const hasProcessedRef = useRef(false); // Use ref to prevent duplicate processing across renders
 
   // Get OAuth parameters from URL
   const code = searchParams.get('code');
@@ -25,6 +26,15 @@ function SquareOAuthCallback() {
 
   useEffect(() => {
     const processCallback = async () => {
+      // Prevent duplicate processing using ref
+      if (hasProcessedRef.current) {
+        console.log('Already processed Square callback, skipping duplicate attempt');
+        return;
+      }
+
+      // Mark as processed immediately to prevent race conditions
+      hasProcessedRef.current = true;
+
       // Check for OAuth errors first
       if (error) {
         console.error('Square OAuth error:', error, errorDescription);
@@ -40,14 +50,52 @@ function SquareOAuthCallback() {
         return;
       }
 
-      if (!user?.token || !user?.tenantId) {
+      // Get auth credentials - try context first, then fallback to localStorage
+      // This handles the case where Square opens callback in a new tab
+      let authToken = user?.token;
+      let tenantId = user?.tenantId;
+
+      if (!authToken || !tenantId) {
+        console.log('No auth context - checking localStorage for credentials...');
+
+        // Fallback to localStorage (for new tab scenario)
+        const storedUser = localStorage.getItem('restaurant_user');
+
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            authToken = parsedUser.token;
+            tenantId = parsedUser.tenantId || parsedUser.tenant_id;
+            console.log('Found stored credentials in localStorage - token:', authToken ? 'present' : 'missing', 'tenantId:', tenantId);
+          } catch (e) {
+            console.error('Failed to parse stored user:', e);
+          }
+        } else {
+          console.error('No restaurant_user found in localStorage');
+        }
+      }
+
+      // If we still don't have credentials, user needs to log in
+      if (!authToken || !tenantId) {
+        console.error('No authentication credentials available');
         setStatus('error');
-        setMessage('Not authenticated. Please log in and try again.');
+        setMessage('Session expired. Please log in and try connecting Square again.');
+
+        // Close this tab after a delay and redirect user to login
+        setTimeout(() => {
+          window.close(); // Try to close the popup/tab
+          // If close doesn't work, redirect to login
+          if (!window.closed) {
+            navigate('/admin/login');
+          }
+        }, 3000);
+
         return;
       }
 
       try {
         setMessage('Completing Square authorization...');
+        console.log('Making Square callback request with token:', authToken ? 'present' : 'missing', 'tenantId:', tenantId);
 
         // Make request to our OAuth callback endpoint
         const response = await axios.get('/admin/square/oauth/callback', {
@@ -56,8 +104,8 @@ function SquareOAuthCallback() {
             state
           },
           headers: {
-            'Authorization': `Bearer ${user.token}`,
-            'X-Tenant-Id': user.tenantId,
+            'Authorization': `Bearer ${authToken}`,
+            'X-Tenant-Id': tenantId,
             'Content-Type': 'application/json'
           },
           // Ensure default includes '/api' for consistency with backend routing
@@ -74,13 +122,30 @@ function SquareOAuthCallback() {
             merchantName: response.data.merchantName,
             tenantSlug: response.data.tenantSlug
           });
-          
+
           toast.success('Square POS connected successfully!');
-          
-          // Redirect to settings after 3 seconds
-          setTimeout(() => {
-            navigate('/admin/settings?tab=square', { replace: true });
-          }, 3000);
+
+          // Notify other tabs/windows about successful connection
+          localStorage.setItem('square_oauth_success', Date.now().toString());
+
+          // Check if we're in a popup/new tab (opened by OAuth flow)
+          if (window.opener) {
+            // This is a popup - notify the opener and close
+            try {
+              window.opener.postMessage({ type: 'SQUARE_OAUTH_SUCCESS', data: response.data }, window.location.origin);
+            } catch (e) {
+              console.error('Failed to notify opener window:', e);
+            }
+
+            setTimeout(() => {
+              window.close();
+            }, 2000);
+          } else {
+            // Regular navigation
+            setTimeout(() => {
+              navigate('/admin/settings?tab=square', { replace: true });
+            }, 3000);
+          }
 
         } else {
           setStatus('error');

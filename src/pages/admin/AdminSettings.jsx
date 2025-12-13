@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw, Globe2, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw, Globe2, ShieldCheck, AlertTriangle, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminApiUtils } from '@/services/adminApi';
 
@@ -1064,7 +1064,7 @@ function AdminSettings() {
                             <div className="md:col-span-2">
                               <p className="text-xs text-gray-500">Record Name</p>
                               <p className="font-mono text-sm break-words">
-                                {customDomain?.verificationRecordName || `_bistrobytes-verification.${domainInput || 'yourdomain.com'}`}
+                                {customDomain?.verificationRecordName || `_bizbytes-verification.${domainInput || 'yourdomain.com'}`}
                               </p>
                             </div>
                           </div>
@@ -1527,8 +1527,23 @@ function AdminSettings() {
 
                       <Alert>
                         <AlertDescription>
-                          Click "Sync Menu" to pull the latest menu items from your Clover POS. 
+                          Click "Sync Menu" to pull the latest menu items from your Clover POS.
                           This will create new items and update existing ones with current pricing and availability.
+                        </AlertDescription>
+                      </Alert>
+
+                      <Alert className="mt-4 border-blue-200 bg-blue-50">
+                        <Info className="h-4 w-4 text-blue-600" />
+                        <AlertDescription className="text-blue-800">
+                          <strong>Note:</strong> Clover does not provide item images or descriptions.
+                          After syncing, please visit{' '}
+                          <button
+                            onClick={() => setActiveTab('menu')}
+                            className="text-blue-600 underline font-semibold hover:text-blue-700"
+                          >
+                            Menu Management
+                          </button>
+                          {' '}to add these fields manually for better customer experience.
                         </AlertDescription>
                       </Alert>
                     </div>

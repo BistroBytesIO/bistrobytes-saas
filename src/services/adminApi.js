@@ -225,7 +225,27 @@ export const adminApiUtils = {
   /**
    * Delete menu item
    */
-  deleteMenuItem: function (itemId) { return this.withRetry(() => adminApi.delete(adminEndpoints.menu.delete(itemId))); }
+  deleteMenuItem: function (itemId) { return this.withRetry(() => adminApi.delete(adminEndpoints.menu.delete(itemId))); },
+
+  /**
+   * Upload menu item image
+   */
+  uploadMenuItemImage: function (itemId, file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return adminApi.post(`/admin/menu/${itemId}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000 // 60 seconds for large uploads
+    });
+  },
+
+  /**
+   * Delete menu item image
+   */
+  deleteMenuItemImage: function (itemId) {
+    return this.withRetry(() => adminApi.delete(`/admin/menu/${itemId}/image`));
+  }
 };
 
 // Settings utilities (Phase 4)
