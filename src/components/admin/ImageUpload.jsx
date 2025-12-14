@@ -9,7 +9,7 @@ const ImageUpload = ({
   onImageRemove,
   readOnly = false,
   maxSizeMB = 5,
-  recommendedDimensions = "800x800px"
+  recommendedDimensions = "800x600px (4:3 ratio)"
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -161,7 +161,7 @@ const ImageUpload = ({
           onClick={!currentImageUrl && !readOnly ? handleUploadClick : undefined}
         >
           {currentImageUrl ? (
-            // Image Preview
+            // Image Preview (matches MenuPage display: w-full h-48)
             <div className="relative">
               <img
                 src={currentImageUrl}

@@ -26,7 +26,8 @@ import {
   Search,
   Filter,
   Gift,
-  Lock
+  Lock,
+  X
 } from 'lucide-react';
 
 // Set app element for react-modal accessibility
@@ -239,10 +240,19 @@ function AdminMenu() {
     try {
       const response = await adminApiUtils.uploadMenuItemImage(selectedItem.id, file);
       if (response.data?.imageUrl) {
+        // Update modal form state
         setModalForm(prev => ({ ...prev, imageUrl: response.data.imageUrl }));
+
+        // Update selected item state so modal shows updated data immediately
+        setSelectedItem(prev => ({ ...prev, imageUrl: response.data.imageUrl }));
+
+        // Refresh menu items list in background (don't await to avoid blocking UI)
+        loadMenuItems().catch(err => {
+          console.error('Failed to refresh menu items:', err);
+          // Don't show error toast - upload was successful
+        });
+
         toast.success('Image uploaded successfully');
-        // Refresh menu items to update the list
-        await loadMenuItems();
       }
     } catch (error) {
       console.error('Failed to upload image:', error);
@@ -254,10 +264,20 @@ function AdminMenu() {
   const handleImageRemove = async () => {
     try {
       await adminApiUtils.deleteMenuItemImage(selectedItem.id);
+
+      // Update modal form state
       setModalForm(prev => ({ ...prev, imageUrl: '' }));
+
+      // Update selected item state so modal shows updated data immediately
+      setSelectedItem(prev => ({ ...prev, imageUrl: null }));
+
+      // Refresh menu items list in background (don't await to avoid blocking UI)
+      loadMenuItems().catch(err => {
+        console.error('Failed to refresh menu items:', err);
+        // Don't show error toast - removal was successful
+      });
+
       toast.success('Image removed');
-      // Refresh menu items to update the list
-      await loadMenuItems();
     } catch (error) {
       console.error('Failed to remove image:', error);
       toast.error('Failed to remove image');
@@ -668,7 +688,19 @@ function AdminMenu() {
         className="relative bg-white w-full max-w-2xl mx-auto mt-8 p-6 rounded-lg shadow-lg focus:outline-none max-h-[90vh] overflow-y-auto"
         overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center z-50 p-4"
       >
-        <h2 className="text-xl font-bold mb-4">Update Menu Item</h2>
+        {/* Modal Header with Close Button */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Update Menu Item</h2>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(false)}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+            aria-label="Close modal"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
         <form onSubmit={handleUpdateSubmit} className="space-y-4">
           {/* POS Sync Notice */}
           {isPOSSynced(selectedItem) && (
