@@ -1146,8 +1146,11 @@ function AdminSettings() {
                               </div>
                               <div className="md:col-span-2">
                                 <p className="text-xs text-gray-500">Record Name / Host</p>
-                                <p className="font-mono text-sm break-words">
-                                  {customDomain.verificationRecordName || `_bizbytes-verification.${domainInput}`}
+                                <p className="font-mono text-sm break-words font-semibold text-blue-700">
+                                  {customDomain.verificationRecordName?.replace(`.${customDomain.domain}`, '') || `_bizbytes-verification`}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Full name: {customDomain.verificationRecordName || `_bizbytes-verification.${domainInput}`}
                                 </p>
                               </div>
                             </div>
@@ -1158,10 +1161,13 @@ function AdminSettings() {
                               </p>
                             </div>
 
-                            <Alert>
-                              <AlertDescription className="text-sm">
-                                <strong>Where to add this:</strong> Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)
-                                and add the DNS record above. It may take 5-30 minutes to propagate.
+                            <Alert className="bg-blue-50 border-blue-200">
+                              <AlertDescription className="text-sm text-blue-900">
+                                <strong>Important:</strong> When adding this to your DNS provider (GoDaddy, Namecheap, Cloudflare, etc.),
+                                only enter the <strong className="text-blue-700">highlighted subdomain part</strong> in the "Host" or "Name" field.
+                                Your DNS provider automatically adds your domain name.
+                                <br />
+                                <span className="text-xs mt-1 block">DNS changes may take 5-30 minutes to propagate.</span>
                               </AlertDescription>
                             </Alert>
                           </div>
@@ -1206,7 +1212,12 @@ function AdminSettings() {
                                   </div>
                                   <div>
                                     <p className="text-xs text-gray-500">Record Name / Host</p>
-                                    <p className="font-mono text-sm break-words">{customDomain.acmValidationCnameName}</p>
+                                    <p className="font-mono text-sm break-words font-semibold text-blue-700">
+                                      {customDomain.acmValidationCnameName?.replace(`.${customDomain.domain}`, '')}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Full name: {customDomain.acmValidationCnameName}
+                                    </p>
                                   </div>
                                   <div>
                                     <p className="text-xs text-gray-500">Record Value / Points to</p>
@@ -1214,10 +1225,13 @@ function AdminSettings() {
                                   </div>
                                 </div>
 
-                                <Alert>
-                                  <AlertDescription className="text-sm">
-                                    <strong>Important:</strong> Add this CNAME record at your domain registrar.
-                                    SSL validation can take 5-30 minutes. We'll automatically check the status every 30 seconds.
+                                <Alert className="bg-blue-50 border-blue-200">
+                                  <AlertDescription className="text-sm text-blue-900">
+                                    <strong>Important:</strong> When adding this CNAME to your DNS provider,
+                                    only enter the <strong className="text-blue-700">highlighted subdomain part</strong> in the "Host" or "Name" field.
+                                    Copy the full "Points to" value exactly as shown.
+                                    <br />
+                                    <span className="text-xs mt-1 block">SSL validation takes 5-30 minutes. We'll automatically check status every 30 seconds.</span>
                                   </AlertDescription>
                                 </Alert>
 
