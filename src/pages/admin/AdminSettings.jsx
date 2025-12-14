@@ -1257,6 +1257,86 @@ function AdminSettings() {
                             )}
                           </div>
                         )}
+
+                        {/* Step 3: Point Your Domain to CloudFront */}
+                        {customDomain && customDomain.certificateStatus === 'ISSUED' && customDomain.cloudfrontDomainName && (
+                          <div className="rounded-lg border p-4 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                                customDomain.active
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                3
+                              </div>
+                              <h3 className="font-semibold text-gray-900">Point Your Domain to CloudFront</h3>
+                              {customDomain.active && (
+                                <ShieldCheck className="h-4 w-4 text-green-600 ml-auto" />
+                              )}
+                            </div>
+
+                            {customDomain.active ? (
+                              <Alert className="bg-green-50 border-green-200">
+                                <AlertDescription className="text-green-700">
+                                  Your domain is live and accessible! Customers can now visit your custom domain.
+                                </AlertDescription>
+                              </Alert>
+                            ) : (
+                              <>
+                                <p className="text-sm text-gray-600">
+                                  Add this CNAME record to route traffic from your custom domain to your website:
+                                </p>
+
+                                <div className="bg-gray-50 p-3 rounded space-y-2">
+                                  <div>
+                                    <p className="text-xs text-gray-500">Record Type</p>
+                                    <p className="font-mono text-sm font-semibold">CNAME</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-500">Record Name / Host</p>
+                                    <p className="font-mono text-sm break-words font-semibold text-blue-700">
+                                      {customDomain.domain?.split('.')[0] || 'www'}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      This is the subdomain part of your domain (e.g., "www" for www.yourrestaurant.com)
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-500">Record Value / Points to</p>
+                                    <p className="font-mono text-sm break-words font-semibold text-green-700">
+                                      {customDomain.cloudfrontDomainName}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-500">TTL (Time to Live)</p>
+                                    <p className="font-mono text-sm">3600 (or Automatic)</p>
+                                  </div>
+                                </div>
+
+                                <Alert className="bg-blue-50 border-blue-200">
+                                  <AlertDescription className="text-sm text-blue-900">
+                                    <strong>Important:</strong> Add this CNAME record to your DNS provider (GoDaddy, Namecheap, Cloudflare, etc.).
+                                    Enter only the <strong className="text-blue-700">subdomain part</strong> in the "Host" or "Name" field.
+                                    <br />
+                                    <span className="text-xs mt-1 block">
+                                      DNS changes take 5-30 minutes to propagate globally. Once propagated, your custom domain will be live!
+                                    </span>
+                                  </AlertDescription>
+                                </Alert>
+
+                                <Alert className="bg-amber-50 border-amber-200">
+                                  <AlertDescription className="text-sm text-amber-900">
+                                    <strong>Example for www.yourrestaurant.com:</strong>
+                                    <br />
+                                    <span className="text-xs mt-1 block font-mono">
+                                      Type: CNAME | Host: www | Points to: {customDomain.cloudfrontDomainName}
+                                    </span>
+                                  </AlertDescription>
+                                </Alert>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </>
                     )}
                   </>
