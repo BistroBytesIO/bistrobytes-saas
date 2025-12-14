@@ -161,8 +161,8 @@ const ImageUpload = ({
           onClick={!currentImageUrl && !readOnly ? handleUploadClick : undefined}
         >
           {currentImageUrl ? (
-            // Image Preview (matches MenuPage display: w-full h-48)
-            <div className="relative">
+            // Image Preview (matches MenuPage menu card size)
+            <div className="relative max-w-xs mx-auto">
               <img
                 src={currentImageUrl}
                 alt="Menu item preview"
