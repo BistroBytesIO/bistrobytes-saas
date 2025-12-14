@@ -65,6 +65,7 @@ function AdminSettings() {
   const [domainSaving, setDomainSaving] = useState(false);
   const [domainVerifying, setDomainVerifying] = useState(false);
   const [domainDisabling, setDomainDisabling] = useState(false);
+  const [certificateChecking, setCertificateChecking] = useState(false);
   
   // Clover integration state
   const [cloverStatus, setCloverStatus] = useState({
@@ -295,6 +296,33 @@ function AdminSettings() {
     }
   }, [branding.logoUrl]);
 
+  // Auto-poll certificate status when pending validation
+  useEffect(() => {
+    if (!customDomain || customDomain.certificateStatus !== 'PENDING_VALIDATION') {
+      return;
+    }
+
+    // Poll every 30 seconds
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await adminApiUtils.checkCertificateStatus();
+        const domainData = response?.data?.data || null;
+        if (domainData) {
+          setCustomDomain(domainData);
+          // If certificate is now issued, show success message
+          if (domainData.certificateStatus === 'ISSUED') {
+            toast.success('SSL certificate validated successfully!');
+          }
+        }
+      } catch (error) {
+        console.error('Certificate status polling error:', error);
+      }
+    }, 30000); // 30 seconds
+
+    // Cleanup interval on unmount or when status changes
+    return () => clearInterval(intervalId);
+  }, [customDomain?.certificateStatus]);
+
   const handleSaveProfile = async () => {
     if (!profile.name?.trim()) {
       toast.error('Restaurant name is required');
@@ -456,6 +484,31 @@ function AdminSettings() {
       toast.error(message);
     } finally {
       setDomainDisabling(false);
+    }
+  };
+
+  const handleCheckCertificateStatus = async () => {
+    if (!customDomain) return;
+    setCertificateChecking(true);
+    try {
+      const response = await adminApiUtils.checkCertificateStatus();
+      const domainData = response?.data?.data || null;
+      if (domainData) {
+        setCustomDomain(domainData);
+        const message = response?.data?.message || 'Certificate status updated';
+        if (domainData.certificateStatus === 'ISSUED') {
+          toast.success(message);
+        } else if (domainData.certificateStatus === 'PENDING_VALIDATION') {
+          toast(message, { icon: '⏳' });
+        } else {
+          toast(message);
+        }
+      }
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to check certificate status';
+      toast.error(message);
+    } finally {
+      setCertificateChecking(false);
     }
   };
 
@@ -1038,7 +1091,8 @@ function AdminSettings() {
                           )}
                         </div>
 
-                        <div className="rounded-lg border p-4 bg-gray-50 space-y-3">
+                        {/* Overall Status */}
+                        <div className="rounded-lg border p-4 bg-gray-50">
                           <div className="flex items-center gap-3">
                             {customDomain?.active ? (
                               <ShieldCheck className="h-5 w-5 text-green-600" />
@@ -1055,34 +1109,140 @@ function AdminSettings() {
                               )}
                             </div>
                           </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div>
-                              <p className="text-xs text-gray-500">Record Type</p>
-                              <p className="font-mono text-sm">{customDomain?.verificationRecordType || 'TXT'}</p>
-                            </div>
-                            <div className="md:col-span-2">
-                              <p className="text-xs text-gray-500">Record Name</p>
-                              <p className="font-mono text-sm break-words">
-                                {customDomain?.verificationRecordName || `_bizbytes-verification.${domainInput || 'yourdomain.com'}`}
-                              </p>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Record Value / Content</p>
-                            <p className="font-mono text-sm break-words">
-                              {customDomain?.verificationRecordValue || 'value will appear after saving your domain'}
-                            </p>
-                          </div>
-
                           {customDomain?.errorMessage && (
-                            <Alert className="bg-red-50 border-red-200">
+                            <Alert className="bg-red-50 border-red-200 mt-3">
                               <AlertDescription className="text-red-700">
                                 {customDomain.errorMessage}
                               </AlertDescription>
                             </Alert>
                           )}
                         </div>
+
+                        {/* Step 1: Domain Ownership Verification */}
+                        {customDomain && (
+                          <div className="rounded-lg border p-4 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                                customDomain.status === 'PENDING_VERIFICATION'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-green-100 text-green-700'
+                              }`}>
+                                1
+                              </div>
+                              <h3 className="font-semibold text-gray-900">Domain Ownership Verification</h3>
+                              {customDomain.status !== 'PENDING_VERIFICATION' && (
+                                <ShieldCheck className="h-4 w-4 text-green-600 ml-auto" />
+                              )}
+                            </div>
+
+                            <p className="text-sm text-gray-600">
+                              Add this DNS record to your domain registrar to prove you own the domain:
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-gray-50 p-3 rounded">
+                              <div>
+                                <p className="text-xs text-gray-500">Record Type</p>
+                                <p className="font-mono text-sm font-semibold">{customDomain.verificationRecordType || 'TXT'}</p>
+                              </div>
+                              <div className="md:col-span-2">
+                                <p className="text-xs text-gray-500">Record Name / Host</p>
+                                <p className="font-mono text-sm break-words">
+                                  {customDomain.verificationRecordName || `_bizbytes-verification.${domainInput}`}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded">
+                              <p className="text-xs text-gray-500">Record Value / Content</p>
+                              <p className="font-mono text-sm break-words">
+                                {customDomain.verificationRecordValue || 'value will appear after saving'}
+                              </p>
+                            </div>
+
+                            <Alert>
+                              <AlertDescription className="text-sm">
+                                <strong>Where to add this:</strong> Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)
+                                and add the DNS record above. It may take 5-30 minutes to propagate.
+                              </AlertDescription>
+                            </Alert>
+                          </div>
+                        )}
+
+                        {/* Step 2: SSL Certificate Validation */}
+                        {customDomain && customDomain.status !== 'PENDING_VERIFICATION' && customDomain.acmValidationCnameName && (
+                          <div className="rounded-lg border p-4 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                                customDomain.certificateStatus === 'ISSUED'
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                2
+                              </div>
+                              <h3 className="font-semibold text-gray-900">SSL Certificate Validation</h3>
+                              {customDomain.certificateStatus === 'ISSUED' && (
+                                <ShieldCheck className="h-4 w-4 text-green-600 ml-auto" />
+                              )}
+                              {customDomain.certificateStatus === 'PENDING_VALIDATION' && (
+                                <Loader2 className="h-4 w-4 text-blue-600 animate-spin ml-auto" />
+                              )}
+                            </div>
+
+                            {customDomain.certificateStatus === 'ISSUED' ? (
+                              <Alert className="bg-green-50 border-green-200">
+                                <AlertDescription className="text-green-700">
+                                  SSL certificate validated successfully! Your custom domain is ready.
+                                </AlertDescription>
+                              </Alert>
+                            ) : (
+                              <>
+                                <p className="text-sm text-gray-600">
+                                  Add this CNAME record to enable SSL/HTTPS for your custom domain:
+                                </p>
+
+                                <div className="bg-gray-50 p-3 rounded space-y-2">
+                                  <div>
+                                    <p className="text-xs text-gray-500">Record Type</p>
+                                    <p className="font-mono text-sm font-semibold">CNAME</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-500">Record Name / Host</p>
+                                    <p className="font-mono text-sm break-words">{customDomain.acmValidationCnameName}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-500">Record Value / Points to</p>
+                                    <p className="font-mono text-sm break-words">{customDomain.acmValidationCnameValue}</p>
+                                  </div>
+                                </div>
+
+                                <Alert>
+                                  <AlertDescription className="text-sm">
+                                    <strong>Important:</strong> Add this CNAME record at your domain registrar.
+                                    SSL validation can take 5-30 minutes. We'll automatically check the status every 30 seconds.
+                                  </AlertDescription>
+                                </Alert>
+
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={handleCheckCertificateStatus}
+                                    disabled={certificateChecking}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    {certificateChecking ? (
+                                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    ) : (
+                                      <ShieldCheck className="h-4 w-4 mr-2" />
+                                    )}
+                                    Check Validation Status
+                                  </Button>
+                                  <p className="text-xs text-gray-500 self-center">
+                                    Status: {customDomain.certificateStatus || 'Unknown'}
+                                  </p>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </>
                     )}
                   </>

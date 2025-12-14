@@ -143,7 +143,8 @@ export const adminEndpoints = {
   // Custom Domains
   customDomains: {
     root: '/admin/custom-domains',
-    verify: '/admin/custom-domains/verify'
+    verify: '/admin/custom-domains/verify',
+    checkCertificate: '/admin/custom-domains/check-certificate'
   }
 };
 
@@ -280,6 +281,10 @@ adminApiUtils.verifyCustomDomain = function () {
 
 adminApiUtils.disableCustomDomain = function () {
   return this.withRetry(() => adminApi.delete(adminEndpoints.customDomains.root));
+};
+
+adminApiUtils.checkCertificateStatus = function () {
+  return this.withRetry(() => adminApi.post(adminEndpoints.customDomains.checkCertificate));
 };
 
 // Clover OAuth Integration utilities
