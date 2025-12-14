@@ -238,7 +238,10 @@ function AdminMenu() {
 
   const handleImageUpload = async (file) => {
     try {
+      console.log('Uploading image for item:', selectedItem.id, 'File:', file.name);
       const response = await adminApiUtils.uploadMenuItemImage(selectedItem.id, file);
+      console.log('Upload image response:', response);
+
       if (response.data?.imageUrl) {
         // Update modal form state
         setModalForm(prev => ({ ...prev, imageUrl: response.data.imageUrl }));
@@ -246,24 +249,29 @@ function AdminMenu() {
         // Update selected item state so modal shows updated data immediately
         setSelectedItem(prev => ({ ...prev, imageUrl: response.data.imageUrl }));
 
+        // Show success toast BEFORE refreshing menu items
+        toast.success('Image uploaded successfully');
+
         // Refresh menu items list in background (don't await to avoid blocking UI)
         loadMenuItems().catch(err => {
-          console.error('Failed to refresh menu items:', err);
+          console.error('Failed to refresh menu items (non-critical):', err);
           // Don't show error toast - upload was successful
         });
-
-        toast.success('Image uploaded successfully');
       }
     } catch (error) {
-      console.error('Failed to upload image:', error);
-      toast.error('Failed to upload image');
+      console.error('Failed to upload image - Full error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      toast.error(`Failed to upload image: ${error.response?.data?.error || error.message || 'Unknown error'}`);
       throw error; // Re-throw to trigger error state in ImageUpload component
     }
   };
 
   const handleImageRemove = async () => {
     try {
-      await adminApiUtils.deleteMenuItemImage(selectedItem.id);
+      console.log('Removing image for item:', selectedItem.id);
+      const response = await adminApiUtils.deleteMenuItemImage(selectedItem.id);
+      console.log('Delete image response:', response);
 
       // Update modal form state
       setModalForm(prev => ({ ...prev, imageUrl: '' }));
@@ -271,16 +279,20 @@ function AdminMenu() {
       // Update selected item state so modal shows updated data immediately
       setSelectedItem(prev => ({ ...prev, imageUrl: null }));
 
+      // Show success toast BEFORE refreshing menu items
+      toast.success('Image removed');
+
       // Refresh menu items list in background (don't await to avoid blocking UI)
       loadMenuItems().catch(err => {
-        console.error('Failed to refresh menu items:', err);
+        console.error('Failed to refresh menu items (non-critical):', err);
         // Don't show error toast - removal was successful
       });
 
-      toast.success('Image removed');
     } catch (error) {
-      console.error('Failed to remove image:', error);
-      toast.error('Failed to remove image');
+      console.error('Failed to remove image - Full error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      toast.error(`Failed to remove image: ${error.response?.data?.error || error.message || 'Unknown error'}`);
       throw error; // Re-throw to trigger error state in ImageUpload component
     }
   };
