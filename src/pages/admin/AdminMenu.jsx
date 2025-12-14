@@ -243,19 +243,29 @@ function AdminMenu() {
       console.log('Upload image response:', response);
 
       if (response.data?.imageUrl) {
+        const newImageUrl = response.data.imageUrl;
+
         // Update modal form state
-        setModalForm(prev => ({ ...prev, imageUrl: response.data.imageUrl }));
+        setModalForm(prev => ({ ...prev, imageUrl: newImageUrl }));
 
         // Update selected item state so modal shows updated data immediately
-        setSelectedItem(prev => ({ ...prev, imageUrl: response.data.imageUrl }));
+        setSelectedItem(prev => ({ ...prev, imageUrl: newImageUrl }));
 
-        // Show success toast BEFORE refreshing menu items
+        // Update the item in menuItems array immediately so reopening modal shows the image
+        setMenuItems(prevItems =>
+          prevItems.map(item =>
+            item.id === selectedItem.id
+              ? { ...item, imageUrl: newImageUrl }
+              : item
+          )
+        );
+
+        // Show success toast
         toast.success('Image uploaded successfully');
 
-        // Refresh menu items list in background (don't await to avoid blocking UI)
-        loadMenuItems().catch(err => {
+        // Refresh menu items list in background for consistency (don't await)
+        fetchMenuItems().catch(err => {
           console.error('Failed to refresh menu items (non-critical):', err);
-          // Don't show error toast - upload was successful
         });
       }
     } catch (error) {
@@ -279,13 +289,21 @@ function AdminMenu() {
       // Update selected item state so modal shows updated data immediately
       setSelectedItem(prev => ({ ...prev, imageUrl: null }));
 
-      // Show success toast BEFORE refreshing menu items
+      // Update the item in menuItems array immediately so reopening modal reflects deletion
+      setMenuItems(prevItems =>
+        prevItems.map(item =>
+          item.id === selectedItem.id
+            ? { ...item, imageUrl: null }
+            : item
+        )
+      );
+
+      // Show success toast
       toast.success('Image removed');
 
-      // Refresh menu items list in background (don't await to avoid blocking UI)
-      loadMenuItems().catch(err => {
+      // Refresh menu items list in background for consistency (don't await)
+      fetchMenuItems().catch(err => {
         console.error('Failed to refresh menu items (non-critical):', err);
-        // Don't show error toast - removal was successful
       });
 
     } catch (error) {
