@@ -1384,11 +1384,11 @@ function AdminSettings() {
                                 </Alert>
 
                                 <Button
-                                  onClick={handleVerifyDomain}
-                                  disabled={verifyLoading}
+                                  onClick={handleVerifyCustomDomain}
+                                  disabled={domainVerifying}
                                   className="w-full"
                                 >
-                                  {verifyLoading ? (
+                                  {domainVerifying ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                       Verifying CNAME...
