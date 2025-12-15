@@ -1184,7 +1184,11 @@ function AdminSettings() {
                               <div className="md:col-span-2">
                                 <p className="text-xs text-gray-500">Record Name / Host</p>
                                 <p className="font-mono text-sm break-words font-semibold text-blue-700">
-                                  {customDomain.verificationRecordName?.replace(`.${customDomain.domain}`, '') || `_bizbytes-verification`}
+                                  {(() => {
+                                    // Extract base domain (last 2 parts: e.g., shoplandofthefree.com from www.shoplandofthefree.com)
+                                    const baseDomain = customDomain.domain.split('.').slice(-2).join('.');
+                                    return customDomain.verificationRecordName?.replace(`.${baseDomain}`, '') || `_bizbytes-verification`;
+                                  })()}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
                                   Full name: {customDomain.verificationRecordName || `_bizbytes-verification.${domainInput}`}
@@ -1250,7 +1254,11 @@ function AdminSettings() {
                                   <div>
                                     <p className="text-xs text-gray-500">Record Name / Host</p>
                                     <p className="font-mono text-sm break-words font-semibold text-blue-700">
-                                      {customDomain.acmValidationCnameName?.replace(`.${customDomain.domain}`, '')}
+                                      {(() => {
+                                        // Extract base domain (last 2 parts)
+                                        const baseDomain = customDomain.domain.split('.').slice(-2).join('.');
+                                        return customDomain.acmValidationCnameName?.replace(`.${baseDomain}`, '');
+                                      })()}
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">
                                       Full name: {customDomain.acmValidationCnameName}
