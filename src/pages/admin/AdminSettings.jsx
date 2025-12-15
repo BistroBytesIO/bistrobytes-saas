@@ -458,10 +458,14 @@ function AdminSettings() {
       }
       if (domainData?.active) {
         toast.success('Domain verified and active');
-      } else if (response?.data?.message) {
+      } else if (domainData?.status === 'DNS_VERIFIED') {
+        toast.success('Domain verified! Provisioning SSL certificate...');
+      } else if (domainData?.status === 'PROVISIONING') {
+        toast('Domain verified. Setting up CloudFront and SSL...', { icon: '⏳' });
+      } else if (response?.data?.message && response.data.message !== 'null') {
         toast(response.data.message);
       } else {
-        toast.success('Verification attempted, awaiting DNS propagation');
+        toast('Domain verification in progress. Please wait...', { icon: '⏳' });
       }
     } catch (error) {
       const message = error.response?.data?.error || 'Verification failed';
