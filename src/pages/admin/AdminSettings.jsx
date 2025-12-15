@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw, Globe2, ShieldCheck, AlertTriangle, Info } from 'lucide-react';
+import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw, Globe2, ShieldCheck, AlertTriangle, Info, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminApiUtils } from '@/services/adminApi';
 
@@ -65,8 +65,9 @@ function AdminSettings() {
   const [domainSaving, setDomainSaving] = useState(false);
   const [domainVerifying, setDomainVerifying] = useState(false);
   const [domainDisabling, setDomainDisabling] = useState(false);
+  const [domainDeleting, setDomainDeleting] = useState(false);
   const [certificateChecking, setCertificateChecking] = useState(false);
-  
+
   // Clover integration state
   const [cloverStatus, setCloverStatus] = useState({
     connected: false,
@@ -484,6 +485,32 @@ function AdminSettings() {
       toast.error(message);
     } finally {
       setDomainDisabling(false);
+    }
+  };
+
+  const handleDeleteCustomDomain = async () => {
+    if (!customDomain) return;
+    if (!confirm('⚠️ PERMANENT DELETE: This will delete the CloudFront distribution, SSL certificate, and all custom domain data. This action CANNOT be undone. Are you sure?')) return;
+    setDomainDeleting(true);
+    try {
+      const response = await adminApiUtils.deleteCustomDomain();
+      if (response?.data?.success) {
+        setCustomDomain(null);
+        setDomainInput('');
+        toast.success(response?.data?.message || 'Custom domain deleted permanently');
+
+        // Show warning if there were any issues with AWS resource cleanup
+        if (response?.data?.cloudfront_warning) {
+          toast(response.data.cloudfront_warning, { duration: 5000, icon: '⚠️' });
+        }
+      } else {
+        toast.error(response?.data?.error || 'Failed to delete domain');
+      }
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to delete domain';
+      toast.error(message);
+    } finally {
+      setDomainDeleting(false);
     }
   };
 
@@ -1087,6 +1114,16 @@ function AdminSettings() {
                             >
                               {domainDisabling ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Unlink className="h-4 w-4 mr-2" />}
                               Disable Domain
+                            </Button>
+                          )}
+                          {customDomain && (
+                            <Button
+                              onClick={handleDeleteCustomDomain}
+                              disabled={domainDeleting}
+                              variant="destructive"
+                            >
+                              {domainDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                              Delete Permanently
                             </Button>
                           )}
                         </div>

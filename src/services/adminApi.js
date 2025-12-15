@@ -283,6 +283,10 @@ adminApiUtils.disableCustomDomain = function () {
   return this.withRetry(() => adminApi.delete(adminEndpoints.customDomains.root));
 };
 
+adminApiUtils.deleteCustomDomain = function () {
+  return this.withRetry(() => adminApi.delete(`${adminEndpoints.customDomains.root}/permanent`));
+};
+
 adminApiUtils.checkCertificateStatus = function () {
   return this.withRetry(() => adminApi.post(adminEndpoints.customDomains.checkCertificate));
 };
