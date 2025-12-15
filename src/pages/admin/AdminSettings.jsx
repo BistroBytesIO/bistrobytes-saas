@@ -1191,7 +1191,9 @@ function AdminSettings() {
                                   {(() => {
                                     // Extract base domain (last 2 parts: e.g., shoplandofthefree.com from www.shoplandofthefree.com)
                                     const baseDomain = customDomain.domain.split('.').slice(-2).join('.');
-                                    return customDomain.verificationRecordName?.replace(`.${baseDomain}`, '') || `_bizbytes-verification`;
+                                    const host = customDomain.verificationRecordName?.replace(`.${baseDomain}`, '') || `_bizbytes-verification`;
+                                    // Remove trailing dot (in case backend returns FQDN with trailing dot)
+                                    return host.endsWith('.') ? host.slice(0, -1) : host;
                                   })()}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
@@ -1261,7 +1263,9 @@ function AdminSettings() {
                                       {(() => {
                                         // Extract base domain (last 2 parts)
                                         const baseDomain = customDomain.domain.split('.').slice(-2).join('.');
-                                        return customDomain.acmValidationCnameName?.replace(`.${baseDomain}`, '');
+                                        const host = customDomain.acmValidationCnameName?.replace(`.${baseDomain}`, '') || '';
+                                        // Remove trailing dot (AWS returns FQDNs with trailing dots)
+                                        return host.endsWith('.') ? host.slice(0, -1) : host;
                                       })()}
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">
