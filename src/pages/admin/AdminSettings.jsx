@@ -456,12 +456,16 @@ function AdminSettings() {
         setCustomDomain(domainData);
         setVerificationMethod(domainData.verificationMethod || verificationMethod);
       }
-      if (domainData?.active) {
-        toast.success('Domain verified and active');
+      if (domainData?.active && domainData?.status === 'ACTIVE') {
+        toast.success('🎉 Domain activated! Your custom domain is now live!');
       } else if (domainData?.status === 'DNS_VERIFIED') {
         toast.success('Domain verified! Provisioning SSL certificate...');
       } else if (domainData?.status === 'PROVISIONING') {
-        toast('Domain verified. Setting up CloudFront and SSL...', { icon: '⏳' });
+        if (domainData?.errorMessage) {
+          toast.error('CNAME verification failed: ' + domainData.errorMessage);
+        } else {
+          toast('CloudFront provisioned! Add the CNAME record in Step 3 below.', { icon: '⏳' });
+        }
       } else if (response?.data?.message && response.data.message !== 'null') {
         toast(response.data.message);
       } else {
@@ -527,7 +531,9 @@ function AdminSettings() {
       if (domainData) {
         setCustomDomain(domainData);
         const message = response?.data?.message || 'Certificate status updated';
-        if (domainData.certificateStatus === 'ISSUED') {
+        if (domainData.certificateStatus === 'ISSUED' && domainData.status === 'PROVISIONING') {
+          toast.success('SSL certificate validated! CloudFront provisioned. Add the CNAME record in Step 3.');
+        } else if (domainData.certificateStatus === 'ISSUED') {
           toast.success(message);
         } else if (domainData.certificateStatus === 'PENDING_VALIDATION') {
           toast(message, { icon: '⏳' });
@@ -1372,10 +1378,40 @@ function AdminSettings() {
                                     Enter only the <strong className="text-blue-700">subdomain part</strong> in the "Host" or "Name" field.
                                     <br />
                                     <span className="text-xs mt-1 block">
-                                      DNS changes take 5-30 minutes to propagate globally. Once propagated, your custom domain will be live!
+                                      DNS changes take 5-30 minutes to propagate globally. Click "Verify & Activate" below after adding the record.
                                     </span>
                                   </AlertDescription>
                                 </Alert>
+
+                                <Button
+                                  onClick={handleVerifyDomain}
+                                  disabled={verifyLoading}
+                                  className="w-full"
+                                >
+                                  {verifyLoading ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                      Verifying CNAME...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ShieldCheck className="h-4 w-4 mr-2" />
+                                      Verify & Activate Domain
+                                    </>
+                                  )}
+                                </Button>
+
+                                {customDomain.errorMessage && (
+                                  <Alert className="bg-yellow-50 border-yellow-200">
+                                    <AlertDescription className="text-sm text-yellow-900">
+                                      <strong>Verification Issue:</strong> {customDomain.errorMessage}
+                                      <br />
+                                      <span className="text-xs mt-1 block">
+                                        Make sure the CNAME record has been added correctly and allow time for DNS propagation (5-30 minutes).
+                                      </span>
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
 
                                 <Alert className="bg-amber-50 border-amber-200">
                                   <AlertDescription className="text-sm text-amber-900">
