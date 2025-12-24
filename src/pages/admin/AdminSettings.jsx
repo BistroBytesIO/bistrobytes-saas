@@ -106,6 +106,19 @@ function AdminSettings() {
     syncing: false
   });
 
+  // Stripe Connect integration state
+  const [stripeStatus, setStripeStatus] = useState({
+    connected: false,
+    valid: false,
+    stripeUserId: '',
+    accountBusinessName: '',
+    accountEmail: '',
+    loading: false,
+    livemode: false,
+    chargesEnabled: false,
+    payoutsEnabled: false
+  });
+
   // Tenant configuration state
   const [tenantConfig, setTenantConfig] = useState({
     posProvider: 'none' // none, clover, square
@@ -147,7 +160,8 @@ function AdminSettings() {
           adminApiUtils.getRestaurantProfile(),
           adminApiUtils.getBusinessHours(),
           adminApiUtils.getPaymentConfig(), // Load payment configuration
-          adminApiUtils.getCustomDomain()
+          adminApiUtils.getCustomDomain(),
+          adminApiUtils.getStripeStatus()
         ];
         
         // Only load POS status for the configured provider or if none is set
@@ -212,9 +226,12 @@ function AdminSettings() {
             setVerificationMethod(domainPayload.verificationMethod || 'DNS_TXT');
           }
         }
-        
+        if (results[4].status === 'fulfilled' && results[4].value?.data) {
+          setStripeStatus(prev => ({ ...prev, ...results[4].value.data }));
+        }
+
         // Process POS-specific results
-        let resultIndex = 4;
+        let resultIndex = 5;
         
         if (cloverPromise) {
           const cloverResult = results[resultIndex];
@@ -271,6 +288,13 @@ function AdminSettings() {
         })
         .catch(() => {/* noop */});
     }
+    if (activeTab === 'stripe') {
+      adminApiUtils.getStripeStatus()
+        .then(res => {
+          if (res?.data) setStripeStatus(prev => ({ ...prev, ...res.data }));
+        })
+        .catch(() => {/* noop */});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
@@ -289,6 +313,13 @@ function AdminSettings() {
       squareConfigured: squareStatus.connected && squareStatus.valid
     }));
   }, [squareStatus.connected, squareStatus.valid]);
+
+  useEffect(() => {
+    setPaymentConfig(prev => ({
+      ...prev,
+      stripeConfigured: stripeStatus.connected && stripeStatus.valid
+    }));
+  }, [stripeStatus.connected, stripeStatus.valid]);
 
   // Set logo preview when branding.logoUrl changes
   useEffect(() => {
@@ -550,6 +581,11 @@ function AdminSettings() {
   };
 
   const handleSavePaymentConfig = async () => {
+    if (paymentConfig.paymentProcessor === 'STRIPE' && !paymentConfig.stripeConfigured) {
+      toast.error('Please connect your Stripe account before selecting it as payment processor');
+      return;
+    }
+
     // Validate Clover selection
     if (paymentConfig.paymentProcessor === 'CLOVER' && !paymentConfig.cloverConfigured) {
       toast.error('Please connect your Clover POS before selecting it as payment processor');
@@ -787,6 +823,91 @@ function AdminSettings() {
     }
   };
 
+  const loadStripeStatus = async () => {
+    try {
+      const response = await adminApiUtils.getStripeStatus();
+      if (response?.data) {
+        setStripeStatus(prev => ({ ...prev, ...response.data, loading: false }));
+      }
+    } catch (error) {
+      console.error('Error loading Stripe status:', error);
+    }
+  };
+
+  const handleStripeConnect = async () => {
+    setStripeStatus(prev => ({ ...prev, loading: true }));
+    try {
+      const response = await adminApiUtils.initiateStripeOAuth();
+      if (response?.data?.authorizationUrl) {
+        window.location.href = response.data.authorizationUrl;
+        return;
+      }
+      toast.error('Failed to initiate Stripe connection');
+      setStripeStatus(prev => ({ ...prev, loading: false }));
+    } catch (error) {
+      console.error('Stripe OAuth initiation error:', error);
+      toast.error('Failed to connect Stripe account');
+      setStripeStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleStripeRefresh = async () => {
+    setStripeStatus(prev => ({ ...prev, loading: true }));
+    try {
+      await adminApiUtils.refreshStripeAccountInfo();
+      await loadStripeStatus();
+      toast.success('Stripe account info refreshed');
+    } catch (error) {
+      console.error('Stripe refresh error:', error);
+      toast.error('Failed to refresh Stripe account info');
+      setStripeStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleStripeTest = async () => {
+    setStripeStatus(prev => ({ ...prev, loading: true }));
+    try {
+      const response = await adminApiUtils.testStripeConnection();
+      if (response?.data?.connected) {
+        toast.success('Stripe connection is valid');
+      } else {
+        toast.error('Stripe connection is invalid');
+      }
+    } catch (error) {
+      console.error('Stripe test error:', error);
+      toast.error('Failed to test Stripe connection');
+    } finally {
+      setStripeStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleStripeDisconnect = async () => {
+    if (!confirm('Are you sure you want to disconnect your Stripe account? You will no longer be able to accept credit card payments.')) {
+      return;
+    }
+
+    setStripeStatus(prev => ({ ...prev, loading: true }));
+    try {
+      await adminApiUtils.disconnectStripe();
+      setStripeStatus({
+        connected: false,
+        valid: false,
+        stripeUserId: '',
+        accountBusinessName: '',
+        accountEmail: '',
+        loading: false,
+        livemode: false,
+        chargesEnabled: false,
+        payoutsEnabled: false
+      });
+      toast.success('Stripe account disconnected');
+    } catch (error) {
+      console.error('Stripe disconnect error:', error);
+      toast.error('Failed to disconnect Stripe account');
+      setStripeStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
   // Square menu sync handlers
   const handleSquareMenuSync = async () => {
     try {
@@ -841,6 +962,7 @@ function AdminSettings() {
             <TabsTrigger tabValue="branding">Branding</TabsTrigger>
             <TabsTrigger tabValue="custom-domain">Custom Domain</TabsTrigger>
             <TabsTrigger tabValue="payments">Payment Processing</TabsTrigger>
+            <TabsTrigger tabValue="stripe">Stripe Connect</TabsTrigger>
             {(tenantConfig.posProvider === 'clover' || tenantConfig.posProvider === 'none') && (
               <TabsTrigger tabValue="clover">Clover POS</TabsTrigger>
             )}
@@ -1476,8 +1598,12 @@ function AdminSettings() {
                         paymentConfig.paymentProcessor === 'STRIPE'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setPaymentConfig({...paymentConfig, paymentProcessor: 'STRIPE'})}
+                      } ${!paymentConfig.stripeConfigured ? 'opacity-50' : ''}`}
+                      onClick={() => {
+                        if (paymentConfig.stripeConfigured) {
+                          setPaymentConfig({...paymentConfig, paymentProcessor: 'STRIPE'});
+                        }
+                      }}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border-2 ${
@@ -1499,7 +1625,13 @@ function AdminSettings() {
                         • Comprehensive fraud protection
                         • Global payment methods support
                       </div>
-                      {paymentConfig.paymentProcessor === 'STRIPE' && (
+                      {!paymentConfig.stripeConfigured && (
+                        <div className="mt-3 flex items-center gap-2 text-sm">
+                          <XCircle className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-500">Requires Stripe Connect</span>
+                        </div>
+                      )}
+                      {paymentConfig.paymentProcessor === 'STRIPE' && paymentConfig.stripeConfigured && (
                         <div className="mt-3 flex items-center gap-2 text-sm">
                           <CheckCircle className="w-4 h-4 text-green-500" />
                           <span className="text-green-600">Selected</span>
@@ -1615,12 +1747,23 @@ function AdminSettings() {
                     {/* Stripe Status */}
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          paymentConfig.stripeConfigured ? 'bg-blue-500' : 'bg-gray-400'
+                        }`}></div>
                         <span className="font-medium">Stripe</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-green-600">Ready</span>
+                        {paymentConfig.stripeConfigured ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 text-blue-500" />
+                            <span className="text-blue-600">Connected</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-500">Not Connected</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -1674,6 +1817,24 @@ function AdminSettings() {
                     </div>
                     )}
                   </div>
+
+                  {!paymentConfig.stripeConfigured && (
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <strong>Need Stripe for payments?</strong> Connect your Stripe account in the
+                        {' '}
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto text-blue-600 underline"
+                          onClick={() => setActiveTab('stripe')}
+                        >
+                          Stripe Connect tab
+                        </Button>
+                        {' '}
+                        to enable card payments.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Clover connection info - Only for PREMIUM and ENTERPRISE plans */}
                   {canUsePosPayments && !paymentConfig.cloverConfigured && (
@@ -1738,6 +1899,150 @@ function AdminSettings() {
                   </>
                 )}
 
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent tabValue="stripe">
+            <Card>
+              <CardHeader>
+                <CardTitle>Stripe Connect Integration</CardTitle>
+                <CardDescription>Connect your Stripe account to accept credit card payments</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!stripeStatus.connected ? (
+                  <>
+                    <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>
+                        Connect your Stripe account to enable online card payments. Funds are deposited directly to your Stripe account.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h3 className="font-semibold text-blue-900 mb-2">What you will need</h3>
+                        <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                          <li>A Stripe account</li>
+                          <li>Your business information</li>
+                          <li>Bank account for payouts</li>
+                        </ul>
+                      </div>
+
+                      <Button
+                        onClick={handleStripeConnect}
+                        disabled={stripeStatus.loading}
+                        className="w-full"
+                        size="lg"
+                      >
+                        {stripeStatus.loading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          <>
+                            <Link2 className="mr-2 h-4 w-4" />
+                            Connect Stripe Account
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Alert className="bg-green-50 border-green-200">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-800">
+                        Your Stripe account is connected.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="border rounded-lg p-4">
+                        <div className="text-sm text-gray-500 mb-1">Account ID</div>
+                        <div className="font-mono text-sm">{stripeStatus.stripeUserId || 'N/A'}</div>
+                      </div>
+                      <div className="border rounded-lg p-4">
+                        <div className="text-sm text-gray-500 mb-1">Business Name</div>
+                        <div className="font-medium">{stripeStatus.accountBusinessName || 'N/A'}</div>
+                      </div>
+                      <div className="border rounded-lg p-4">
+                        <div className="text-sm text-gray-500 mb-1">Email</div>
+                        <div className="text-sm">{stripeStatus.accountEmail || 'N/A'}</div>
+                      </div>
+                      <div className="border rounded-lg p-4">
+                        <div className="text-sm text-gray-500 mb-1">Mode</div>
+                        <div className="flex items-center gap-2">
+                          {stripeStatus.livemode ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Live
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Test
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium">Charges Enabled</span>
+                        {stripeStatus.chargesEnabled ? (
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-600" />
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium">Payouts Enabled</span>
+                        {stripeStatus.payoutsEnabled ? (
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-600" />
+                        )}
+                      </div>
+                    </div>
+
+                    {!stripeStatus.chargesEnabled && (
+                      <Alert className="bg-yellow-50 border-yellow-200">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          Your Stripe account is not fully activated yet. Complete setup in your Stripe Dashboard to accept payments.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={handleStripeRefresh}
+                        disabled={stripeStatus.loading}
+                      >
+                        <RefreshCw className={`mr-2 h-4 w-4 ${stripeStatus.loading ? 'animate-spin' : ''}`} />
+                        Refresh Status
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleStripeTest}
+                        disabled={stripeStatus.loading}
+                      >
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        Test Connection
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={handleStripeDisconnect}
+                        disabled={stripeStatus.loading}
+                      >
+                        <Unlink className="mr-2 h-4 w-4" />
+                        Disconnect
+                      </Button>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -362,6 +362,31 @@ adminApiUtils.getSquareConfig = function () {
   return this.withRetry(() => adminApi.get('/admin/square/oauth/config'));
 };
 
+// Stripe Connect OAuth utilities
+adminApiUtils.getStripeStatus = function () {
+  return this.withRetry(() => adminApi.get('/admin/stripe/oauth/status'));
+};
+
+adminApiUtils.initiateStripeOAuth = function () {
+  return this.withRetry(() => adminApi.post('/admin/stripe/oauth/authorize'));
+};
+
+adminApiUtils.refreshStripeAccountInfo = function () {
+  return this.withRetry(() => adminApi.post('/admin/stripe/oauth/refresh'));
+};
+
+adminApiUtils.disconnectStripe = function () {
+  return this.withRetry(() => adminApi.patch('/admin/stripe/oauth/disconnect'));
+};
+
+adminApiUtils.testStripeConnection = function () {
+  return this.withRetry(() => adminApi.post('/admin/stripe/oauth/test'));
+};
+
+adminApiUtils.getStripeConfig = function () {
+  return this.withRetry(() => adminApi.get('/admin/stripe/oauth/config'));
+};
+
 // Square Menu Sync utilities (TODO: Phase 2)
 adminApiUtils.syncSquareMenu = function () {
   return this.withRetry(() => adminApi.post('/admin/square/oauth/sync/menu'));

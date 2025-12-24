@@ -24,6 +24,7 @@ import AdminSettings from './pages/admin/AdminSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import CloverOAuthCallback from './pages/admin/CloverOAuthCallback'
 import SquareOAuthCallback from './pages/admin/SquareOAuthCallback'
+import StripeOAuthCallback from './pages/admin/StripeOAuthCallback'
 import PromoCodesManager from './pages/admin/PromoCodesManager'
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
             <Route path="/admin/forgot-password" element={<ForgotPassword />} />
             <Route path="/admin/settings/clover/callback" element={<CloverOAuthCallback />} />
             <Route path="/admin/settings/square/callback" element={<SquareOAuthCallback />} />
+            <Route path="/admin/settings/stripe/callback" element={<StripeOAuthCallback />} />
             <Route path="/admin/unauthorized" element={<Unauthorized />} />
             
             {/* Protected Admin Routes */}
