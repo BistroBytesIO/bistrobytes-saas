@@ -126,7 +126,7 @@ function AdminSettings() {
 
   // Payment configuration state
   const [paymentConfig, setPaymentConfig] = useState({
-    paymentProcessor: 'STRIPE', // STRIPE, CLOVER, SQUARE
+    paymentProcessor: null, // STRIPE, CLOVER, SQUARE, or null if none configured
     cloverConfigured: false,
     squareConfigured: false,
     stripeConfigured: false,
@@ -320,6 +320,25 @@ function AdminSettings() {
       stripeConfigured: stripeStatus.connected && stripeStatus.valid
     }));
   }, [stripeStatus.connected, stripeStatus.valid]);
+
+  // Clear paymentProcessor if all processors are unconfigured, or if the selected processor becomes unconfigured
+  useEffect(() => {
+    const allUnconfigured = !paymentConfig.stripeConfigured &&
+                           !paymentConfig.cloverConfigured &&
+                           !paymentConfig.squareConfigured;
+
+    const selectedProcessorUnconfigured =
+      (paymentConfig.paymentProcessor === 'STRIPE' && !paymentConfig.stripeConfigured) ||
+      (paymentConfig.paymentProcessor === 'CLOVER' && !paymentConfig.cloverConfigured) ||
+      (paymentConfig.paymentProcessor === 'SQUARE' && !paymentConfig.squareConfigured);
+
+    if (allUnconfigured || selectedProcessorUnconfigured) {
+      setPaymentConfig(prev => ({
+        ...prev,
+        paymentProcessor: null
+      }));
+    }
+  }, [paymentConfig.stripeConfigured, paymentConfig.cloverConfigured, paymentConfig.squareConfigured, paymentConfig.paymentProcessor]);
 
   // Set logo preview when branding.logoUrl changes
   useEffect(() => {
@@ -581,6 +600,12 @@ function AdminSettings() {
   };
 
   const handleSavePaymentConfig = async () => {
+    // Validate that a payment processor has been selected
+    if (!paymentConfig.paymentProcessor) {
+      toast.error('Please select a payment processor before saving');
+      return;
+    }
+
     if (paymentConfig.paymentProcessor === 'STRIPE' && !paymentConfig.stripeConfigured) {
       toast.error('Please connect your Stripe account before selecting it as payment processor');
       return;
@@ -1591,14 +1616,29 @@ function AdminSettings() {
                     </Alert>
                   )}
 
+                  {/* No processors configured warning */}
+                  {paymentConfig.paymentProcessor === null && (
+                    <Alert className="bg-amber-50 border-amber-200 mb-4">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-900">
+                        <strong>No payment processor configured.</strong> Please connect at least one payment method below before you can select a payment processor.
+                        {!paymentConfig.stripeConfigured && (
+                          <span className="block mt-2 text-sm">
+                            Visit the <strong>Stripe Connect</strong> tab to connect your Stripe account for card payments.
+                          </span>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   <div className={`grid grid-cols-1 gap-4 ${canUsePosPayments ? 'md:grid-cols-3' : 'md:grid-cols-1'}`}>
                     {/* Stripe Option */}
                     <div
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        paymentConfig.paymentProcessor === 'STRIPE'
+                      className={`border rounded-lg p-4 transition-all ${
+                        paymentConfig.paymentProcessor === 'STRIPE' && paymentConfig.stripeConfigured
                           ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      } ${!paymentConfig.stripeConfigured ? 'opacity-50' : ''}`}
+                          : 'border-gray-200'
+                      } ${!paymentConfig.stripeConfigured ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                       onClick={() => {
                         if (paymentConfig.stripeConfigured) {
                           setPaymentConfig({...paymentConfig, paymentProcessor: 'STRIPE'});
@@ -1607,11 +1647,11 @@ function AdminSettings() {
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border-2 ${
-                          paymentConfig.paymentProcessor === 'STRIPE'
+                          paymentConfig.paymentProcessor === 'STRIPE' && paymentConfig.stripeConfigured
                             ? 'border-blue-500 bg-blue-500'
                             : 'border-gray-300'
                         }`}>
-                          {paymentConfig.paymentProcessor === 'STRIPE' && (
+                          {paymentConfig.paymentProcessor === 'STRIPE' && paymentConfig.stripeConfigured && (
                             <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                           )}
                         </div>
@@ -1642,11 +1682,11 @@ function AdminSettings() {
                     {/* Clover Option - Only for PREMIUM and ENTERPRISE plans */}
                     {canUsePosPayments && (
                     <div
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        paymentConfig.paymentProcessor === 'CLOVER'
+                      className={`border rounded-lg p-4 transition-all ${
+                        paymentConfig.paymentProcessor === 'CLOVER' && paymentConfig.cloverConfigured
                           ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      } ${!paymentConfig.cloverConfigured ? 'opacity-50' : ''}`}
+                          : 'border-gray-200'
+                      } ${!paymentConfig.cloverConfigured ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                       onClick={() => {
                         if (paymentConfig.cloverConfigured) {
                           setPaymentConfig({...paymentConfig, paymentProcessor: 'CLOVER'});
@@ -1655,11 +1695,11 @@ function AdminSettings() {
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border-2 ${
-                          paymentConfig.paymentProcessor === 'CLOVER'
+                          paymentConfig.paymentProcessor === 'CLOVER' && paymentConfig.cloverConfigured
                             ? 'border-green-500 bg-green-500'
                             : 'border-gray-300'
                         }`}>
-                          {paymentConfig.paymentProcessor === 'CLOVER' && (
+                          {paymentConfig.paymentProcessor === 'CLOVER' && paymentConfig.cloverConfigured && (
                             <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                           )}
                         </div>
@@ -1691,11 +1731,11 @@ function AdminSettings() {
                     {/* Square Option - Only for PREMIUM and ENTERPRISE plans */}
                     {canUsePosPayments && (
                     <div
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        paymentConfig.paymentProcessor === 'SQUARE'
+                      className={`border rounded-lg p-4 transition-all ${
+                        paymentConfig.paymentProcessor === 'SQUARE' && paymentConfig.squareConfigured
                           ? 'border-orange-500 bg-orange-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      } ${!paymentConfig.squareConfigured ? 'opacity-50' : ''}`}
+                          : 'border-gray-200'
+                      } ${!paymentConfig.squareConfigured ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                       onClick={() => {
                         if (paymentConfig.squareConfigured) {
                           setPaymentConfig({...paymentConfig, paymentProcessor: 'SQUARE'});
@@ -1704,11 +1744,11 @@ function AdminSettings() {
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border-2 ${
-                          paymentConfig.paymentProcessor === 'SQUARE'
+                          paymentConfig.paymentProcessor === 'SQUARE' && paymentConfig.squareConfigured
                             ? 'border-orange-500 bg-orange-500'
                             : 'border-gray-300'
                         }`}>
-                          {paymentConfig.paymentProcessor === 'SQUARE' && (
+                          {paymentConfig.paymentProcessor === 'SQUARE' && paymentConfig.squareConfigured && (
                             <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
                           )}
                         </div>
@@ -1879,7 +1919,7 @@ function AdminSettings() {
                 <div className="border-t pt-6">
                   <Button
                     onClick={handleSavePaymentConfig}
-                    disabled={paymentConfig.saving}
+                    disabled={paymentConfig.saving || paymentConfig.paymentProcessor === null}
                     className="flex items-center gap-2"
                   >
                     {paymentConfig.saving ? (
@@ -1894,6 +1934,11 @@ function AdminSettings() {
                       </>
                     )}
                   </Button>
+                  {paymentConfig.paymentProcessor === null && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      Please select a payment processor before saving.
+                    </p>
+                  )}
                 </div>
 
                   </>
