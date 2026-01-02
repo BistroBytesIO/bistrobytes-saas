@@ -79,8 +79,16 @@ const SignupPage = () => {
       description: '',
       heroTagline: '',
 
-      // Contact Information
+      // Owner Contact Information (for account management)
       ownerName: '',
+      ownerEmail: '',
+      ownerPhone: '',
+
+      // Customer-Facing Contact Information (for website display)
+      contactEmail: '',
+      contactPhone: '',
+
+      // DEPRECATED: Backward compatibility
       email: '',
       phone: '',
 
@@ -208,7 +216,7 @@ const SignupPage = () => {
       case 1:
         return ['restaurantName', 'businessType', 'cuisine', 'description', 'heroTagline']
       case 2:
-        return ['ownerName', 'email', 'phone', 'address', 'city', 'state', 'zipCode', 'country']
+        return ['ownerName', 'ownerEmail', 'ownerPhone', 'contactEmail', 'contactPhone', 'address', 'city', 'state', 'zipCode', 'country']
       case 3:
         return ['timezone', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'currency', 'taxRate', 'serviceFeeRate', 'minimumOrder', 'hasExistingPOS', 'posSystem']
       case 4:
@@ -259,10 +267,18 @@ const SignupPage = () => {
         description: data.description,
         heroTagline: data.heroTagline,
         
-        // Contact information (flat fields)
+        // Owner contact information (for account management)
         ownerName: data.ownerName,
-        email: data.email,
-        phone: data.phone,
+        ownerEmail: data.ownerEmail,
+        ownerPhone: data.ownerPhone,
+
+        // Customer-facing contact information (for website display)
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone,
+
+        // DEPRECATED: Backward compatibility
+        email: data.ownerEmail,  // Fallback to owner email
+        phone: data.ownerPhone,  // Fallback to owner phone
         
         // Address information (flat fields)
         address: data.address,
@@ -319,7 +335,7 @@ const SignupPage = () => {
       const response = await api.post('/subscriptions/create-checkout-session', {
         planId: data.plan,
         billingCycle: data.billingCycle,
-        email: data.email,
+        email: data.ownerEmail,  // Use owner email for account login
         tenantData: tenantConfig
       })
       
@@ -427,51 +443,121 @@ const SignupPage = () => {
           <div className="space-y-6" key="step-2">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Contact Information</h2>
-              <p className="text-gray-600">How can customers reach you?</p>
+              <p className="text-gray-600">Set up account access and customer contact details</p>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="mb-1 block">Owner/Manager Name *</Label>
-                <Input
-                  {...register('ownerName', { required: 'Owner name is required' })}
-                  placeholder="John Smith"
-                  className={errors.ownerName ? 'border-red-500' : ''}
-                />
-                {errors.ownerName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.ownerName.message}</p>
-                )}
+
+            {/* Owner/Account Information Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                Account Owner Information
+              </h3>
+              <p className="text-sm text-blue-700 mb-4">
+                For account login and administrative communications (NOT displayed to customers)
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <Label className="mb-1 block">Owner/Manager Name *</Label>
+                  <Input
+                    {...register('ownerName', { required: 'Owner name is required' })}
+                    placeholder="John Smith"
+                    className={errors.ownerName ? 'border-red-500' : ''}
+                  />
+                  {errors.ownerName && (
+                    <p className="text-red-500 text-sm mt-1">{errors.ownerName.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="mb-1 block">Owner Email Address *</Label>
+                  <Input
+                    type="email"
+                    {...register('ownerEmail', {
+                      required: 'Owner email is required',
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: 'Invalid email'
+                      }
+                    })}
+                    placeholder="john@example.com"
+                    className={errors.ownerEmail ? 'border-red-500' : ''}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Used for account login</p>
+                  {errors.ownerEmail && (
+                    <p className="text-red-500 text-sm mt-1">{errors.ownerEmail.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="mb-1 block">Owner Phone Number *</Label>
+                  <Input
+                    {...register('ownerPhone', { required: 'Owner phone is required' })}
+                    placeholder="+1 (555) 123-4567"
+                    className={errors.ownerPhone ? 'border-red-500' : ''}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">For account communications</p>
+                  {errors.ownerPhone && (
+                    <p className="text-red-500 text-sm mt-1">{errors.ownerPhone.message}</p>
+                  )}
+                </div>
               </div>
-              
-              <div>
-                <Label className="mb-1 block">Email Address *</Label>
-                <Input
-                  type="email"
-                  {...register('email', { 
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address'
-                    }
-                  })}
-                  placeholder="john@pizzapalace.com"
-                  className={errors.email ? 'border-red-500' : ''}
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-                )}
+            </div>
+
+            {/* Customer Contact Information Section */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-green-900 mb-3">
+                Customer Contact Information
+              </h3>
+              <p className="text-sm text-green-700 mb-4">
+                Displayed on your website for customers to contact you
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="mb-1 block">Contact Email Address *</Label>
+                  <Input
+                    type="email"
+                    {...register('contactEmail', {
+                      required: 'Contact email is required',
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: 'Invalid email'
+                      }
+                    })}
+                    placeholder="info@pizzapalace.com"
+                    className={errors.contactEmail ? 'border-red-500' : ''}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Shown to customers on website</p>
+                  {errors.contactEmail && (
+                    <p className="text-red-500 text-sm mt-1">{errors.contactEmail.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="mb-1 block">Contact Phone Number *</Label>
+                  <Input
+                    {...register('contactPhone', { required: 'Contact phone is required' })}
+                    placeholder="+1 (555) 987-6543"
+                    className={errors.contactPhone ? 'border-red-500' : ''}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Shown to customers on website</p>
+                  {errors.contactPhone && (
+                    <p className="text-red-500 text-sm mt-1">{errors.contactPhone.message}</p>
+                  )}
+                </div>
               </div>
-              
-              <div>
-                <Label className="mb-1 block">Phone Number *</Label>
-                <Input
-                  {...register('phone', { required: 'Phone number is required' })}
-                  placeholder="+1 (555) 123-4567"
-                  className={errors.phone ? 'border-red-500' : ''}
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
-                )}
+
+              <div className="mt-3 pt-3 border-t border-green-300">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('contactEmail', watch('ownerEmail'), { shouldValidate: true });
+                    setValue('contactPhone', watch('ownerPhone'), { shouldValidate: true });
+                  }}
+                  className="text-sm text-green-700 hover:text-green-900 underline"
+                >
+                  Use same as owner contact information
+                </button>
               </div>
             </div>
             
