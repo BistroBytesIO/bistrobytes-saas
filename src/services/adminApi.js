@@ -149,11 +149,11 @@ export const adminEndpoints = {
 
   // Category Management
   categories: {
-    all: '/api/categories',
-    byId: (id) => `/api/categories/${id}`,
-    create: '/api/categories',
-    update: (id) => `/api/categories/${id}`,
-    delete: (id) => `/api/categories/${id}`
+    all: '/categories',
+    byId: (id) => `/categories/${id}`,
+    create: '/categories',
+    update: (id) => `/categories/${id}`,
+    delete: (id) => `/categories/${id}`
   }
 };
 
