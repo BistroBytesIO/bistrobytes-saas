@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ImageUpload from '@/components/admin/ImageUpload';
 import {
   Plus,
@@ -27,7 +28,8 @@ import {
   Filter,
   Gift,
   Lock,
-  X
+  X,
+  FolderOpen
 } from 'lucide-react';
 
 // Set app element for react-modal accessibility
@@ -52,6 +54,7 @@ function AdminMenu() {
     price: '',
     stockQuantity: '',
     isFeatured: false,
+    categoryId: '',
   });
 
   // Modal for editing items
@@ -66,12 +69,21 @@ function AdminMenu() {
     imageUrl: '',
     cloverItemId: null,
     squareItemId: null,
+    categoryId: '',
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
+
+  // Category management state
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categoryLoading, setCategoryLoading] = useState(false);
 
   const tenantId = getTenantId();
 
@@ -82,6 +94,7 @@ function AdminMenu() {
     console.log('🚀 AdminMenu component mounted');
     fetchMenuItems();
     loadRestaurantProfile();
+    fetchCategories();
   }, []);
 
   // Filter items based on search and featured filter
@@ -136,6 +149,144 @@ function AdminMenu() {
       console.error('❌ Error loading restaurant profile:', error);
       // Default to BASIC if loading fails
       setPlanType('BASIC');
+    }
+  };
+
+  const fetchCategories = async () => {
+    console.log('📂 Fetching categories...');
+    setIsLoadingCategories(true);
+    try {
+      const response = await adminApiUtils.getCategories();
+      console.log('✅ Fetched categories:', response.data);
+      if (Array.isArray(response.data)) {
+        setCategories(response.data);
+      } else {
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching categories:', error);
+      setCategories([]);
+      toast.error('Failed to fetch categories');
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  // Category management handlers
+  const handleCategoryChange = (e) => {
+    const { name, value } = e.target;
+    setCategoryForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCategorySubmit = async (e) => {
+    e.preventDefault();
+    if (!categoryForm.name.trim()) {
+      toast.error('Category name is required');
+      return;
+    }
+    setCategoryLoading(true);
+    try {
+      await adminApiUtils.createCategory(categoryForm);
+      toast.success('Category created successfully');
+      soundService.playSuccess();
+      setCategoryForm({ name: '', description: '' });
+      await fetchCategories();
+    } catch (error) {
+      console.error('❌ Error creating category:', error);
+      if (error.response?.data?.error?.includes('already exists')) {
+        toast.error('A category with this name already exists');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to create category');
+      }
+      soundService.playError();
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
+
+  const handleCategoryEditClick = (category) => {
+    setEditingCategory(category);
+    setCategoryForm({ name: category.name, description: category.description || '' });
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleCategoryUpdateSubmit = async (e) => {
+    e.preventDefault();
+    if (!categoryForm.name.trim()) {
+      toast.error('Category name is required');
+      return;
+    }
+    setCategoryLoading(true);
+    try {
+      await adminApiUtils.updateCategory(editingCategory.id, categoryForm);
+      toast.success('Category updated successfully');
+      soundService.playSuccess();
+      setIsCategoryModalOpen(false);
+      setCategoryForm({ name: '', description: '' });
+      setEditingCategory(null);
+      await fetchCategories();
+    } catch (error) {
+      console.error('❌ Error updating category:', error);
+      if (error.response?.data?.error?.includes('already exists')) {
+        toast.error('A category with this name already exists');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to update category');
+      }
+      soundService.playError();
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
+
+  const confirmCategoryDelete = (category) => {
+    toast(
+      (t) => (
+        <div className="text-center">
+          <p className="mb-3">
+            Delete <strong>{category.name}</strong>?
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button
+              onClick={() => {
+                toast.dismiss(t.id);
+                deleteCategoryItem(category);
+              }}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Yes, Delete
+            </Button>
+            <Button
+              onClick={() => toast.dismiss(t.id)}
+              size="sm"
+              variant="outline"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 6000,
+        position: 'top-center',
+      }
+    );
+  };
+
+  const deleteCategoryItem = async (category) => {
+    try {
+      await adminApiUtils.deleteCategory(category.id);
+      toast.success('Category deleted successfully');
+      soundService.playSuccess();
+      await fetchCategories();
+    } catch (error) {
+      console.error('❌ Error deleting category:', error);
+      if (error.response?.data?.error?.includes('menu items are assigned')) {
+        toast.error('Cannot delete: Items are assigned to this category. Reassign items first.');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to delete category');
+      }
+      soundService.playError();
     }
   };
 
@@ -207,6 +358,7 @@ function AdminMenu() {
         price: '',
         stockQuantity: '',
         isFeatured: false,
+        categoryId: '',
       });
       
       await fetchMenuItems();
@@ -232,6 +384,7 @@ function AdminMenu() {
       imageUrl: item.imageUrl || '',
       cloverItemId: item.cloverItemId || null,
       squareItemId: item.squareItemId || null,
+      categoryId: item.categoryId || '',
     });
     setIsModalOpen(true);
   };
@@ -350,7 +503,8 @@ function AdminMenu() {
         stockQuantity: parseInt(modalForm.stockQuantity),
         pointsToRedeem: modalForm.isRewardItem && modalForm.pointsToRedeem
           ? parseInt(modalForm.pointsToRedeem)
-          : null
+          : null,
+        categoryId: modalForm.categoryId ? parseInt(modalForm.categoryId) : null
       };
 
       await adminApiUtils.updateMenuItem(selectedItem.id, itemData);
@@ -372,6 +526,7 @@ function AdminMenu() {
         isFeatured: false,
         isRewardItem: false,
         pointsToRedeem: '',
+        categoryId: '',
       });
     }
   };
@@ -457,34 +612,49 @@ function AdminMenu() {
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                <Input
-                  placeholder="Search menu items..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Filter size={16} className="text-gray-500" />
-                <select
-                  value={filterFeatured}
-                  onChange={(e) => setFilterFeatured(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                >
-                  <option value="all">All Items</option>
-                  <option value="featured">Featured Only</option>
-                  <option value="regular">Regular Only</option>
-                </select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Tabs for Menu Items and Categories */}
+        <Tabs defaultValue="items" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="items">
+              <UtensilsCrossed size={16} className="mr-2" />
+              Menu Items
+            </TabsTrigger>
+            <TabsTrigger value="categories">
+              <FolderOpen size={16} className="mr-2" />
+              Categories
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Menu Items Tab */}
+          <TabsContent value="items" className="mt-6 space-y-6">
+            {/* Search and Filters */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <Input
+                      placeholder="Search menu items..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Filter size={16} className="text-gray-500" />
+                    <select
+                      value={filterFeatured}
+                      onChange={(e) => setFilterFeatured(e.target.value)}
+                      className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    >
+                      <option value="all">All Items</option>
+                      <option value="featured">Featured Only</option>
+                      <option value="regular">Regular Only</option>
+                    </select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
         {/* Plan Upgrade Prompt for Starter users */}
         {planType === 'BASIC' && (
@@ -563,7 +733,7 @@ function AdminMenu() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Stock Quantity *
@@ -581,6 +751,22 @@ function AdminMenu() {
                       required
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category (Optional)
+                  </label>
+                  <select
+                    name="categoryId"
+                    value={form.categoryId}
+                    onChange={handleChange}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">No Category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex items-center h-full pt-6">
                   <label className="flex items-center cursor-pointer">
@@ -708,6 +894,133 @@ function AdminMenu() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          {/* Categories Tab */}
+          <TabsContent value="categories" className="mt-6 space-y-6">
+            {/* Add New Category Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus size={20} />
+                  Add New Category
+                </CardTitle>
+                <CardDescription>
+                  Create menu categories to organize your items
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCategorySubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Category Name *
+                      </label>
+                      <Input
+                        type="text"
+                        name="name"
+                        placeholder="e.g., Appetizers, Main Courses"
+                        value={categoryForm.name}
+                        onChange={handleCategoryChange}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description (Optional)
+                      </label>
+                      <Input
+                        type="text"
+                        name="description"
+                        placeholder="Brief description of this category"
+                        value={categoryForm.description}
+                        onChange={handleCategoryChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={categoryLoading}>
+                      {categoryLoading ? (
+                        <ClipLoader color="#ffffff" size={20} />
+                      ) : (
+                        <>
+                          <Plus size={16} className="mr-2" />
+                          Add Category
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Categories List Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FolderOpen size={20} />
+                  All Categories
+                </CardTitle>
+                <CardDescription>
+                  {categories.length} {categories.length === 1 ? 'category' : 'categories'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingCategories ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <ClipLoader color="#4F46E5" size={40} />
+                      <p className="mt-4 text-gray-600">Loading categories...</p>
+                    </div>
+                  </div>
+                ) : categories.length > 0 ? (
+                  <div className="space-y-3">
+                    {categories.map(category => (
+                      <div
+                        key={category.id}
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-800">{category.name}</h4>
+                          {category.description && (
+                            <p className="text-sm text-gray-600 mt-1">{category.description}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCategoryEditClick(category)}
+                          >
+                            <Edit size={14} className="mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => confirmCategoryDelete(category)}
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 size={14} className="mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <FolderOpen size={48} className="mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
+                    <p className="text-gray-500">
+                      Add your first category above to organize your menu items!
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Update Item Modal */}
@@ -804,7 +1117,7 @@ function AdminMenu() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Stock Quantity *
@@ -821,6 +1134,27 @@ function AdminMenu() {
                   required
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category (Optional)
+              </label>
+              <select
+                name="categoryId"
+                value={modalForm.categoryId}
+                onChange={handleModalChange}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">No Category</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              {isPOSSynced(selectedItem) && (
+                <p className="text-xs text-blue-600 mt-1">
+                  Categories can be set for POS-synced items
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-3 pt-6">
               <label className="flex items-center cursor-pointer">
@@ -924,6 +1258,88 @@ function AdminMenu() {
                   pointsToRedeem: '',
                 });
                 setIsModalOpen(false);
+              }}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Category Edit Modal */}
+      <Modal
+        isOpen={isCategoryModalOpen}
+        onRequestClose={() => {
+          setIsCategoryModalOpen(false);
+          setCategoryForm({ name: '', description: '' });
+          setEditingCategory(null);
+        }}
+        contentLabel="Edit Category"
+        className="relative bg-white w-full max-w-md mx-auto mt-8 p-6 rounded-lg shadow-lg focus:outline-none"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center z-50 p-4"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Edit Category</h2>
+          <button
+            type="button"
+            onClick={() => {
+              setIsCategoryModalOpen(false);
+              setCategoryForm({ name: '', description: '' });
+              setEditingCategory(null);
+            }}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+            aria-label="Close modal"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleCategoryUpdateSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category Name *
+            </label>
+            <Input
+              type="text"
+              name="name"
+              value={categoryForm.name}
+              onChange={handleCategoryChange}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description (Optional)
+            </label>
+            <Input
+              type="text"
+              name="description"
+              value={categoryForm.description}
+              onChange={handleCategoryChange}
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="submit"
+              disabled={categoryLoading}
+              className="flex-1"
+            >
+              {categoryLoading ? (
+                <ClipLoader color="#ffffff" size={20} />
+              ) : (
+                <>
+                  <Edit size={16} className="mr-2" />
+                  Update Category
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setIsCategoryModalOpen(false);
+                setCategoryForm({ name: '', description: '' });
+                setEditingCategory(null);
               }}
               variant="outline"
             >

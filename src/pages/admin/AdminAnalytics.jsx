@@ -509,35 +509,45 @@ function AdminAnalytics() {
               <CardDescription>Revenue breakdown by menu category</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={performanceStats.categoryPerformance || []}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percentage }) => `${name}: ${percentage}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="percentage"
-                  >
-                    {(performanceStats.categoryPerformance || []).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value, name, props) => [
-                      `${value}% ($${parseFloat(props.payload.revenue || 0).toFixed(2)})`,
-                      props.payload.name
-                    ]}
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {(performanceStats.categoryPerformance || []).length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={performanceStats.categoryPerformance || []}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percentage }) => `${name}: ${percentage}%`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="percentage"
+                    >
+                      {(performanceStats.categoryPerformance || []).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value, name, props) => [
+                        `${value}% ($${parseFloat(props.payload.revenue || 0).toFixed(2)})`,
+                        props.payload.name
+                      ]}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <Package className="h-12 w-12 mb-3 text-gray-400" />
+                  <p className="text-sm font-medium">No category data available</p>
+                  <p className="text-xs mt-1 text-center max-w-xs">
+                    Assign categories to menu items in Menu Management to see performance breakdown
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

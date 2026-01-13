@@ -2239,6 +2239,21 @@ function AdminSettings() {
                           {' '}to add these fields manually for better customer experience.
                         </AlertDescription>
                       </Alert>
+
+                      <Alert className="mt-4 border-amber-200 bg-amber-50">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800">
+                          <strong>Category Assignment:</strong> Clover categories are not synced.
+                          Assign categories to your menu items via{' '}
+                          <button
+                            onClick={() => setActiveTab('menu')}
+                            className="text-amber-600 underline font-semibold hover:text-amber-700"
+                          >
+                            Menu Management → Categories tab
+                          </button>
+                          {' '}for better organization and accurate category analytics.
+                        </AlertDescription>
+                      </Alert>
                     </div>
 
                     <Alert>
@@ -2457,6 +2472,21 @@ function AdminSettings() {
                         <AlertDescription>
                           Click "Sync Menu" to pull the latest menu items from your Square POS.
                           This will create new items and update existing ones with current pricing and availability.
+                        </AlertDescription>
+                      </Alert>
+
+                      <Alert className="mt-4 border-amber-200 bg-amber-50">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800">
+                          <strong>Category Assignment:</strong> Square categories are not synced.
+                          Assign categories to your menu items via{' '}
+                          <button
+                            onClick={() => setActiveTab('menu')}
+                            className="text-amber-600 underline font-semibold hover:text-amber-700"
+                          >
+                            Menu Management → Categories tab
+                          </button>
+                          {' '}for better organization and accurate category analytics.
                         </AlertDescription>
                       </Alert>
                     </div>

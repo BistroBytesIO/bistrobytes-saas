@@ -145,6 +145,15 @@ export const adminEndpoints = {
     root: '/admin/custom-domains',
     verify: '/admin/custom-domains/verify',
     checkCertificate: '/admin/custom-domains/check-certificate'
+  },
+
+  // Category Management
+  categories: {
+    all: '/api/categories',
+    byId: (id) => `/api/categories/${id}`,
+    create: '/api/categories',
+    update: (id) => `/api/categories/${id}`,
+    delete: (id) => `/api/categories/${id}`
   }
 };
 
@@ -246,6 +255,34 @@ export const adminApiUtils = {
    */
   deleteMenuItemImage: function (itemId) {
     return this.withRetry(() => adminApi.delete(`/admin/menu/${itemId}/image`));
+  },
+
+  /**
+   * Get all categories
+   */
+  getCategories: function () {
+    return this.withRetry(() => adminApi.get(adminEndpoints.categories.all));
+  },
+
+  /**
+   * Create new category
+   */
+  createCategory: function (categoryData) {
+    return this.withRetry(() => adminApi.post(adminEndpoints.categories.create, categoryData));
+  },
+
+  /**
+   * Update category
+   */
+  updateCategory: function (categoryId, categoryData) {
+    return this.withRetry(() => adminApi.put(adminEndpoints.categories.update(categoryId), categoryData));
+  },
+
+  /**
+   * Delete category
+   */
+  deleteCategory: function (categoryId) {
+    return this.withRetry(() => adminApi.delete(adminEndpoints.categories.delete(categoryId)));
   }
 };
 
