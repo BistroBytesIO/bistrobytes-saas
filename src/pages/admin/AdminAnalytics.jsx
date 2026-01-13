@@ -517,7 +517,9 @@ function AdminAnalytics() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percentage }) => `${name}: ${percentage}%`}
+                      label={({ name, percentage }) =>
+                        `${name}: ${Number(percentage).toFixed(2)}%`
+                      }
                       outerRadius={100}
                       fill="#8884d8"
                       dataKey="percentage"
@@ -528,7 +530,9 @@ function AdminAnalytics() {
                     </Pie>
                     <Tooltip
                       formatter={(value, name, props) => [
-                        `${value}% ($${parseFloat(props.payload.revenue || 0).toFixed(2)})`,
+                        `${Number(value).toFixed(2)}% ($${parseFloat(
+                          props.payload.revenue || 0
+                        ).toFixed(2)})`,
                         props.payload.name
                       ]}
                       contentStyle={{
