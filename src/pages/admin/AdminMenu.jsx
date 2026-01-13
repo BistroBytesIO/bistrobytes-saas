@@ -615,18 +615,18 @@ function AdminMenu() {
         {/* Tabs for Menu Items and Categories */}
         <Tabs defaultValue="items" className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="items">
+            <TabsTrigger tabValue="items">
               <UtensilsCrossed size={16} className="mr-2" />
               Menu Items
             </TabsTrigger>
-            <TabsTrigger value="categories">
+            <TabsTrigger tabValue="categories">
               <FolderOpen size={16} className="mr-2" />
               Categories
             </TabsTrigger>
           </TabsList>
 
           {/* Menu Items Tab */}
-          <TabsContent value="items" className="mt-6 space-y-6">
+          <TabsContent tabValue="items" className="mt-6 space-y-6">
             {/* Search and Filters */}
             <Card>
               <CardContent className="p-4">
@@ -897,7 +897,7 @@ function AdminMenu() {
           </TabsContent>
 
           {/* Categories Tab */}
-          <TabsContent value="categories" className="mt-6 space-y-6">
+          <TabsContent tabValue="categories" className="mt-6 space-y-6">
             {/* Add New Category Card */}
             <Card>
               <CardHeader>
