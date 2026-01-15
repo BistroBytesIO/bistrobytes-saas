@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw, Globe2, ShieldCheck, AlertTriangle, Info, Trash2 } from 'lucide-react';
+import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw, Globe2, ShieldCheck, AlertTriangle, Info, Trash2, Crop } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminApiUtils } from '@/services/adminApi';
+import ImageCropModal from '@/components/admin/ImageCropModal';
 
 const defaultHours = {
   monday: { open: '09:00', close: '17:00', closed: false },
@@ -54,6 +55,7 @@ function AdminSettings() {
 
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
+  const [cropModalOpen, setCropModalOpen] = useState(false);
 
   const [hours, setHours] = useState(defaultHours);
 
@@ -1164,20 +1166,43 @@ function AdminSettings() {
                     {logoPreview && (
                       <div className="flex items-center justify-between">
                         <p className="text-xs text-green-600">✓ Logo uploaded</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setLogoPreview('');
-                            setLogoFile(null);
-                            setBranding({ ...branding, logoUrl: '' });
-                          }}
-                        >
-                          Remove
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCropModalOpen(true)}
+                          >
+                            <Crop className="h-4 w-4 mr-1" />
+                            Crop
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setLogoPreview('');
+                              setLogoFile(null);
+                              setBranding({ ...branding, logoUrl: '' });
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </div>
                     )}
+
+                    {/* Image Crop Modal */}
+                    <ImageCropModal
+                      isOpen={cropModalOpen}
+                      onClose={() => setCropModalOpen(false)}
+                      imageSrc={logoPreview}
+                      onCropComplete={(croppedImage) => {
+                        setLogoPreview(croppedImage);
+                        setBranding({ ...branding, logoUrl: croppedImage });
+                        toast.success('Logo cropped successfully');
+                      }}
+                    />
                   </div>
                 </div>
                 <div className="flex justify-end">
