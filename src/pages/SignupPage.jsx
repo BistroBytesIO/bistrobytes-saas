@@ -210,6 +210,37 @@ const SignupPage = () => {
     fetchPlans()
   }, [])
 
+  // Browser history support for back button navigation
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state && typeof event.state.step === 'number') {
+        setStep(event.state.step)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  // Update URL and history when step changes
+  useEffect(() => {
+    if (step >= 1 && step <= 5) {
+      const url = new URL(window.location.href)
+      url.searchParams.set('step', step.toString())
+      // Preserve other params like 'plan'
+      window.history.pushState({ step }, '', url.toString())
+    }
+  }, [step])
+
+  // Initialize step from URL on mount
+  useEffect(() => {
+    const urlStep = parseInt(searchParams.get('step'))
+    if (urlStep >= 1 && urlStep <= 5) {
+      setStep(urlStep)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Define fields to validate for each step
   const getFieldsForStep = (stepNumber) => {
     switch (stepNumber) {
@@ -235,11 +266,13 @@ const SignupPage = () => {
 
     if (isValid) {
       setStep(step + 1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
   const prevStep = () => {
     setStep(step - 1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleStripeCheckout = async (data) => {
@@ -422,6 +455,9 @@ const SignupPage = () => {
                 rows={3}
                 placeholder="Tell customers about your business' story, offerings, and what makes you unique..."
               />
+              <p className="text-sm text-gray-500 mt-1">
+                This description will be displayed in the "About" section on your business homepage.
+              </p>
             </div>
             
             <div>
@@ -1239,7 +1275,10 @@ const SignupPage = () => {
                   ) : step === 4 ? (
                     <Button
                       type="button"
-                      onClick={() => setStep(5)}
+                      onClick={() => {
+                        setStep(5)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
                       className="min-w-[140px]"
                     >
                       Continue to Payment
