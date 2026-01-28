@@ -3,6 +3,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
 import adminApi, { adminApiUtils } from '@/services/adminApi';
 import useWebSocket from '@/hooks/useWebSocket';
+import usePosStatus from '@/hooks/usePosStatus';
 import soundService from '@/services/soundService';
 import ClipLoader from 'react-spinners/ClipLoader';
 import toast from 'react-hot-toast';
@@ -14,7 +15,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Clock, 
   CheckCircle, 
-  AlertCircle, 
+  AlertCircle,
+  Info, 
   Wifi, 
   WifiOff, 
   ShoppingBag,
@@ -32,6 +34,7 @@ function AdminReadyForPickup() {
   const [orders, setOrders] = useState([]);
   const [loadingOrderId, setLoadingOrderId] = useState(null);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const { hasPosIntegration, posProvider, isLoading: isPosStatusLoading } = usePosStatus();
   
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -315,6 +318,20 @@ function AdminReadyForPickup() {
           </Alert>
         )}
 
+        {/* PoS Sync Notice */}
+        {!isPosStatusLoading && hasPosIntegration && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription>
+              <p className="font-medium text-blue-900">Order status is managed by {posProvider} PoS</p>
+              <p className="text-sm text-blue-800">
+                Mark orders as picked up in your {posProvider} system and BistroBytes will sync automatically.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+
         {/* Loading State */}
         {isLoadingOrders ? (
           <Card>
@@ -342,6 +359,11 @@ function AdminReadyForPickup() {
                             <CheckCircle size={12} />
                             Ready for Pickup
                           </Badge>
+                          {order.statusUpdatedBy && (
+                            <Badge className="bg-blue-50 text-blue-700 border border-blue-200">
+                              {order.statusUpdatedBy === 'MANUAL' ? 'Via BistroBytes' : `Via ${posProvider || 'PoS'}`}
+                            </Badge>
+                          )}
                         </div>
                         <div className="text-right">
                           <div className="flex items-center text-sm text-gray-500 mb-1">
@@ -354,6 +376,7 @@ function AdminReadyForPickup() {
                         </div>
                       </div>
                     </CardHeader>
+
 
                     <CardContent className="p-6">
                       {/* Customer Info */}
@@ -438,20 +461,33 @@ function AdminReadyForPickup() {
                       )}
 
                       {/* Action Button */}
-                      <Button
-                        onClick={() => markAsPickedUp(order.id)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        disabled={loadingOrderId === order.id}
-                      >
-                        {loadingOrderId === order.id ? (
-                          <ClipLoader color="#ffffff" size={20} />
-                        ) : (
-                          <>
-                            <ShoppingBag size={18} className="mr-2" />
-                            Mark as Picked Up
-                          </>
-                        )}
-                      </Button>
+                      {hasPosIntegration ? (
+                        <Alert className="border-blue-200 bg-blue-50">
+                          <Info className="h-4 w-4 text-blue-600" />
+                          <AlertDescription>
+                            <p className="font-medium text-blue-900">Status synced via {posProvider}</p>
+                            <p className="text-sm text-blue-800">
+                              Mark this order as picked up in {posProvider} to update BistroBytes.
+                            </p>
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Button
+                          onClick={() => markAsPickedUp(order.id)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                          disabled={loadingOrderId === order.id}
+                        >
+                          {loadingOrderId === order.id ? (
+                            <ClipLoader color="#ffffff" size={20} />
+                          ) : (
+                            <>
+                              <ShoppingBag size={18} className="mr-2" />
+                              Mark as Picked Up
+                            </>
+                          )}
+                        </Button>
+                      )}
+
                     </CardContent>
                   </Card>
                 ))}

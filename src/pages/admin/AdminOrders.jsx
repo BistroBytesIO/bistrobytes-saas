@@ -3,6 +3,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
 import adminApi, { adminApiUtils } from '@/services/adminApi';
 import useWebSocket from '@/hooks/useWebSocket';
+import usePosStatus from '@/hooks/usePosStatus';
 import soundService from '@/services/soundService';
 import ClipLoader from 'react-spinners/ClipLoader';
 import toast from 'react-hot-toast';
@@ -14,7 +15,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Clock, 
   Check, 
+  CheckCircle,
   AlertCircle, 
+  Info,
   Wifi, 
   WifiOff, 
   Volume2, 
@@ -35,6 +38,7 @@ function AdminOrders() {
   const [loadingOrderId, setLoadingOrderId] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const { hasPosIntegration, posProvider, isLoading: isPosStatusLoading } = usePosStatus();
   
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -332,6 +336,20 @@ function AdminOrders() {
           </Alert>
         )}
 
+        {/* PoS Sync Notice */}
+        {!isPosStatusLoading && hasPosIntegration && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription>
+              <p className="font-medium text-blue-900">Order status is managed by {posProvider} PoS</p>
+              <p className="text-sm text-blue-800">
+                Mark orders as ready in your {posProvider} system and BistroBytes will sync the status automatically.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+
         {/* Loading State */}
         {isLoadingOrders ? (
           <Card>
@@ -355,6 +373,11 @@ function AdminOrders() {
                         <div className="flex items-center gap-2">
                           <ShoppingBag size={18} className="text-gray-600" />
                           <CardTitle className="text-lg">Order #{order.id}</CardTitle>
+                          {order.statusUpdatedBy && (
+                            <Badge className="bg-blue-50 text-blue-700 border border-blue-200">
+                              {order.statusUpdatedBy === 'MANUAL' ? 'Via BistroBytes' : `Via ${posProvider || 'PoS'}`}
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <Clock size={14} className="mr-1" />
@@ -362,6 +385,7 @@ function AdminOrders() {
                         </div>
                       </div>
                     </CardHeader>
+
 
                     <CardContent className="p-6">
                       {/* Customer & Payment Info */}
@@ -457,20 +481,33 @@ function AdminOrders() {
                       )}
 
                       {/* Action Button */}
-                      <Button
-                        onClick={() => markAsReady(order.id)}
-                        className="w-full bg-primary hover:bg-primary/90 text-white"
-                        disabled={loadingOrderId === order.id}
-                      >
-                        {loadingOrderId === order.id ? (
-                          <ClipLoader color="#ffffff" size={20} />
-                        ) : (
-                          <>
-                            <Check size={18} className="mr-2" />
-                            Mark Ready for Pickup
-                          </>
-                        )}
-                      </Button>
+                      {hasPosIntegration ? (
+                        <Alert className="border-blue-200 bg-blue-50">
+                          <Info className="h-4 w-4 text-blue-600" />
+                          <AlertDescription>
+                            <p className="font-medium text-blue-900">Status synced via {posProvider}</p>
+                            <p className="text-sm text-blue-800">
+                              Mark this order as ready in {posProvider} to update BistroBytes.
+                            </p>
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Button
+                          onClick={() => markAsReady(order.id)}
+                          className="w-full bg-primary hover:bg-primary/90 text-white"
+                          disabled={loadingOrderId === order.id}
+                        >
+                          {loadingOrderId === order.id ? (
+                            <ClipLoader color="#ffffff" size={20} />
+                          ) : (
+                            <>
+                              <Check size={18} className="mr-2" />
+                              Mark Ready for Pickup
+                            </>
+                          )}
+                        </Button>
+                      )}
+
                     </CardContent>
                   </Card>
                 ))}
