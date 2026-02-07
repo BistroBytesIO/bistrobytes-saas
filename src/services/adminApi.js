@@ -479,4 +479,9 @@ adminApiUtils.validatePromoCode = function (validationData) {
   return this.withRetry(() => adminApi.post('/admin/promo-codes/validate', validationData));
 };
 
+// Fulfillment Type Configuration utilities
+adminApiUtils.updateFulfillmentType = function (fulfillmentType) {
+  return this.withRetry(() => adminApi.put('/admin/tenant/fulfillment-type', { fulfillmentType }));
+};
+
 export default adminApi;

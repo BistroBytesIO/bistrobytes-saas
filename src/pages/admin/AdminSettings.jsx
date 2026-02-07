@@ -123,8 +123,12 @@ function AdminSettings() {
 
   // Tenant configuration state
   const [tenantConfig, setTenantConfig] = useState({
-    posProvider: 'none' // none, clover, square
+    posProvider: 'none', // none, clover, square
+    defaultFulfillmentType: 'PICKUP' // PICKUP, SHIPMENT, DELIVERY
   });
+
+  // Fulfillment type saving state
+  const [fulfillmentSaving, setFulfillmentSaving] = useState(false);
 
   // Payment configuration state
   const [paymentConfig, setPaymentConfig] = useState({
@@ -153,9 +157,10 @@ function AdminSettings() {
         // First load tenant config to know which POS provider to load
         const tenantConfigResponse = await adminApiUtils.getTenantConfig();
         const posProvider = tenantConfigResponse?.data?.posProvider || 'none';
-        
+        const defaultFulfillmentType = tenantConfigResponse?.data?.defaultFulfillmentType || 'PICKUP';
+
         // Set tenant config first
-        setTenantConfig(prev => ({ ...prev, posProvider }));
+        setTenantConfig(prev => ({ ...prev, posProvider, defaultFulfillmentType }));
 
         // Build the promise array based on POS provider
         const promises = [
@@ -781,6 +786,27 @@ function AdminSettings() {
       toast.error('Failed to sync menu items from Clover', { id: 'menu-sync' });
     } finally {
       setMenuSyncStatus(prev => ({ ...prev, syncing: false }));
+    }
+  };
+
+  // Fulfillment type handler
+  const handleFulfillmentTypeChange = async (fulfillmentType) => {
+    if (tenantConfig.defaultFulfillmentType === fulfillmentType) return;
+
+    setFulfillmentSaving(true);
+    try {
+      const response = await adminApiUtils.updateFulfillmentType(fulfillmentType);
+      if (response.data.success) {
+        setTenantConfig(prev => ({ ...prev, defaultFulfillmentType: fulfillmentType }));
+        toast.success(`Fulfillment type updated to ${fulfillmentType.toLowerCase()}`);
+      } else {
+        toast.error(response.data.error || 'Failed to update fulfillment type');
+      }
+    } catch (error) {
+      console.error('Error updating fulfillment type:', error);
+      toast.error('Failed to update fulfillment type');
+    } finally {
+      setFulfillmentSaving(false);
     }
   };
 
@@ -2201,6 +2227,61 @@ function AdminSettings() {
                       </Button>
                     </div>
 
+                    {/* Fulfillment Type Section */}
+                    <div className="border-t pt-4 mt-6">
+                      <div className="mb-4">
+                        <h3 className="text-lg font-medium">Order Fulfillment Type</h3>
+                        <p className="text-sm text-gray-600">Choose how orders are fulfilled when synced to Clover POS</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleFulfillmentTypeChange('PICKUP')}
+                          disabled={fulfillmentSaving}
+                          className={`p-4 border-2 rounded-lg text-left transition-all ${
+                            tenantConfig.defaultFulfillmentType === 'PICKUP'
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="font-medium">Pickup</div>
+                          <div className="text-sm text-gray-600">Customer picks up at location (restaurants, cafes)</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFulfillmentTypeChange('SHIPMENT')}
+                          disabled={fulfillmentSaving}
+                          className={`p-4 border-2 rounded-lg text-left transition-all ${
+                            tenantConfig.defaultFulfillmentType === 'SHIPMENT'
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="font-medium">Shipment</div>
+                          <div className="text-sm text-gray-600">Products shipped to customer (retail, e-commerce)</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFulfillmentTypeChange('DELIVERY')}
+                          disabled={fulfillmentSaving}
+                          className={`p-4 border-2 rounded-lg text-left transition-all ${
+                            tenantConfig.defaultFulfillmentType === 'DELIVERY'
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="font-medium">Delivery</div>
+                          <div className="text-sm text-gray-600">Orders delivered to customer address</div>
+                        </button>
+                      </div>
+                      {fulfillmentSaving && (
+                        <div className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Saving...
+                        </div>
+                      )}
+                    </div>
+
                     {/* Menu Sync Section */}
                     <div className="border-t pt-4 mt-6">
                       <div className="flex justify-between items-center mb-4">
@@ -2208,7 +2289,7 @@ function AdminSettings() {
                           <h3 className="text-lg font-medium">Menu Synchronization</h3>
                           <p className="text-sm text-gray-600">Sync menu items from your Clover POS to BizBytes</p>
                         </div>
-                        <Button 
+                        <Button
                           onClick={handleMenuSync}
                           disabled={menuSyncStatus.syncing}
                           className="bg-blue-600 hover:bg-blue-700"
@@ -2449,6 +2530,61 @@ function AdminSettings() {
                         )}
                         Disconnect
                       </Button>
+                    </div>
+
+                    {/* Fulfillment Type Section */}
+                    <div className="border-t pt-4 mt-6">
+                      <div className="mb-4">
+                        <h3 className="text-lg font-medium">Order Fulfillment Type</h3>
+                        <p className="text-sm text-gray-600">Choose how orders are fulfilled when synced to Square POS</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleFulfillmentTypeChange('PICKUP')}
+                          disabled={fulfillmentSaving}
+                          className={`p-4 border-2 rounded-lg text-left transition-all ${
+                            tenantConfig.defaultFulfillmentType === 'PICKUP'
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="font-medium">Pickup</div>
+                          <div className="text-sm text-gray-600">Customer picks up at location (restaurants, cafes)</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFulfillmentTypeChange('SHIPMENT')}
+                          disabled={fulfillmentSaving}
+                          className={`p-4 border-2 rounded-lg text-left transition-all ${
+                            tenantConfig.defaultFulfillmentType === 'SHIPMENT'
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="font-medium">Shipment</div>
+                          <div className="text-sm text-gray-600">Products shipped to customer (retail, e-commerce)</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFulfillmentTypeChange('DELIVERY')}
+                          disabled={fulfillmentSaving}
+                          className={`p-4 border-2 rounded-lg text-left transition-all ${
+                            tenantConfig.defaultFulfillmentType === 'DELIVERY'
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="font-medium">Delivery</div>
+                          <div className="text-sm text-gray-600">Orders delivered to customer address</div>
+                        </button>
+                      </div>
+                      {fulfillmentSaving && (
+                        <div className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Saving...
+                        </div>
+                      )}
                     </div>
 
                     {/* Menu Sync Section */}
