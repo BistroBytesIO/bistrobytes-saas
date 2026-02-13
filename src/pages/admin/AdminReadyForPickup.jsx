@@ -56,15 +56,6 @@ function AdminReadyForPickup() {
     // Refresh orders list when there are updates
     if (notification.notificationType === 'ORDER_STATUS_UPDATE' || notification.notificationType === 'NEW_ORDER') {
       fetchOrders();
-      
-      // Show toast for status updates
-      if (notification.message && notification.message.includes('READY_FOR_PICKUP')) {
-        toast.success(`Order #${notification.orderId} is ready for pickup!`, {
-          icon: '✅',
-          duration: 4000,
-        });
-        soundService.playSuccess();
-      }
     }
   };
 

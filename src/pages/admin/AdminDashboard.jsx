@@ -83,15 +83,6 @@ function AdminDashboard() {
       fetchDashboardStats();
       fetchPerformanceStats();
       
-      // Show toast notification
-      toast.success(
-        `New Order #${notification.orderId} - $${notification.orderTotal}`,
-        {
-          duration: 5000,
-          icon: '📋',
-        }
-      );
-      
       // Play notification sound
       soundService.playChaChing();
     } else if (notification.notificationType === 'ORDER_STATUS_UPDATE') {

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useRestaurantAuth } from '@/contexts/RestaurantAuthContext';
+import useWebSocket from '@/hooks/useWebSocket';
 import { Button } from '@/components/ui/button';
+import toast from 'react-hot-toast';
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -25,6 +27,7 @@ const AdminLayout = ({ children }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
 
   const tenantId = getTenantId();
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api';
   const formatSlugToName = (slug) => {
     return (slug || '')
       .split(/[-_]/)
@@ -103,6 +106,43 @@ const AdminLayout = ({ children }) => {
   const handleLogout = () => {
     logout(navigate);
   };
+
+  const handleGlobalWebSocketMessage = (notification) => {
+    if (!notification?.notificationType || !notification?.orderId) {
+      return;
+    }
+
+    if (notification.notificationType === 'NEW_ORDER') {
+      const total = typeof notification.totalAmount === 'number'
+        ? ` - $${notification.totalAmount.toFixed(2)}`
+        : '';
+      toast.success(
+        `New Order #${notification.orderId}${total}`,
+        {
+          id: `new-order-${notification.orderId}`,
+          duration: 5000
+        }
+      );
+      return;
+    }
+
+    if (notification.notificationType === 'ORDER_STATUS_UPDATE') {
+      toast.success(
+        notification.message || `Order #${notification.orderId} status updated`,
+        {
+          id: `status-update-${notification.orderId}-${notification.message || ''}`,
+          duration: 5000
+        }
+      );
+    }
+  };
+
+  useWebSocket(
+    baseUrl,
+    handleGlobalWebSocketMessage,
+    Boolean(tenantId),
+    tenantId
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -11,6 +11,7 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
     const [connectionError, setConnectionError] = useState(null);
     const mountedRef = useRef(true);
     const subscriptionsRef = useRef(new Map());
+    const recentMessagesRef = useRef(new Map());
 
     useEffect(() => {
         if (!enabled) {
@@ -73,6 +74,37 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
 
         console.log('📡 Connecting to WebSocket:', wsUrl);
 
+        const dispatchIncomingMessage = (rawBody) => {
+            if (!mountedRef.current) return;
+
+            // De-duplicate identical payloads received from /topic/orders and /topic/admin/{tenant}
+            const now = Date.now();
+            const duplicateWindowMs = 1500;
+            const lastSeen = recentMessagesRef.current.get(rawBody);
+            if (lastSeen && now - lastSeen < duplicateWindowMs) {
+                return;
+            }
+            recentMessagesRef.current.set(rawBody, now);
+
+            // Prune old entries to keep memory bounded
+            for (const [body, ts] of recentMessagesRef.current.entries()) {
+                if (now - ts > 10000) {
+                    recentMessagesRef.current.delete(body);
+                }
+            }
+
+            try {
+                const notification = JSON.parse(rawBody);
+                if (notification.tenantId === effectiveTenantId) {
+                    onMessage(notification);
+                } else {
+                    console.warn('⚠️ Received message for different tenant, ignoring');
+                }
+            } catch (parseError) {
+                console.error('❌ Error parsing message:', parseError);
+            }
+        };
+
         const client = new Client({
             brokerURL: wsUrl,
 
@@ -90,20 +122,8 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
                 // Subscribe to order notifications (backend broadcasts to /topic/orders)
                 try {
                     const orderSubscription = client.subscribe(`/topic/orders`, (message) => {
-                        if (!mountedRef.current) return; // Component unmounted
-
                         console.log('📨 Received order message:', message.body);
-                        try {
-                            const notification = JSON.parse(message.body);
-                            // Add tenant validation
-                            if (notification.tenantId === effectiveTenantId) {
-                                onMessage(notification);
-                            } else {
-                                console.warn('⚠️ Received message for different tenant, ignoring');
-                            }
-                        } catch (parseError) {
-                            console.error('❌ Error parsing message:', parseError);
-                        }
+                        dispatchIncomingMessage(message.body);
                     });
 
                     subscriptionsRef.current.set('orders', orderSubscription);
@@ -112,17 +132,8 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
                     // Subscribe to general admin notifications for this tenant
                     // Optional: if backend provides a tenant-scoped admin topic
                     const adminSubscription = client.subscribe(`/topic/admin/${effectiveTenantId}`, (message) => {
-                        if (!mountedRef.current) return;
-
                         console.log('📨 Received admin message:', message.body);
-                        try {
-                            const notification = JSON.parse(message.body);
-                            if (notification.tenantId === effectiveTenantId) {
-                                onMessage(notification);
-                            }
-                        } catch (parseError) {
-                            console.error('❌ Error parsing admin message:', parseError);
-                        }
+                        dispatchIncomingMessage(message.body);
                     });
 
                     subscriptionsRef.current.set('admin', adminSubscription);
@@ -209,6 +220,7 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
                 }
             });
             subscriptionsRef.current.clear();
+            recentMessagesRef.current.clear();
 
             if (clientRef.current) {
                 try {

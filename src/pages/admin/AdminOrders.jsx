@@ -61,36 +61,6 @@ function AdminOrders() {
     if (notification.notificationType === 'NEW_ORDER' && soundEnabled) {
       console.log('🔊 Playing cha-ching sound...');
       soundService.playChaChing();
-
-      // Show toast notification
-      toast.success(
-        `New Order #${notification.orderId} from ${notification.customerName}`,
-        {
-          duration: 6000,
-          icon: '🔔',
-          style: {
-            background: '#10B981',
-            color: 'white',
-          },
-        }
-      );
-    }
-
-    // Show toast for order status updates (e.g. from Square/Clover POS webhooks)
-    if (notification.notificationType === 'ORDER_STATUS_UPDATE') {
-      toast.success(
-        notification.message || `Order #${notification.orderId} status updated`,
-        {
-          duration: 5000,
-          style: {
-            background: '#3B82F6',
-            color: 'white',
-          },
-        }
-      );
-      if (soundEnabled) {
-        soundService.playSuccess();
-      }
     }
 
     // Refresh orders list
