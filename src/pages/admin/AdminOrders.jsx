@@ -38,7 +38,10 @@ function AdminOrders() {
   const [loadingOrderId, setLoadingOrderId] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [paymentProcessor, setPaymentProcessor] = useState(null);
+  const [isLoadingPaymentConfig, setIsLoadingPaymentConfig] = useState(true);
   const { hasPosIntegration, posProvider, isLoading: isPosStatusLoading } = usePosStatus();
+  const canUseManualStatusActions = !isLoadingPaymentConfig && paymentProcessor === 'STRIPE' && !hasPosIntegration;
   
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,12 +56,12 @@ function AdminOrders() {
   
   const handleWebSocketMessage = (notification) => {
     console.log('📥 AdminOrders received WebSocket notification:', notification);
-    
+
     // Play sound for new orders
     if (notification.notificationType === 'NEW_ORDER' && soundEnabled) {
       console.log('🔊 Playing cha-ching sound...');
       soundService.playChaChing();
-      
+
       // Show toast notification
       toast.success(
         `New Order #${notification.orderId} from ${notification.customerName}`,
@@ -72,7 +75,24 @@ function AdminOrders() {
         }
       );
     }
-    
+
+    // Show toast for order status updates (e.g. from Square/Clover POS webhooks)
+    if (notification.notificationType === 'ORDER_STATUS_UPDATE') {
+      toast.success(
+        notification.message || `Order #${notification.orderId} status updated`,
+        {
+          duration: 5000,
+          style: {
+            background: '#3B82F6',
+            color: 'white',
+          },
+        }
+      );
+      if (soundEnabled) {
+        soundService.playSuccess();
+      }
+    }
+
     // Refresh orders list
     console.log('🔄 Refreshing orders list...');
     fetchOrders();
@@ -130,6 +150,7 @@ function AdminOrders() {
   useEffect(() => {
     console.log('🚀 AdminOrders component mounted');
     fetchOrders();
+    fetchPaymentConfig();
   }, []);
 
   // Update sound service when sound preference changes
@@ -155,6 +176,19 @@ function AdminOrders() {
       toast.error('Failed to fetch orders');
     } finally {
       setIsLoadingOrders(false);
+    }
+  };
+
+  const fetchPaymentConfig = async () => {
+    setIsLoadingPaymentConfig(true);
+    try {
+      const response = await adminApiUtils.getPaymentConfig();
+      setPaymentProcessor(response?.data?.paymentProcessor || null);
+    } catch (error) {
+      console.error('❌ Error fetching payment configuration:', error);
+      setPaymentProcessor(null);
+    } finally {
+      setIsLoadingPaymentConfig(false);
     }
   };
 
@@ -348,6 +382,17 @@ function AdminOrders() {
             </AlertDescription>
           </Alert>
         )}
+        {!isPosStatusLoading && !isLoadingPaymentConfig && !hasPosIntegration && paymentProcessor !== 'STRIPE' && (
+          <Alert className="border-amber-200 bg-amber-50">
+            <Info className="h-4 w-4 text-amber-600" />
+            <AlertDescription>
+              <p className="font-medium text-amber-900">Manual status controls are unavailable</p>
+              <p className="text-sm text-amber-800">
+                Manual order status buttons are available only when Stripe is the selected payment processor and no PoS is connected.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
 
 
         {/* Loading State */}
@@ -481,14 +526,25 @@ function AdminOrders() {
                       )}
 
                       {/* Action Button */}
-                      {hasPosIntegration ? (
+                      {!canUseManualStatusActions ? (
                         <Alert className="border-blue-200 bg-blue-50">
                           <Info className="h-4 w-4 text-blue-600" />
                           <AlertDescription>
-                            <p className="font-medium text-blue-900">Status synced via {posProvider}</p>
-                            <p className="text-sm text-blue-800">
-                              Mark this order as ready in {posProvider} to update BistroBytes.
-                            </p>
+                            {hasPosIntegration ? (
+                              <>
+                                <p className="font-medium text-blue-900">Status synced via {posProvider}</p>
+                                <p className="text-sm text-blue-800">
+                                  Mark this order as ready in {posProvider} to update BistroBytes.
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="font-medium text-blue-900">Manual status updates are disabled</p>
+                                <p className="text-sm text-blue-800">
+                                  Select Stripe as your payment processor with no PoS connected to enable this action.
+                                </p>
+                              </>
+                            )}
                           </AlertDescription>
                         </Alert>
                       ) : (
