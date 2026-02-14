@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import api from '@/lib/api';
 import { adminApiUtils } from '@/services/adminApi';
 
@@ -16,24 +16,10 @@ export const RestaurantAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const logoutTimerRef = useRef(null);
-
-  const decodeJwt = (token) => {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      return null;
-    }
-  };
 
   // Initialize auth state from localStorage
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
         const storedUser = localStorage.getItem('restaurant_user');
         const storedRestaurant = localStorage.getItem('restaurant_data');
@@ -42,10 +28,6 @@ export const RestaurantAuthProvider = ({ children }) => {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
 
-          // Set up axios default headers for authenticated requests
-          if (parsedUser.token) {
-            api.defaults.headers.common['Authorization'] = `Bearer ${parsedUser.token}`;
-          }
           if (parsedUser.tenantId) {
             api.defaults.headers.common['X-Tenant-Id'] = parsedUser.tenantId;
           }
@@ -59,11 +41,39 @@ export const RestaurantAuthProvider = ({ children }) => {
         console.error("Error parsing stored auth data, clearing localStorage:", error);
         localStorage.removeItem('restaurant_user');
         localStorage.removeItem('restaurant_data');
-        // Clear any default headers
-        delete api.defaults.headers.common['Authorization'];
         delete api.defaults.headers.common['X-Tenant-Id'];
       } finally {
         setIsLoading(false);
+      }
+
+      // If we have a tenant context, confirm the session from the HttpOnly cookie.
+      try {
+        const tenantId = (() => {
+          try {
+            const s = localStorage.getItem('restaurant_user');
+            if (!s) return null;
+            const u = JSON.parse(s);
+            return u?.tenantId || null;
+          } catch {
+            return null;
+          }
+        })();
+        if (tenantId) {
+          const resp = await api.get('/auth/me', { headers: { 'X-Tenant-Id': tenantId } });
+          const me = resp?.data || null;
+          if (me?.email) {
+            const normalized = {
+              email: me.email,
+              role: me.role?.trim?.().toUpperCase?.() || me.role,
+              tenantId: me.tenantId || tenantId
+            };
+            localStorage.setItem('restaurant_user', JSON.stringify(normalized));
+            setUser(normalized);
+            api.defaults.headers.common['X-Tenant-Id'] = normalized.tenantId;
+          }
+        }
+      } catch {
+        // Cookie session not present/valid; keep local state as-is.
       }
     };
 
@@ -108,19 +118,12 @@ export const RestaurantAuthProvider = ({ children }) => {
       localStorage.setItem('restaurant_user', JSON.stringify(userData));
       setUser(userData);
 
-      // Set up axios default headers for future requests
-      if (userData.token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
-      }
       if (userData.tenantId) {
         api.defaults.headers.common['X-Tenant-Id'] = userData.tenantId;
       }
 
       // Fetch restaurant data if available
       await fetchRestaurantData();
-
-      // Set auto logout timer if token has exp
-      setupAutoLogout(userData.token);
 
       return userData;
     } catch (error) {
@@ -141,14 +144,7 @@ export const RestaurantAuthProvider = ({ children }) => {
     localStorage.removeItem('restaurant_data');
     
     // Clear axios default headers
-    delete api.defaults.headers.common['Authorization'];
     delete api.defaults.headers.common['X-Tenant-Id'];
-
-    // Clear any logout timers
-    if (logoutTimerRef.current) {
-      clearTimeout(logoutTimerRef.current);
-      logoutTimerRef.current = null;
-    }
     
     // Navigate to login page
     if (navigate) {
@@ -231,11 +227,11 @@ export const RestaurantAuthProvider = ({ children }) => {
    * Refresh user token if needed
    */
   const refreshToken = async () => {
-    if (!user?.token) return false;
+    if (!user?.tenantId) return false;
 
     try {
-      // This would implement token refresh logic
-      // For now, just return current state
+      // Cookie-based session: confirm we are still authenticated.
+      await api.get('/auth/me', { headers: { 'X-Tenant-Id': user.tenantId } });
       return true;
     } catch (error) {
       console.error('Token refresh failed:', error);
@@ -248,34 +244,13 @@ export const RestaurantAuthProvider = ({ children }) => {
    * Validate current session
    */
   const validateSession = async () => {
-    if (!user?.token) return false;
-
-    // Prefer client-side validation based on JWT exp
-    const payload = decodeJwt(user.token);
-    if (payload?.exp) {
-      const nowSec = Math.floor(Date.now() / 1000);
-      if (payload.exp <= nowSec) {
-        console.warn('Session expired based on token exp');
-        return false;
-      }
+    if (!user?.tenantId) return false;
+    try {
+      await api.get('/auth/me', { headers: { 'X-Tenant-Id': user.tenantId } });
       return true;
+    } catch {
+      return false;
     }
-    // If no exp claim, assume valid and rely on API failures to prompt logout
-    return true;
-  };
-
-  const setupAutoLogout = (token) => {
-    if (!token) return;
-    const payload = decodeJwt(token);
-    if (!payload?.exp) return;
-    const nowMs = Date.now();
-    const expMs = payload.exp * 1000;
-    const timeout = Math.max(0, expMs - nowMs);
-    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
-    logoutTimerRef.current = setTimeout(() => {
-      console.warn('Auto-logout: token expired');
-      logout();
-    }, timeout);
   };
 
   const contextValue = {

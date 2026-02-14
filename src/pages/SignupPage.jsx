@@ -12,6 +12,7 @@ import { Tooltip } from '../components/ui/tooltip'
 import { Skeleton } from '../components/ui/skeleton'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
+import { safeRedirectToUrl } from '@/utils/safeRedirect'
 
 const SignupPage = () => {
   const [searchParams] = useSearchParams()
@@ -374,7 +375,12 @@ const SignupPage = () => {
       
       if (response.data.success) {
         // Redirect to Stripe Checkout
-        window.location.href = response.data.checkoutUrl
+        const ok = safeRedirectToUrl(response.data.checkoutUrl, {
+          allowedHosts: ['checkout.stripe.com'],
+        })
+        if (!ok) {
+          throw new Error('Refusing to redirect to unexpected URL')
+        }
       } else {
         throw new Error(response.data.error || 'Failed to create checkout session')
       }

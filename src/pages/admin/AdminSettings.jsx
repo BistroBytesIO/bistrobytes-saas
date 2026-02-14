@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Save, Upload, Link2, Unlink, CheckCircle, XCircle, RefreshCw, Globe2, ShieldCheck, AlertTriangle, Info, Trash2, Crop } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { safeRedirectToUrl } from '@/utils/safeRedirect';
 import { adminApiUtils } from '@/services/adminApi';
 import ImageCropModal from '@/components/admin/ImageCropModal';
 
@@ -692,6 +693,18 @@ function AdminSettings() {
   };
 
   // Clover integration handlers
+  const persistOAuthState = (provider, authorizationUrl) => {
+    try {
+      const url = new URL(authorizationUrl, window.location.origin);
+      const state = url.searchParams.get('state');
+      if (state) {
+        sessionStorage.setItem(`oauth_state:${provider}`, JSON.stringify({ state, ts: Date.now() }));
+      }
+    } catch (e) {
+      // If we can't parse, continue; backend should still validate state.
+    }
+  };
+
   const handleCloverConnect = async () => {
     try {
       setCloverStatus(prev => ({ ...prev, loading: true }));
@@ -699,7 +712,11 @@ function AdminSettings() {
       const response = await adminApiUtils.initiateCloverOAuth();
       if (response.data.success && response.data.authorizationUrl) {
         // Redirect to Clover OAuth
-        window.location.href = response.data.authorizationUrl;
+        persistOAuthState('clover', response.data.authorizationUrl);
+        const ok = safeRedirectToUrl(response.data.authorizationUrl, {
+          allowedHosts: ['www.clover.com', 'sandbox.dev.clover.com', 'clover.com'],
+        });
+        if (!ok) throw new Error('Refusing to redirect to unexpected Clover URL');
         // Note: loadPaymentConfig will be called when user returns from OAuth
       } else {
         toast.error('Failed to initiate Clover connection');
@@ -817,7 +834,11 @@ function AdminSettings() {
       const response = await adminApiUtils.initiateSquareOAuth();
       if (response.data.success && response.data.authorizationUrl) {
         // Redirect to Square OAuth
-        window.location.href = response.data.authorizationUrl;
+        persistOAuthState('square', response.data.authorizationUrl);
+        const ok = safeRedirectToUrl(response.data.authorizationUrl, {
+          allowedHosts: ['connect.squareup.com', 'connect.squareupsandbox.com'],
+        });
+        if (!ok) throw new Error('Refusing to redirect to unexpected Square URL');
       } else {
         toast.error('Failed to initiate Square connection');
       }
@@ -892,7 +913,11 @@ function AdminSettings() {
     try {
       const response = await adminApiUtils.initiateStripeOAuth();
       if (response?.data?.authorizationUrl) {
-        window.location.href = response.data.authorizationUrl;
+        persistOAuthState('stripe', response.data.authorizationUrl);
+        const ok = safeRedirectToUrl(response.data.authorizationUrl, {
+          allowedHosts: ['connect.stripe.com'],
+        });
+        if (!ok) throw new Error('Refusing to redirect to unexpected Stripe URL');
         return;
       }
       toast.error('Failed to initiate Stripe connection');

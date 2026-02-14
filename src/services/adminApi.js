@@ -7,43 +7,43 @@ import axios from 'axios';
 const adminApi = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api',
   timeout: 30000, // 30 second timeout for admin operations
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
+const devLogging = !!import.meta.env?.DEV;
+
 /**
- * Request interceptor to attach authentication token and tenant ID
+ * Request interceptor to attach tenant ID. Admin auth is via HttpOnly cookie.
  */
 adminApi.interceptors.request.use(
   (config) => {
     try {
-      // Get user data from localStorage (using restaurant_user key from our auth context)
+      // Get user data from localStorage (non-sensitive; token is not stored client-side)
       const userData = localStorage.getItem('restaurant_user');
       
       if (userData) {
         const user = JSON.parse(userData);
-        
-        // Attach Bearer token
-        if (user.token) {
-          config.headers.Authorization = `Bearer ${user.token}`;
-        }
         
         // Attach tenant ID for multi-tenant requests
         if (user.tenantId) {
           config.headers['X-Tenant-Id'] = user.tenantId;
         }
       } else {
-        console.warn('⚠️ No authentication token found for admin request');
+        console.warn('⚠️ No tenant context found for admin request');
       }
 
       // Log request for debugging
-      console.debug('🚀 Admin API Request:', {
-        method: config.method?.toUpperCase(),
-        url: `${config.baseURL}${config.url}`,
-        tenantId: config.headers['X-Tenant-Id'],
-        hasAuth: !!config.headers.Authorization
-      });
+      if (devLogging) {
+        console.debug('🚀 Admin API Request:', {
+          method: config.method?.toUpperCase(),
+          url: `${config.baseURL}${config.url}`,
+          tenantId: config.headers['X-Tenant-Id'],
+          hasCookieAuth: true
+        });
+      }
 
       return config;
     } catch (error) {
@@ -62,12 +62,14 @@ adminApi.interceptors.request.use(
  */
 adminApi.interceptors.response.use(
   (response) => {
-    console.debug('✅ Admin API Response:', {
-      method: response.config.method?.toUpperCase(),
-      url: `${response.config.baseURL}${response.config.url}`,
-      status: response.status,
-      tenantId: response.config.headers['X-Tenant-Id']
-    });
+    if (devLogging) {
+      console.debug('✅ Admin API Response:', {
+        method: response.config.method?.toUpperCase(),
+        url: `${response.config.baseURL}${response.config.url}`,
+        status: response.status,
+        tenantId: response.config.headers['X-Tenant-Id']
+      });
+    }
     return response;
   },
   (error) => {

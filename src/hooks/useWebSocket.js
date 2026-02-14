@@ -21,11 +21,12 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
 
         // Get tenant ID from localStorage if not provided
         let effectiveTenantId = tenantId;
+        let user = null;
         if (!effectiveTenantId) {
             try {
                 const userData = localStorage.getItem('restaurant_user');
                 if (userData) {
-                    const user = JSON.parse(userData);
+                    user = JSON.parse(userData);
                     effectiveTenantId = user.tenantId;
                 }
             } catch (error) {
@@ -109,7 +110,7 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
             brokerURL: wsUrl,
 
             connectHeaders: {
-                'X-Tenant-Id': effectiveTenantId
+                'X-Tenant-Id': effectiveTenantId,
             },
 
             onConnect: (frame) => {
@@ -119,18 +120,8 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
                 setIsConnected(true);
                 setConnectionError(null);
 
-                // Subscribe to order notifications (backend broadcasts to /topic/orders)
+                // Subscribe to tenant-scoped admin notifications only.
                 try {
-                    const orderSubscription = client.subscribe(`/topic/orders`, (message) => {
-                        console.log('📨 Received order message:', message.body);
-                        dispatchIncomingMessage(message.body);
-                    });
-
-                    subscriptionsRef.current.set('orders', orderSubscription);
-                    console.log('📡 Subscribed to /topic/orders for tenant:', effectiveTenantId);
-
-                    // Subscribe to general admin notifications for this tenant
-                    // Optional: if backend provides a tenant-scoped admin topic
                     const adminSubscription = client.subscribe(`/topic/admin/${effectiveTenantId}`, (message) => {
                         console.log('📨 Received admin message:', message.body);
                         dispatchIncomingMessage(message.body);

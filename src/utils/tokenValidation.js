@@ -1,3 +1,5 @@
+import api from '@/lib/api';
+
 /**
  * Token validation utilities for password setup
  */
@@ -39,9 +41,29 @@ export const tokenValidation = {
    * @param {string} token - The setup token
    * @returns {Promise<Object>} validation result
    */
-  verifyTokenWithBackend: async (token) => {
-    // This would make an API call to verify the token
-    // For now, return local validation
-    return Promise.resolve(tokenValidation.validateToken(token));
+  verifyTokenWithBackend: async (token, tenantId, email) => {
+    const local = tokenValidation.validateToken(token);
+    if (!local.isValid) {
+      return local;
+    }
+
+    try {
+      const response = await api.post('/auth/verify-setup-token', {
+        token,
+        tenantId,
+        email
+      });
+
+      return {
+        isValid: !!response?.data?.valid,
+        email: response?.data?.email,
+        error: response?.data?.error
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        error: error?.response?.data?.error || 'Token verification failed'
+      };
+    }
   }
 };

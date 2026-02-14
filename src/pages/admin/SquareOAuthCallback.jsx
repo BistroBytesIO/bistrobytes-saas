@@ -50,13 +50,30 @@ function SquareOAuthCallback() {
         return;
       }
 
-      // Get auth credentials - try context first, then fallback to localStorage
+      // Validate OAuth state against the value we stored before redirect.
+      try {
+        const raw = sessionStorage.getItem('oauth_state:square');
+        const stored = raw ? JSON.parse(raw) : null;
+        const maxAgeMs = 15 * 60 * 1000;
+        const tsOk = stored?.ts && Date.now() - stored.ts <= maxAgeMs;
+        if (!state || !stored?.state || stored.state !== state || !tsOk) {
+          setStatus('error');
+          setMessage('Invalid OAuth state. Please retry connecting Square from settings.');
+          return;
+        }
+        sessionStorage.removeItem('oauth_state:square');
+      } catch {
+        setStatus('error');
+        setMessage('Invalid OAuth state. Please retry connecting Square from settings.');
+        return;
+      }
+
+      // Get tenant context - try context first, then fallback to localStorage
       // This handles the case where Square opens callback in a new tab
-      let authToken = user?.token;
       let tenantId = user?.tenantId;
 
-      if (!authToken || !tenantId) {
-        console.log('No auth context - checking localStorage for credentials...');
+      if (!tenantId) {
+        console.log('No auth context - checking localStorage for tenant...');
 
         // Fallback to localStorage (for new tab scenario)
         const storedUser = localStorage.getItem('restaurant_user');
@@ -64,9 +81,8 @@ function SquareOAuthCallback() {
         if (storedUser) {
           try {
             const parsedUser = JSON.parse(storedUser);
-            authToken = parsedUser.token;
             tenantId = parsedUser.tenantId || parsedUser.tenant_id;
-            console.log('Found stored credentials in localStorage - token:', authToken ? 'present' : 'missing', 'tenantId:', tenantId);
+            console.log('Found stored tenantId in localStorage:', tenantId);
           } catch (e) {
             console.error('Failed to parse stored user:', e);
           }
@@ -76,10 +92,10 @@ function SquareOAuthCallback() {
       }
 
       // If we still don't have credentials, user needs to log in
-      if (!authToken || !tenantId) {
-        console.error('No authentication credentials available');
+      if (!tenantId) {
+        console.error('No tenant context available');
         setStatus('error');
-        setMessage('Session expired. Please log in and try connecting Square again.');
+        setMessage('Missing tenant context. Please log in and try connecting Square again.');
 
         // Close this tab after a delay and redirect user to login
         setTimeout(() => {
@@ -95,7 +111,7 @@ function SquareOAuthCallback() {
 
       try {
         setMessage('Completing Square authorization...');
-        console.log('Making Square callback request with token:', authToken ? 'present' : 'missing', 'tenantId:', tenantId);
+        console.log('Making Square callback request with tenantId:', tenantId);
 
         // Make request to our OAuth callback endpoint
         const response = await axios.get('/admin/square/oauth/callback', {
@@ -104,10 +120,10 @@ function SquareOAuthCallback() {
             state
           },
           headers: {
-            'Authorization': `Bearer ${authToken}`,
             'X-Tenant-Id': tenantId,
             'Content-Type': 'application/json'
           },
+          withCredentials: true,
           // Ensure default includes '/api' for consistency with backend routing
           baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api'
         });

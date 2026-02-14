@@ -45,16 +45,32 @@ function StripeOAuthCallback() {
         return;
       }
 
-      let authToken = user?.token;
+      // Validate OAuth state against the value we stored before redirect.
+      try {
+        const raw = sessionStorage.getItem('oauth_state:stripe');
+        const stored = raw ? JSON.parse(raw) : null;
+        const maxAgeMs = 15 * 60 * 1000;
+        const tsOk = stored?.ts && Date.now() - stored.ts <= maxAgeMs;
+        if (!state || !stored?.state || stored.state !== state || !tsOk) {
+          setStatus('error');
+          setMessage('Invalid OAuth state. Please retry connecting Stripe from settings.');
+          return;
+        }
+        sessionStorage.removeItem('oauth_state:stripe');
+      } catch {
+        setStatus('error');
+        setMessage('Invalid OAuth state. Please retry connecting Stripe from settings.');
+        return;
+      }
+
       let tenantId = user?.tenantId;
 
-      if (!authToken || !tenantId) {
-        console.log('No auth context - checking localStorage for credentials...');
+      if (!tenantId) {
+        console.log('No auth context - checking localStorage for tenant...');
         const storedUser = localStorage.getItem('restaurant_user');
         if (storedUser) {
           try {
             const parsedUser = JSON.parse(storedUser);
-            authToken = parsedUser.token;
             tenantId = parsedUser.tenantId || parsedUser.tenant_id;
           } catch (e) {
             console.error('Failed to parse stored user:', e);
@@ -62,10 +78,10 @@ function StripeOAuthCallback() {
         }
       }
 
-      if (!authToken || !tenantId) {
-        console.error('No authentication credentials available');
+      if (!tenantId) {
+        console.error('No tenant context available');
         setStatus('error');
-        setMessage('Session expired. Please log in and try connecting Stripe again.');
+        setMessage('Missing tenant context. Please log in and try connecting Stripe again.');
 
         setTimeout(() => {
           window.close();
@@ -85,10 +101,10 @@ function StripeOAuthCallback() {
             state
           },
           headers: {
-            'Authorization': `Bearer ${authToken}`,
             'X-Tenant-Id': tenantId,
             'Content-Type': 'application/json'
           },
+          withCredentials: true,
           baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api'
         });
 

@@ -4,19 +4,24 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api',
   timeout: 30000, // 30 second timeout for tenant provisioning
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
+const devLogging = !!import.meta.env?.DEV;
+
 // Add request interceptor for logging
 api.interceptors.request.use(
   (config) => {
-    console.debug('🚀 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: `${config.baseURL}${config.url}`,
-      hasData: !!config.data
-    })
+    if (devLogging) {
+      console.debug('🚀 API Request:', {
+        method: config.method?.toUpperCase(),
+        url: `${config.baseURL}${config.url}`,
+        hasData: !!config.data
+      })
+    }
     return config
   },
   (error) => {
@@ -28,11 +33,13 @@ api.interceptors.request.use(
 // Add response interceptor for logging and error handling
 api.interceptors.response.use(
   (response) => {
-    console.debug('✅ API Response:', {
-      method: response.config.method?.toUpperCase(),
-      url: `${response.config.baseURL}${response.config.url}`,
-      status: response.status
-    })
+    if (devLogging) {
+      console.debug('✅ API Response:', {
+        method: response.config.method?.toUpperCase(),
+        url: `${response.config.baseURL}${response.config.url}`,
+        status: response.status
+      })
+    }
     return response
   },
   (error) => {

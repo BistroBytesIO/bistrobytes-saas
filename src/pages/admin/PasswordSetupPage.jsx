@@ -43,7 +43,6 @@ function PasswordSetupPage() {
       // Clear any existing authentication data to prevent conflicts
       localStorage.removeItem('restaurant_user');
       localStorage.removeItem('restaurant_data');
-      delete api.defaults.headers.common['Authorization'];
       delete api.defaults.headers.common['X-Tenant-Id'];
       
       if (!token) {
@@ -66,18 +65,26 @@ function PasswordSetupPage() {
       }
 
       try {
-        // Basic token validation
-        const tokenResult = tokenValidation.validateToken(token);
-        
+        // Verify setup token with backend (authoritative)
+        const emailForVerification = (formData.email || email || '').trim();
+        const tokenResult = await tokenValidation.verifyTokenWithBackend(
+          token,
+          tenantId,
+          emailForVerification
+        );
+
         if (!tokenResult.isValid) {
           setTokenValid(false);
           // Only show toast once
           if (!toastShownRef.current) {
-            toast.error('Invalid setup token');
+            toast.error(tokenResult.error || 'Invalid setup token');
             toastShownRef.current = true;
           }
         } else {
           setTokenValid(true);
+          if (tokenResult.email) {
+            setFormData(prev => ({ ...prev, email: tokenResult.email }));
+          }
           // Only show toast once
           if (!toastShownRef.current) {
             toast.success('Setup token verified successfully');
@@ -98,7 +105,7 @@ function PasswordSetupPage() {
     };
 
     verifyToken();
-  }, [token, tenantId]);
+  }, [token, tenantId, email]);
 
   // Validate password in real-time
   useEffect(() => {
@@ -157,43 +164,23 @@ function PasswordSetupPage() {
       if (response.status === 200) {
         toast.success('Admin account created successfully!');
         
-        // Check if response includes authentication data for automatic login
-        if (response.data.token && response.data.tenantId) {
-          // Store authentication data in localStorage for automatic login
-          const userData = {
-            email: response.data.email,
-            role: response.data.role,
-            token: response.data.token,
-            tenantId: response.data.tenantId
-          };
-          
-          localStorage.setItem('restaurant_user', JSON.stringify(userData));
-          
-          // Set up axios default headers for immediate authenticated requests
-          api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
-          api.defaults.headers.common['X-Tenant-Id'] = userData.tenantId;
-          
-          // Redirect to admin dashboard with success message
-          setTimeout(() => {
-            navigate('/admin/dashboard', { 
-              state: { 
-                message: 'Welcome! Your admin account has been created and you are now logged in.'
-              }
-            });
-          }, 1500);
-        } else {
-          // Fallback to login redirect if no auth data returned
-          setTimeout(() => {
-            const tenantQuery = tenantId ? `&tenantId=${encodeURIComponent(tenantId)}` : '';
-            navigate(`/admin/login?setup=success${tenantQuery}`, { 
-              state: { 
-                message: 'Your admin account has been created successfully. Please log in.',
-                email: formData.email,
-                tenantId: tenantId || undefined
-              }
-            });
-          }, 1500);
-        }
+        // Cookie-based session: backend sets HttpOnly auth cookie on success.
+        const userData = {
+          email: response.data.email,
+          role: response.data.role,
+          tenantId: response.data.tenantId
+        };
+
+        localStorage.setItem('restaurant_user', JSON.stringify(userData));
+        api.defaults.headers.common['X-Tenant-Id'] = userData.tenantId;
+
+        setTimeout(() => {
+          navigate('/admin/dashboard', { 
+            state: { 
+              message: 'Welcome! Your admin account has been created and you are now logged in.'
+            }
+          });
+        }, 1500);
       }
     } catch (error) {
       console.error('Password setup error:', error);
