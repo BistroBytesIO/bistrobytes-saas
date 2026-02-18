@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 
 function AdminDashboard() {
+  const devLogging = !!import.meta.env?.DEV;
   const { user, getTenantId } = useRestaurantAuth();
   const navigate = useNavigate();
   
@@ -135,7 +136,7 @@ function AdminDashboard() {
     try {
       const response = await adminApiUtils.getDashboardStats();
       setDashboardStats(response.data);
-      console.log('✅ Dashboard stats loaded:', response.data);
+      if (devLogging) { console.log('✅ Dashboard stats loaded:', response.data); }
     } catch (error) {
       console.error('❌ Error fetching dashboard stats:', error);
       // Use mock data if API fails
@@ -156,7 +157,7 @@ function AdminDashboard() {
     try {
       const response = await adminApiUtils.getMonthlyRevenue();
       setMonthlyRevenue(response.data);
-      console.log('✅ Monthly revenue loaded:', response.data);
+      if (devLogging) { console.log('✅ Monthly revenue loaded:', response.data); }
     } catch (error) {
       console.error('❌ Error fetching monthly revenue:', error);
       // Use mock data if API fails
@@ -178,7 +179,7 @@ function AdminDashboard() {
     try {
       const response = await adminApiUtils.getLowStockItems();
       setLowStockItems(response.data);
-      console.log('✅ Low stock items loaded:', response.data);
+      if (devLogging) { console.log('✅ Low stock items loaded:', response.data); }
     } catch (error) {
       console.error('❌ Error fetching low stock items:', error);
       // Use mock data if API fails
@@ -196,7 +197,7 @@ function AdminDashboard() {
     try {
       const response = await adminApiUtils.getPerformanceStats();
       setPerformanceStats(response.data);
-      console.log('✅ Performance stats loaded:', response.data);
+      if (devLogging) { console.log('✅ Performance stats loaded:', response.data); }
     } catch (error) {
       console.error('❌ Error fetching performance stats:', error);
       // Use mock data if API fails
@@ -225,7 +226,7 @@ function AdminDashboard() {
     try {
       const response = await adminApiUtils.getPromoCodeStats();
       setPromoCodeStats(response.data);
-      console.log('✅ Promo code stats loaded:', response.data);
+      if (devLogging) { console.log('✅ Promo code stats loaded:', response.data); }
     } catch (error) {
       console.error('❌ Error fetching promo code stats:', error);
       // Use default empty stats if API fails

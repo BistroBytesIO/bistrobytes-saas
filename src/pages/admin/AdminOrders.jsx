@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 
 function AdminOrders() {
+  const devLogging = !!import.meta.env?.DEV;
   const { user, getTenantId } = useRestaurantAuth();
   const [orders, setOrders] = useState([]);
   const [loadingOrderId, setLoadingOrderId] = useState(null);
@@ -52,7 +53,7 @@ function AdminOrders() {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api';
   const tenantId = getTenantId();
   
-  console.log('🔧 Admin Orders - Base URL:', baseUrl, 'Tenant ID:', tenantId);
+  if (devLogging) { console.log('🔧 Admin Orders - Base URL:', baseUrl, 'Tenant ID:', tenantId); }
   
   const handleWebSocketMessage = (notification) => {
     console.log('📥 AdminOrders received WebSocket notification:', notification);
@@ -134,7 +135,7 @@ function AdminOrders() {
     setIsLoadingOrders(true);
     try {
       const response = await adminApiUtils.getPendingOrders();
-      console.log('✅ Fetched orders:', response.data);
+      if (devLogging) { console.log('✅ Fetched orders:', response.data); }
       if (Array.isArray(response.data)) {
         setOrders(response.data);
       } else {

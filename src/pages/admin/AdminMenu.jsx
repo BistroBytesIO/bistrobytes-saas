@@ -38,6 +38,7 @@ if (typeof window !== 'undefined') {
 }
 
 function AdminMenu() {
+  const devLogging = !!import.meta.env?.DEV;
   const { user, getTenantId } = useRestaurantAuth();
   const navigate = useNavigate();
   const [menuItems, setMenuItems] = useState([]);
@@ -124,7 +125,7 @@ function AdminMenu() {
     setIsLoadingItems(true);
     try {
       const response = await adminApiUtils.getMenuItems();
-      console.log('✅ Fetched menu items:', response.data);
+      if (devLogging) { console.log('✅ Fetched menu items:', response.data); }
       if (Array.isArray(response.data)) {
         setMenuItems(response.data);
       } else {
@@ -157,7 +158,7 @@ function AdminMenu() {
     setIsLoadingCategories(true);
     try {
       const response = await adminApiUtils.getCategories();
-      console.log('✅ Fetched categories:', response.data);
+      if (devLogging) { console.log('✅ Fetched categories:', response.data); }
       if (Array.isArray(response.data)) {
         setCategories(response.data);
       } else {
@@ -393,7 +394,7 @@ function AdminMenu() {
     try {
       console.log('Uploading image for item:', selectedItem.id, 'File:', file.name);
       const response = await adminApiUtils.uploadMenuItemImage(selectedItem.id, file);
-      console.log('Upload image response:', response);
+      if (devLogging) { console.log('Upload image response:', response); }
 
       if (response.data?.imageUrl) {
         const newImageUrl = response.data.imageUrl;

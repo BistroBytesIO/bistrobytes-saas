@@ -94,18 +94,19 @@ export const RestaurantAuthProvider = ({ children }) => {
    * @param {string} tenantId - Restaurant tenant ID
    */
   const login = async (email, password, tenantId) => {
+    const devLogging = !!import.meta.env?.DEV;
     try {
       // Make login request with tenant header
-      const response = await api.post('/auth/login', { 
-        email, 
-        password 
+      const response = await api.post('/auth/login', {
+        email,
+        password
       }, {
         headers: {
           'X-Tenant-Id': tenantId
         }
       });
 
-      console.log("Login response:", response.data);
+      if (devLogging) { console.log("Login response:", response.data); }
 
       // Ensure role is properly formatted
       const userData = {

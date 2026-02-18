@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 
 function PromoCodesManager() {
+  const devLogging = !!import.meta.env?.DEV;
   const { user } = useRestaurantAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -67,7 +68,7 @@ function PromoCodesManager() {
     try {
       const response = await adminApiUtils.getAllPromoCodes();
       setPromoCodes(response.data.data || []);
-      console.log('✅ Promo codes loaded:', response.data.data);
+      if (devLogging) { console.log('✅ Promo codes loaded:', response.data.data); }
     } catch (error) {
       console.error('❌ Error fetching promo codes:', error);
       toast.error('Failed to load promo codes');

@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 
 function CloverOAuthCallback() {
+  const devLogging = !!import.meta.env?.DEV;
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useRestaurantAuth();
@@ -91,7 +92,7 @@ function CloverOAuthCallback() {
           try {
             const parsedUser = JSON.parse(storedUser);
             tenantId = parsedUser.tenantId || parsedUser.tenant_id;
-            console.log('Found stored tenantId in localStorage:', tenantId);
+            if (devLogging) { console.log('Found stored tenantId in localStorage:', tenantId); }
           } catch (e) {
             console.error('Failed to parse stored user:', e);
           }
@@ -120,7 +121,7 @@ function CloverOAuthCallback() {
 
       try {
         setMessage('Completing Clover authorization...');
-        console.log('Making callback request with tenantId:', tenantId);
+        if (devLogging) { console.log('Making callback request with tenantId:', tenantId); }
 
         // Make request to our OAuth callback endpoint
         const response = await axios.get('/admin/clover/oauth/callback', {
@@ -140,7 +141,7 @@ function CloverOAuthCallback() {
           baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api'
         });
 
-        console.log('OAuth callback response:', response.data);
+        if (devLogging) { console.log('OAuth callback response:', response.data); }
 
         if (response.data.success) {
           setStatus('success');

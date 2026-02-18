@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 
 function AdminReadyForPickup() {
+  const devLogging = !!import.meta.env?.DEV;
   const { user, getTenantId } = useRestaurantAuth();
   const [orders, setOrders] = useState([]);
   const [loadingOrderId, setLoadingOrderId] = useState(null);
@@ -48,7 +49,7 @@ function AdminReadyForPickup() {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:8443/api';
   const tenantId = getTenantId();
   
-  console.log('🔧 Admin Ready for Pickup - Base URL:', baseUrl, 'Tenant ID:', tenantId);
+  if (devLogging) { console.log('🔧 Admin Ready for Pickup - Base URL:', baseUrl, 'Tenant ID:', tenantId); }
   
   const handleWebSocketMessage = (notification) => {
     console.log('📥 AdminReadyForPickup received WebSocket notification:', notification);
@@ -132,7 +133,7 @@ function AdminReadyForPickup() {
     setIsLoadingOrders(true);
     try {
       const response = await adminApiUtils.getReadyForPickupOrders();
-      console.log('✅ Fetched READY orders:', response.data);
+      if (devLogging) { console.log('✅ Fetched READY orders:', response.data); }
       if (Array.isArray(response.data)) {
         setOrders(response.data);
       } else {
