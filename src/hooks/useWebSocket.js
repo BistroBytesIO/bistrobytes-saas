@@ -111,6 +111,12 @@ const useWebSocket = (baseUrl, onMessage, enabled = true, tenantId = null) => {
 
             connectHeaders: {
                 'X-Tenant-Id': effectiveTenantId,
+                // Include JWT so the STOMP channel interceptor can authenticate admin sessions.
+                // sessionStorage is used because the HttpOnly cookie is not sent cross-origin in dev
+                // (HTTP frontend → HTTPS API).
+                ...(sessionStorage.getItem('admin_jwt')
+                    ? { 'Authorization': `Bearer ${sessionStorage.getItem('admin_jwt')}` }
+                    : {}),
             },
 
             onConnect: (frame) => {

@@ -33,6 +33,12 @@ export const RestaurantAuthProvider = ({ children }) => {
           }
         }
 
+        // Restore Authorization header from sessionStorage on page reload.
+        const savedJwt = sessionStorage.getItem('admin_jwt');
+        if (savedJwt) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${savedJwt}`;
+        }
+
         if (storedRestaurant) {
           const parsedRestaurant = JSON.parse(storedRestaurant);
           setRestaurant(parsedRestaurant);
@@ -115,12 +121,20 @@ export const RestaurantAuthProvider = ({ children }) => {
         tenantId: tenantId || response.data.tenantId
       };
 
-      // Store user data
+      // Store user metadata (non-sensitive: email, role, tenantId — NOT the token).
       localStorage.setItem('restaurant_user', JSON.stringify(userData));
       setUser(userData);
 
       if (userData.tenantId) {
         api.defaults.headers.common['X-Tenant-Id'] = userData.tenantId;
+      }
+
+      // Persist the JWT for cross-origin requests (HTTP dev frontend → HTTPS API).
+      // sessionStorage is per-tab and cleared on close — strictly safer than localStorage.
+      // The HttpOnly cookie is also set server-side for same-origin production setups.
+      if (response.data.token) {
+        sessionStorage.setItem('admin_jwt', response.data.token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
       }
 
       // Fetch restaurant data if available
@@ -140,12 +154,14 @@ export const RestaurantAuthProvider = ({ children }) => {
     setUser(null);
     setRestaurant(null);
     
-    // Clear localStorage
+    // Clear localStorage and sessionStorage
     localStorage.removeItem('restaurant_user');
     localStorage.removeItem('restaurant_data');
-    
+    sessionStorage.removeItem('admin_jwt');
+
     // Clear axios default headers
     delete api.defaults.headers.common['X-Tenant-Id'];
+    delete api.defaults.headers.common['Authorization'];
     
     // Navigate to login page
     if (navigate) {

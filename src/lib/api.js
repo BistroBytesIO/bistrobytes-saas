@@ -12,9 +12,18 @@ const api = axios.create({
 
 const devLogging = !!import.meta.env?.DEV;
 
-// Add request interceptor for logging
+// Add request interceptor for logging and auth
 api.interceptors.request.use(
   (config) => {
+    // Attach JWT as Bearer token for cross-origin scenarios (HTTP dev → HTTPS API).
+    // The Authorization header may already be set as an axios default by RestaurantAuthContext.
+    if (!config.headers['Authorization']) {
+      const jwt = sessionStorage.getItem('admin_jwt');
+      if (jwt) {
+        config.headers['Authorization'] = `Bearer ${jwt}`;
+      }
+    }
+
     if (devLogging) {
       console.debug('🚀 API Request:', {
         method: config.method?.toUpperCase(),

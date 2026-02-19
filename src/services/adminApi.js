@@ -16,17 +16,19 @@ const adminApi = axios.create({
 const devLogging = !!import.meta.env?.DEV;
 
 /**
- * Request interceptor to attach tenant ID. Admin auth is via HttpOnly cookie.
+ * Request interceptor to attach tenant ID and Authorization header.
+ * Auth token is stored in sessionStorage (set during login) for cross-origin dev compatibility.
+ * The HttpOnly cookie is also set server-side for same-origin production deployments.
  */
 adminApi.interceptors.request.use(
   (config) => {
     try {
-      // Get user data from localStorage (non-sensitive; token is not stored client-side)
+      // Get user data from localStorage (non-sensitive: email, role, tenantId — not the token)
       const userData = localStorage.getItem('restaurant_user');
-      
+
       if (userData) {
         const user = JSON.parse(userData);
-        
+
         // Attach tenant ID for multi-tenant requests
         if (user.tenantId) {
           config.headers['X-Tenant-Id'] = user.tenantId;
@@ -35,13 +37,22 @@ adminApi.interceptors.request.use(
         console.warn('⚠️ No tenant context found for admin request');
       }
 
+      // Attach JWT as Bearer token if not already set on this request.
+      // This handles cross-origin scenarios where the HttpOnly cookie is not sent.
+      if (!config.headers['Authorization']) {
+        const jwt = sessionStorage.getItem('admin_jwt');
+        if (jwt) {
+          config.headers['Authorization'] = `Bearer ${jwt}`;
+        }
+      }
+
       // Log request for debugging
       if (devLogging) {
         console.debug('🚀 Admin API Request:', {
           method: config.method?.toUpperCase(),
           url: `${config.baseURL}${config.url}`,
           tenantId: config.headers['X-Tenant-Id'],
-          hasCookieAuth: true
+          hasAuth: !!config.headers['Authorization']
         });
       }
 
