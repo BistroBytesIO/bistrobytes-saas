@@ -150,10 +150,18 @@ export const RestaurantAuthProvider = ({ children }) => {
   /**
    * Logout function with cleanup
    */
-  const logout = (navigate) => {
+  const logout = async (navigate) => {
+    // Tell the backend to clear the HttpOnly cookie (Max-Age=0).
+    // Fire-and-forget: clear local state regardless of whether the request succeeds.
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore errors — the token in sessionStorage will no longer be sent anyway.
+    }
+
     setUser(null);
     setRestaurant(null);
-    
+
     // Clear localStorage and sessionStorage
     localStorage.removeItem('restaurant_user');
     localStorage.removeItem('restaurant_data');
@@ -162,7 +170,7 @@ export const RestaurantAuthProvider = ({ children }) => {
     // Clear axios default headers
     delete api.defaults.headers.common['X-Tenant-Id'];
     delete api.defaults.headers.common['Authorization'];
-    
+
     // Navigate to login page
     if (navigate) {
       navigate('/admin/login');
