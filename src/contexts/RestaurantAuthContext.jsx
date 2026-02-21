@@ -48,11 +48,12 @@ export const RestaurantAuthProvider = ({ children }) => {
         localStorage.removeItem('restaurant_user');
         localStorage.removeItem('restaurant_data');
         delete api.defaults.headers.common['X-Tenant-Id'];
-      } finally {
-        setIsLoading(false);
       }
 
-      // If we have a tenant context, confirm the session from the HttpOnly cookie.
+      // If we have a tenant context, confirm the session with the backend.
+      // setIsLoading(false) is intentionally deferred to here so that ProtectedRoute
+      // never sees isAuthenticated=true with a stale/invalid token. The loading spinner
+      // covers this round-trip and prevents a flash of the dashboard before redirect.
       try {
         const tenantId = (() => {
           try {
@@ -78,8 +79,22 @@ export const RestaurantAuthProvider = ({ children }) => {
             api.defaults.headers.common['X-Tenant-Id'] = normalized.tenantId;
           }
         }
-      } catch {
-        // Cookie session not present/valid; keep local state as-is.
+      } catch (error) {
+        // Backend explicitly rejected the session (e.g. after a restart) — clear all auth state
+        // so the user is sent back to login rather than seeing a fake authenticated dashboard.
+        // Network errors (no error.response) are NOT treated as auth failures — the backend may
+        // simply be temporarily unreachable and the token could still be valid.
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          setUser(null);
+          setRestaurant(null);
+          localStorage.removeItem('restaurant_user');
+          localStorage.removeItem('restaurant_data');
+          sessionStorage.removeItem('admin_jwt');
+          delete api.defaults.headers.common['Authorization'];
+          delete api.defaults.headers.common['X-Tenant-Id'];
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 

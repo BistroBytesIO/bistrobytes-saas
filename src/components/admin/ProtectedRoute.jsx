@@ -12,20 +12,21 @@ const ProtectedRoute = ({
   requireRole = 'ROLE_ADMIN', 
   redirectTo = '/admin/login' 
 }) => {
-  const { user, isAuthenticated, isLoading, hasRole, validateSession } = useRestaurantAuth();
+  const { user, isAuthenticated, isLoading, hasRole, validateSession, logout } = useRestaurantAuth();
   const location = useLocation();
 
-  // Validate session on route access
+  // Validate session on route access and logout if the backend no longer recognises it
+  // (e.g. after a server restart). Calling logout() clears user state which causes the
+  // Navigate below to fire and send the user back to the login screen.
   useEffect(() => {
     if (isAuthenticated && user) {
       validateSession().then((isValid) => {
         if (!isValid) {
-          console.warn('Session validation failed, redirecting to login');
-          // The validateSession function will handle logout if needed
+          logout();
         }
       });
     }
-  }, [isAuthenticated, user, validateSession]);
+  }, [isAuthenticated, user, validateSession, logout]);
 
   // Show loading spinner while checking authentication
   if (isLoading) {
