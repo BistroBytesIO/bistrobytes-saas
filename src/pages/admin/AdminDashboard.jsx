@@ -146,7 +146,7 @@ function AdminDashboard() {
         popularItems: [{ name: 'Burger Deluxe', orders: 15 }],
         totalCustomers: 85,
       });
-      toast.error('Failed to load dashboard statistics - using demo data');
+
     } finally {
       setLoadingStats(false);
     }
